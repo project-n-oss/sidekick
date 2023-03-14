@@ -55,8 +55,6 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		awsCred:    cred,
 	}
 
-	br.ScheduleRefreshEndpoints(ctx)
-
 	return br, nil
 }
 

@@ -29,6 +29,8 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 	if err := br.RefreshEndpoints(ctx); err != nil {
 		return nil, err
 	}
+	// Refresh endpoints on a interval
+	br.ScheduleRefreshEndpoints(ctx)
 
 	return &Api{
 		logger: logger,
