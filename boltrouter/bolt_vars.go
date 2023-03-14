@@ -132,7 +132,7 @@ func getAwsRegion(logger *zap.Logger) (string, error) {
 	ctx := context.Background()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("could not load aws default config: %w", err)
 	}
 
 	client := imds.NewFromConfig(cfg)
@@ -154,7 +154,7 @@ func getAwsZoneID(logger *zap.Logger) (string, error) {
 	ctx := context.Background()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("could not load aws default config: %w", err)
 	}
 
 	client := imds.NewFromConfig(cfg)
