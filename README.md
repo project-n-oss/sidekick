@@ -1,2 +1,22 @@
-# sidekick
-sidekick is a sidecar process to allow you to interface with the bolt platform
+# Sidekick
+
+
+```
+Client (az2)
+ ↓   ↑
+ ServerA (az1)
+  ↓   ↑
+  ServerB (az2)
+    ↓ ↑
+    S3
+```
+
+```
+Client (az2) ← 
+ ↓             ↖
+ ServerA (az1)  ↖
+  ↓            ↗  
+  ServerB (az2)
+    ↓ ↑
+    S3
+```
