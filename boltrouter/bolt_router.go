@@ -29,7 +29,7 @@ type BoltRouter struct {
 // NewBoltRouter creates a new BoltRouter.
 func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRouter, error) {
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 5
+	retryClient.RetryMax = 3
 	retryClient.Logger = NewLeveledLogger(logger)
 
 	boltVars, err := GetBoltVars(logger)
@@ -75,8 +75,22 @@ func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) 
 	return nil, fmt.Errorf("could not select any bolt endpoints")
 }
 
-// ScheduleRefreshEndpoints starts a goroutine that calls RefreshEndpoints every 2min
-func (br *BoltRouter) ScheduleRefreshEndpoints(ctx context.Context) {
+// getPreferredEndpointOrder returns BoltVars.ReadOrderEndpoints if BoltVars.HttpReadMethodTypes contains
+// reqMethod, otherwise return BoltVars.WriteOrderEndpoints.
+func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
+	HttpReadMethodTypes := br.boltVars.HttpReadMethodTypes.Get()
+	for _, methodType := range HttpReadMethodTypes {
+		if reqMethod == methodType {
+			return br.boltVars.ReadOrderEndpoints.Get()
+		}
+	}
+
+	writeOrderEnpoints := br.boltVars.WriteOrderEndpoints.Get()
+	return writeOrderEnpoints
+}
+
+// RefreshEndpointsPeriodically starts a goroutine that calls RefreshEndpoints every 2min
+func (br *BoltRouter) RefreshEndpointsPeriodically(ctx context.Context) {
 	ticker := time.NewTicker(120 * time.Second)
 	go func() {
 		for {
@@ -100,20 +114,6 @@ func (br *BoltRouter) RefreshEndpoints(ctx context.Context) error {
 	}
 	br.boltVars.BoltEndpoints.Set(endpoints)
 	return nil
-}
-
-// getPreferredEndpointOrder returns BoltVars.ReadOrderEndpoints if BoltVars.HttpReadMethodTypes contains
-// reqMethod, otherwise return BoltVars.WriteOrderEndpoints.
-func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
-	HttpReadMethodTypes := br.boltVars.HttpReadMethodTypes.Get()
-	for _, methodType := range HttpReadMethodTypes {
-		if reqMethod == methodType {
-			return br.boltVars.ReadOrderEndpoints.Get()
-		}
-	}
-
-	writeOrderEnpoints := br.boltVars.WriteOrderEndpoints.Get()
-	return writeOrderEnpoints
 }
 
 // getBoltEndpoints queries quicksilver and returns a BoltEndpointsMap.
