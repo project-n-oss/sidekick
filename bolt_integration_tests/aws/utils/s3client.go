@@ -13,7 +13,6 @@ import (
 
 // GetS3Client returns a S3 client
 func GetS3Client(t *testing.T, ctx context.Context) *s3.Client {
-	t.Log("url: ", SidekickURL)
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == s3.ServiceID {
 			return aws.Endpoint{

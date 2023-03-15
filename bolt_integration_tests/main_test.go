@@ -3,6 +3,7 @@ package bolt_integration_tests
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"strconv"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
@@ -52,7 +54,7 @@ func TestAws(t *testing.T) {
 
 func SetupSidekick(t *testing.T, ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
-	logger := zaptest.NewLogger(t)
+	logger := zaptest.NewLogger(t, zaptest.Level(zap.InfoLevel))
 
 	go func() {
 		sigs := make(chan os.Signal, 1)
@@ -86,6 +88,12 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 	}()
 
 	go func() {
-		http.Serve(listner, handler)
+		logger.Info("HELLO")
+		err := http.Serve(listner, handler)
+		if err != nil {
+			logger.Error(fmt.Errorf("server err: %w", err).Error())
+		}
 	}()
+
+	time.Sleep(1 * time.Second)
 }

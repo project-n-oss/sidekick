@@ -61,7 +61,3 @@ var serveCmd = &cobra.Command{
 		return nil
 	},
 }
-
-func init() {
-	rootCmd.AddCommand(serveCmd)
-}
