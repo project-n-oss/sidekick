@@ -117,17 +117,11 @@ func (br *BoltRouter) RefreshEndpoints(ctx context.Context) error {
 }
 
 // getBoltEndpoints queries quicksilver and returns a BoltEndpointsMap.
-// It will always return BoltVars.BoltHostname if running in local mode.
+// It will always return an empty mapif running in local mode.
 func (br *BoltRouter) getBoltEndpoints(ctx context.Context) (BoltEndpointsMap, error) {
-	// If running locally, we can't connect to quicksilver, return map of boltEndpoint
+	// If running locally, we can't connect to quicksilver.
 	if br.config.Local {
-		endpoint := br.boltVars.BoltHostname.Get()
-		return BoltEndpointsMap{
-			"main_write_endpoints":     {endpoint},
-			"failover_write_endpoints": {endpoint},
-			"main_read_endpoints":      {endpoint},
-			"failover_read_endpoints":  {endpoint},
-		}, nil
+		return BoltEndpointsMap{}, nil
 	}
 
 	if br.boltVars.QuicksilverURL.Get() == "" || br.boltVars.Region.Get() == "" {
