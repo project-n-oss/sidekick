@@ -61,5 +61,4 @@ func TestBoltRequest(t *testing.T) {
 			}
 		})
 	}
-
 }
