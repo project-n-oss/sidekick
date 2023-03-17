@@ -2,7 +2,7 @@ package aws
 
 import (
 	"context"
-	"sidekick/bolt_integration_tests/aws/utils"
+	"sidekick/integration_tests/aws/utils"
 
 	"github.com/stretchr/testify/suite"
 )

@@ -1,4 +1,4 @@
-package bolt_integration_tests
+package integration_tests
 
 import (
 	"context"
@@ -10,9 +10,10 @@ import (
 	"os"
 	"os/signal"
 	"sidekick/api"
-	"sidekick/bolt_integration_tests/aws"
-	"sidekick/bolt_integration_tests/aws/utils"
 	"sidekick/boltrouter"
+	"sidekick/cmd"
+	"sidekick/integration_tests/aws"
+	"sidekick/integration_tests/aws/utils"
 	"strconv"
 	"syscall"
 	"testing"
@@ -22,7 +23,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestMain(m *testing.M) {
@@ -54,7 +54,7 @@ func TestAws(t *testing.T) {
 
 func SetupSidekick(t *testing.T, ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
-	logger := zaptest.NewLogger(t, zaptest.Level(zap.InfoLevel))
+	logger := cmd.NewLogger(false)
 
 	go func() {
 		sigs := make(chan os.Signal, 1)
@@ -85,10 +85,10 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 		<-ctx.Done()
 		err := listner.Close()
 		require.NoError(t, err)
+		logger.Sync()
 	}()
 
 	go func() {
-		logger.Info("HELLO")
 		err := http.Serve(listner, handler)
 		if err != nil {
 			logger.Error(fmt.Errorf("server err: %w", err).Error())

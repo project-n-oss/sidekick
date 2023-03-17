@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"sidekick/bolt_integration_tests/aws/utils"
+	"sidekick/integration_tests/aws/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"

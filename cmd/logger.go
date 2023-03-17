@@ -8,15 +8,13 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var logger *zap.Logger
-
-func InitLogger(verbose bool) {
+func NewLogger(verbose bool) *zap.Logger {
 	logEncoder := getConsoleEncoder()
 
 	zapAtom := zap.NewAtomicLevel()
 	zapAtom.SetLevel(zapcore.InfoLevel)
 
-	logger = zap.New(
+	ret := zap.New(
 		zapcore.NewCore(
 			logEncoder,
 			zapcore.Lock(os.Stdout),
@@ -34,6 +32,8 @@ func InitLogger(verbose bool) {
 	OnShutdown(func() {
 		_ = logger.Sync()
 	})
+
+	return ret
 }
 
 func getConsoleEncoder() zapcore.Encoder {

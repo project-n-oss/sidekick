@@ -38,22 +38,21 @@ func TestBoltRequest(t *testing.T) {
 			boltReq, err := br.NewBoltRequest(ctx, req)
 			require.NoError(t, err)
 			require.NotNil(t, boltReq)
-
-			require.Equal(t, req.Method, boltReq.Method)
+			boltHttpRequest := boltReq.Bolt
+			require.Equal(t, req.Method, boltHttpRequest.Method)
 
 			endpointOrder := br.getPreferredEndpointOrder(req.Method)
 			endpoints := boltVars.BoltEndpoints.Get()[endpointOrder[0]]
-			require.Contains(t, endpoints, boltReq.URL.Hostname())
+			require.Contains(t, endpoints, boltHttpRequest.URL.Hostname())
 
-			require.Equal(t, boltVars.BoltHostname.Get(), boltReq.Header.Get("Host"))
-			require.NotEmpty(t, boltReq.Header.Get("X-Amz-Date"))
-			require.NotEmpty(t, boltReq.Header.Get("Authorization"))
-			require.NotEmpty(t, boltReq.Header.Get("X-Bolt-Auth-Prefix"))
-			require.Len(t, boltReq.Header.Get("X-Bolt-Auth-Prefix"), 4)
-			require.NotEmpty(t, boltReq.Header.Get("User-Agent"))
-			require.Contains(t, boltReq.Header.Get("User-Agent"), boltVars.UserAgentPrefix.Get())
+			require.Equal(t, boltVars.BoltHostname.Get(), boltHttpRequest.Header.Get("Host"))
+			require.NotEmpty(t, boltHttpRequest.Header.Get("X-Amz-Date"))
+			require.NotEmpty(t, boltHttpRequest.Header.Get("Authorization"))
+			require.NotEmpty(t, boltHttpRequest.Header.Get("X-Bolt-Auth-Prefix"))
+			require.Len(t, boltHttpRequest.Header.Get("X-Bolt-Auth-Prefix"), 4)
+			require.Contains(t, boltHttpRequest.Header.Get("User-Agent"), boltVars.UserAgentPrefix.Get())
 
-			passthrough := boltReq.Header.Get("X-Bolt-Passthrough-Read")
+			passthrough := boltHttpRequest.Header.Get("X-Bolt-Passthrough-Read")
 			if !tt.cfg.Passthrough {
 				require.Equal(t, "disable", passthrough)
 			} else {

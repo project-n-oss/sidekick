@@ -23,13 +23,15 @@ func init() {
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
 }
 
+var logger *zap.Logger
+
 var rootCmd = &cobra.Command{
 	Use:           filepath.Base(os.Args[0]),
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		InitLogger(verbose)
+		logger = NewLogger(verbose)
 
 		if _, err := os.Stat(".env"); err == nil {
 			err := godotenv.Load()

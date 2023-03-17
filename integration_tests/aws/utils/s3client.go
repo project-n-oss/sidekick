@@ -32,7 +32,7 @@ func GetS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	cfg.RetryMaxAttempts = retry.DefaultMaxAttempts
 
 	s3c := s3.NewFromConfig(cfg, func(options *s3.Options) {
-		// options.UsePathStyle = true
+		options.UsePathStyle = true
 	})
 
 	return s3c

@@ -3,23 +3,35 @@ package boltrouter
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"go.uber.org/zap"
 )
+
+type BoltRequest struct {
+	Bolt *http.Request
+	Aws  *http.Request
+}
 
 // NewBoltRequest transforms the passed in intercepted aws http.Request and returns
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
-func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*http.Request, error) {
+func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*BoltRequest, error) {
 	sourceBucket := extractSourceBucket(req)
+	failoverRequest, err := newFailoverAwsRequest(ctx, req.Clone(ctx), br.awsCred, sourceBucket, br.boltVars.Region.Get())
+	if err != nil {
+		return nil, fmt.Errorf("failed to make failover request: %w", err)
+	}
+
 	authPrefix := randString(4)
 	headReq, err := signedAwsHeadRequest(ctx, req, br.awsCred, sourceBucket.bucket, br.boltVars.Region.Get(), authPrefix)
 	if err != nil {
-		return nil, fmt.Errorf("could not make signed aws head request")
+		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
 	}
 
 	BoltURL, err := br.SelectBoltEndpoint(ctx, req.Method)
@@ -34,10 +46,14 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*h
 		BoltURL = BoltURL.JoinPath(sourceBucket.bucket, req.URL.EscapedPath())
 
 	} else {
-		BoltURL = BoltURL.JoinPath(req.URL.EscapedPath())
+		BoltURL = BoltURL.JoinPath(req.URL.Path)
 	}
+	// Bolt will only accept query if path starts with "/".
+	// Bolt will return a 400 error otherwise
+	BoltURL.Path = "/" + BoltURL.Path
 	BoltURL.RawQuery = req.URL.RawQuery
 	req.URL = BoltURL
+	req.URL.Scheme = "https"
 
 	if v := headReq.Header.Get("X-Amz-Security-Token"); v != "" {
 		req.Header.Set("X-Amz-Security-Token", v)
@@ -53,6 +69,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*h
 	}
 
 	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
+	req.Host = br.boltVars.BoltHostname.Get()
 	req.Header.Set("X-Bolt-Auth-Prefix", authPrefix)
 	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
 
@@ -60,7 +77,10 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*h
 		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
 	}
 
-	return req.Clone(ctx), nil
+	return &BoltRequest{
+		Bolt: req.Clone(ctx),
+		Aws:  failoverRequest.Clone(ctx),
+	}, nil
 }
 
 // SHA value for empty payload. As head object request is with empty payload
@@ -75,12 +95,46 @@ func signedAwsHeadRequest(ctx context.Context, req *http.Request, awsCred aws.Cr
 		return nil, err
 	}
 
+	if v := req.Header.Get("X-Amz-Security-Token"); v != "" {
+		headReq.Header.Set("X-Amz-Security-Token", v)
+	}
+	headReq.Header.Set("X-Amz-Content-Sha256", emptyPayloadHash)
+
 	// TODO: change signing time/skew clock to take advantage of bolt caching
 	awsSigner := v4.NewSigner()
 	if err := awsSigner.SignHTTP(ctx, awsCred, headReq, emptyPayloadHash, "s3", region, time.Now()); err != nil {
 		return nil, err
 	}
 	return headReq, nil
+}
+
+func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket SourceBucket, region string) (*http.Request, error) {
+	var host string
+	switch sourceBucket.style {
+	case virtualHostedStyle:
+		host = fmt.Sprintf("%s.s3.%s.amazonaws.com", sourceBucket.bucket, region)
+	// default to path style
+	default:
+		host = fmt.Sprintf("s3.%s.amazonaws.com", region)
+
+	}
+
+	req.Header.Del("Authorization")
+	req.Header.Del("X-Amz-Security-Token")
+
+	req.URL.Host = host
+	req.Host = host
+	req.URL.Scheme = "https"
+	req.RequestURI = ""
+
+	payloadHash := req.Header.Get("X-Amz-Content-Sha256")
+
+	awsSigner := v4.NewSigner()
+	if err := awsSigner.SignHTTP(ctx, awsCred, req, payloadHash, "s3", region, time.Now()); err != nil {
+		return nil, err
+	}
+
+	return req.Clone(ctx), nil
 }
 
 type s3RequestStyle string
@@ -91,7 +145,7 @@ const (
 	nAuthDummy         s3RequestStyle = "n-auth-dummy"
 )
 
-type sourceBucket struct {
+type SourceBucket struct {
 	bucket string
 	style  s3RequestStyle
 }
@@ -99,24 +153,32 @@ type sourceBucket struct {
 // extractSourceBucket extracts the aws request bucket using Path-style or Virtual-hosted-style requests.
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
 // This method will "n-auth-dummy" if nothing is found
-func extractSourceBucket(req *http.Request) sourceBucket {
+func extractSourceBucket(req *http.Request) SourceBucket {
 	// virtual-hosted-style
 	if split := strings.Split(req.Host, "."); len(split) > 1 {
 		bucket := split[0]
-		return sourceBucket{bucket: bucket, style: virtualHostedStyle}
+		return SourceBucket{bucket: bucket, style: virtualHostedStyle}
 	}
 
 	// path-style request
 	if paths := strings.Split(req.URL.EscapedPath(), "/"); len(paths) > 1 {
 		bucket := paths[1]
-		return sourceBucket{bucket: bucket, style: pathStyle}
+		return SourceBucket{bucket: bucket, style: pathStyle}
 	}
 
-	return sourceBucket{bucket: "n-auth-dummy", style: nAuthDummy}
+	return SourceBucket{bucket: "n-auth-dummy", style: nAuthDummy}
 }
 
 // DoBoltRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
-// DoBoltRequest will automatically retry using the retryablehttp.Client in BoltRouter.
-func (br *BoltRouter) DoBoltRequest(req *http.Request) (*http.Response, error) {
-	return br.httpClient.StandardClient().Do(req)
+func (br *BoltRouter) DoBoltRequest(boltReq *BoltRequest) (*http.Response, error) {
+	resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+	if err != nil {
+		return resp, err
+	} else if resp.StatusCode != 200 {
+		b, _ := io.ReadAll(resp.Body)
+		br.logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
+		return http.DefaultClient.Do(boltReq.Aws)
+	}
+
+	return resp, nil
 }
