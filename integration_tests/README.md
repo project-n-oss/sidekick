@@ -21,6 +21,8 @@ ssh into the instance and clone the [sidekick repository](https://github.com/pro
 
 ### Create a test bucket
 
+:warning: Make sure you select the same region as the one your cluster is running in.
+
 1. Go to the s3 console in the same account as your cluster.
 2. Create a bucket for the tests. The bucket name should be something like: `sidekick-tests-rvh` where rvh is your initials.
 3. Add the following bucket policies to the bucket:
@@ -36,7 +38,10 @@ ssh into the instance and clone the [sidekick repository](https://github.com/pro
                 "AWS": "arn:aws:iam::{YOUR_ACCOUNT_ID}:role/{PROJECTN_ADMIN_ROLE_OF_CLUSTER}"
             },
             "Action": "s3:*",
-            "Resource": "arn:aws:s3:::{BUCKET_NAME}"
+            "Resource": [
+                "arn:aws:s3:::{BUCKET_NAME}/*",
+                "arn:aws:s3:::{BUCKET_NAME}"
+            ]
         }
     ]
 }
@@ -70,10 +75,12 @@ Wait for 100% progress on the status board
 
 ## Running the tests
 
-Make sure to set the following env variable:
+Create a `.env` file in `sidekick/integration_tests`:
 
 ```bash
-export BUCKET=MY_TEST_BUCKET
+BUCKET=sidekick-test-rvh
+BOLT_CUSTOM_DOMAIN=rvh.bolt.projectn.co
+AWS_REGION=us-east-2
 ```
 
 You can run test from this directory using the following command:
