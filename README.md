@@ -1,7 +1,7 @@
 ![projectn-sidekick.png](projectn-sidekick.png)
 # Sidekick
 
-Sidekick a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) ([ambassador](https://learn.microsoft.com/en-us/azure/architecture/patterns/ambassador)) process that allows your applications to talk with a Bolt cluster through any AWS SDK.
+Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) ([ambassador](https://learn.microsoft.com/en-us/azure/architecture/patterns/ambassador)) process that allows your applications to talk with a Bolt cluster through any AWS SDK.
 
 ## Getting started
 
