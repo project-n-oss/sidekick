@@ -108,6 +108,7 @@ func signedAwsHeadRequest(ctx context.Context, req *http.Request, awsCred aws.Cr
 	return headReq, nil
 }
 
+// newFailoverAwsRequest creates a standard aws s3 request that can be used as a failover if the Bolt request fails.
 func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket SourceBucket, region string) (*http.Request, error) {
 	var host string
 	switch sourceBucket.style {

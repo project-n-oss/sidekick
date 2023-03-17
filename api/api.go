@@ -93,11 +93,5 @@ func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 		return
 	}
 
-	// err = os.WriteFile("aws.log", awsDump, 0644)
-	// if err != nil {
-	// 	zap.Error(err)
-	// 	return
-	// }
-
 	logger.Debug("request dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
 }
