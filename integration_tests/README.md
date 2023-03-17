@@ -1,5 +1,6 @@
 # Integration Tests
 
+This directory contains a suite of integration tests for sidekick and bolt.
 
 ## Getting Started
 
@@ -67,7 +68,7 @@ aws s3 cp ./test_data/ s3://{YOUR_BUCKET}/ --recursive
 ssh into your cluster's admin server and crunch your new bucket:
 
 ```bash
-projectn crunch s3://sidekick-test-rvh
+projectn crunch s3://YOUR_BUCKET
 projectn status
 ```
 
@@ -78,9 +79,9 @@ Wait for 100% progress on the status board
 Create a `.env` file in `sidekick/integration_tests`:
 
 ```bash
-BUCKET=sidekick-test-rvh
-BOLT_CUSTOM_DOMAIN=rvh.bolt.projectn.co
-AWS_REGION=us-east-2
+BUCKET=YOU_BUCKET
+BOLT_CUSTOM_DOMAIN=YOUR_CLUSTER_DOMAIN
+AWS_REGION=REGION_OF_BUCKET_AND_CLUSTER
 ```
 
 You can run test from this directory using the following command:
