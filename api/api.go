@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"net/http/httputil"
 	"sidekick/boltrouter"
 
 	"go.uber.org/zap"
@@ -54,13 +56,42 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if a.logger.Level() == zap.DebugLevel {
+		dumpRequest(a.logger, boltReq)
+	}
+
 	resp, err := a.br.DoBoltRequest(boltReq)
 	if err != nil {
 		a.InternalError(w, err)
 		return
 	}
-	if err := resp.Write(w); err != nil {
+
+	for k, values := range resp.Header {
+		for _, v := range values {
+			w.Header().Add(k, v)
+		}
+	}
+
+	w.WriteHeader(resp.StatusCode)
+	if _, err := io.Copy(w, resp.Body); err != nil {
 		a.InternalError(w, err)
 		return
+
 	}
+}
+
+func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
+	boltDump, err := httputil.DumpRequest(boltReq.Bolt, true)
+	if err != nil {
+		zap.Error(err)
+		return
+	}
+
+	awsDump, err := httputil.DumpRequest(boltReq.Aws, true)
+	if err != nil {
+		zap.Error(err)
+		return
+	}
+
+	logger.Debug("request dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
 }

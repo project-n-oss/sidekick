@@ -1,26 +1,28 @@
-package bolt_integration_tests
+package integration_tests
 
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"sidekick/api"
-	"sidekick/bolt_integration_tests/aws"
-	"sidekick/bolt_integration_tests/aws/utils"
 	"sidekick/boltrouter"
+	"sidekick/cmd"
+	"sidekick/integration_tests/aws"
+	"sidekick/integration_tests/aws/utils"
 	"strconv"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestMain(m *testing.M) {
@@ -52,7 +54,7 @@ func TestAws(t *testing.T) {
 
 func SetupSidekick(t *testing.T, ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
-	logger := zaptest.NewLogger(t)
+	logger := cmd.NewLogger(false)
 
 	go func() {
 		sigs := make(chan os.Signal, 1)
@@ -83,9 +85,15 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 		<-ctx.Done()
 		err := listner.Close()
 		require.NoError(t, err)
+		logger.Sync()
 	}()
 
 	go func() {
-		http.Serve(listner, handler)
+		err := http.Serve(listner, handler)
+		if err != nil {
+			logger.Error(fmt.Errorf("server err: %w", err).Error())
+		}
 	}()
+
+	time.Sleep(1 * time.Second)
 }

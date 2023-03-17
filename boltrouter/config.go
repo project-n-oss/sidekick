@@ -7,4 +7,7 @@ type Config struct {
 
 	// Enable pass through in Bolt.
 	Passthrough bool
+
+	// Enable failover to a aws request if the Bolt request fails.
+	Failover bool
 }

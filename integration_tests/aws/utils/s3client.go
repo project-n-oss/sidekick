@@ -11,9 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetS3Client returns a S3 client
-func GetS3Client(t *testing.T, ctx context.Context) *s3.Client {
-	t.Log("url: ", SidekickURL)
+// GetS3Client returns a S3 client connected to bolt through sidekick
+func GetBoltS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == s3.ServiceID {
 			return aws.Endpoint{
@@ -33,8 +32,17 @@ func GetS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	cfg.RetryMaxAttempts = retry.DefaultMaxAttempts
 
 	s3c := s3.NewFromConfig(cfg, func(options *s3.Options) {
-		// options.UsePathStyle = true
+		options.UsePathStyle = true
 	})
 
+	return s3c
+}
+
+// GetS3Client returns a default aws S3 client
+func GetAwsS3Client(t *testing.T, ctx context.Context) *s3.Client {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	require.NoError(t, err)
+
+	s3c := s3.NewFromConfig(cfg)
 	return s3c
 }

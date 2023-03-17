@@ -2,6 +2,7 @@ package boltrouter
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/hashicorp/go-retryablehttp"
 	"go.uber.org/zap"
 )
 
@@ -20,21 +20,26 @@ type BoltRouter struct {
 	logger *zap.Logger
 	config Config
 
-	httpClient *retryablehttp.Client
-
-	boltVars *BoltVars
-	awsCred  aws.Credentials
+	boltHttpClient *http.Client
+	boltVars       *BoltVars
+	awsCred        aws.Credentials
 }
 
 // NewBoltRouter creates a new BoltRouter.
 func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRouter, error) {
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 3
-	retryClient.Logger = NewLeveledLogger(logger)
-
 	boltVars, err := GetBoltVars(logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not get BoltVars: %w", err)
+	}
+
+	// custom transport is needed to allow certificate validation from bolt hostname
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{
+		ServerName: boltVars.BoltHostname.Get(),
+	}
+	boltHttpClient := http.Client{
+		Timeout:   time.Duration(90) * time.Second,
+		Transport: customTransport,
 	}
 
 	awsCfg, err := config.LoadDefaultConfig(ctx)
@@ -50,9 +55,9 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		logger: logger,
 		config: cfg,
 
-		httpClient: retryClient,
-		boltVars:   boltVars,
-		awsCred:    cred,
+		boltHttpClient: &boltHttpClient,
+		boltVars:       boltVars,
+		awsCred:        cred,
 	}
 
 	return br, nil
@@ -129,12 +134,12 @@ func (br *BoltRouter) getBoltEndpoints(ctx context.Context) (BoltEndpointsMap, e
 	}
 
 	requestURL := br.boltVars.QuicksilverURL.Get()
-	r, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return BoltEndpointsMap{}, err
 	}
 
-	resp, err := br.httpClient.Do(r)
+	resp, err := br.boltHttpClient.Do(r)
 	if err != nil {
 		return BoltEndpointsMap{}, fmt.Errorf("could not get endpoints from quicksilver: %w", err)
 	}

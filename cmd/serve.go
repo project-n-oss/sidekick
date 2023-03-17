@@ -12,9 +12,10 @@ import (
 )
 
 func init() {
-	serveCmd.Flags().IntP("port", "p", 8080, "the port to listen on")
-	serveCmd.Flags().BoolP("local", "l", false, "running sidekick locally")
-	serveCmd.Flags().Bool("passthrough", false, "set passthrough flag to try in bolt requests")
+	serveCmd.Flags().IntP("port", "p", 8081, "The port for sidekick to listen on.")
+	serveCmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
+	serveCmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
+	serveCmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
 	rootCmd.AddCommand(serveCmd)
 }
 
@@ -27,10 +28,12 @@ var serveCmd = &cobra.Command{
 
 		local, _ := cmd.Flags().GetBool("local")
 		passthrough, _ := cmd.Flags().GetBool("passthrough")
+		failover, _ := cmd.Flags().GetBool("failover")
 		cfg := api.Config{
 			BoltRouter: boltrouter.Config{
 				Local:       local,
 				Passthrough: passthrough,
+				Failover:    failover,
 			},
 		}
 
@@ -60,8 +63,4 @@ var serveCmd = &cobra.Command{
 
 		return nil
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(serveCmd)
 }
