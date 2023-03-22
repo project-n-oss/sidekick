@@ -32,4 +32,4 @@ jobs:
 
       - name: Staticcheck
         run: |
-          make bin/staticcheck && ./bin/staticcheck 
+          make bin/staticcheck && ./bin/staticcheck
