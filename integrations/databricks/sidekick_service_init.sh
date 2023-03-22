@@ -21,7 +21,7 @@ chmod +x /usr/bin/sidekick
 cat >/databricks/driver/conf/sidekick-spark-conf.conf <<EOL
 [driver] {
   "spark.hadoop.fs.s3a.path.style.access" = "true"
-  "spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint" = "http://localhost:8081"
+  "spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint" = "http://localhost:7071"
 }
 EOL
 

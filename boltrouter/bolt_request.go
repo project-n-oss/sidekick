@@ -171,14 +171,14 @@ func extractSourceBucket(req *http.Request) SourceBucket {
 }
 
 // DoBoltRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
-func (br *BoltRouter) DoBoltRequest(boltReq *BoltRequest) (*http.Response, error) {
+func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, error) {
 	resp, err := br.boltHttpClient.Do(boltReq.Bolt)
 	if err != nil {
 		return resp, err
 	} else if resp.StatusCode != 200 && br.config.Failover {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-		br.logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
+		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
 		return http.DefaultClient.Do(boltReq.Aws)
 	}
 

@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 
 var boltIntegration = flag.Bool("i", false, "run bolt integration test suite")
 var local = flag.Bool("l", false, "run sidekick locally")
-var port = flag.Int("p", 8000, "the port for sidekick to listen on")
+var port = flag.Int("p", cmd.DEFAULT_PORT, "the port for sidekick to listen on")
 
 func TestAws(t *testing.T) {
 	if !*boltIntegration {

@@ -12,8 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const DEFAULT_PORT = 7071
+
 func init() {
-	serveCmd.Flags().IntP("port", "p", 8081, "The port for sidekick to listen on.")
+	serveCmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
 	serveCmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
 	serveCmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
 	serveCmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")

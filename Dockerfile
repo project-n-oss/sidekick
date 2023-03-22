@@ -6,7 +6,7 @@ COPY . .
 RUN go generate ./...
 RUN go build .
 
-FROM golang:1.12-alpine
+FROM golang:1.20-alpine
 
 WORKDIR /usr/bin/sidekick
 
