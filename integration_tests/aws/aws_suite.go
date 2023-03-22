@@ -2,7 +2,8 @@ package aws
 
 import (
 	"context"
-	"sidekick/integration_tests/aws/utils"
+
+	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
 
 	"github.com/stretchr/testify/suite"
 )

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sidekick/api"
-	"sidekick/boltrouter"
 	"strconv"
+
+	"github.com/project-n-oss/sidekick/api"
+	"github.com/project-n-oss/sidekick/boltrouter"
 
 	"github.com/spf13/cobra"
 )

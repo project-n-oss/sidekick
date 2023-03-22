@@ -1,4 +1,4 @@
-module sidekick
+module github.com/project-n-oss/sidekick
 
 go 1.20
 

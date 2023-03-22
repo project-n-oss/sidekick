@@ -5,7 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
-	"sidekick/boltrouter"
+
+	"github.com/project-n-oss/sidekick/boltrouter"
 
 	"go.uber.org/zap"
 )
