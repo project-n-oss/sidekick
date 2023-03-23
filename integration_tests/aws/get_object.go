@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"bytes"
+	"io"
 	"testing"
 
 	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
@@ -36,11 +36,10 @@ func (s *AwsSuite) getObject() {
 			})
 			require.NoError(t, err)
 			require.NotNil(t, awsResp)
-			awsBuf := new(bytes.Buffer)
-			_, err = awsBuf.ReadFrom(awsResp.Body)
+			awsBuf, err := io.ReadAll(awsResp.Body)
 			awsResp.Body.Close()
 			require.NoError(t, err)
-			awsBody := awsBuf.String()
+			awsBody := string(awsBuf)
 
 			boltResp, err := utils.BoltS3c.GetObject(s.ctx, &s3.GetObjectInput{
 				Bucket: awsBucket,
@@ -48,11 +47,10 @@ func (s *AwsSuite) getObject() {
 			})
 			require.NoError(t, err)
 			require.NotNil(t, boltResp)
-			boltBuf := new(bytes.Buffer)
-			_, err = boltBuf.ReadFrom(boltResp.Body)
+			boltBuf, err := io.ReadAll(boltResp.Body)
 			boltResp.Body.Close()
 			require.NoError(t, err)
-			boltBody := boltBuf.String()
+			boltBody := string(boltBuf)
 
 			require.Equal(t, awsBody, boltBody)
 		})

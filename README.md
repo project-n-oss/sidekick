@@ -35,6 +35,12 @@ Build the docker image:
 docker build -t sidekick .
 ```
 
+running:
+
+```bash
+docker run -p 7071:7071 --env BOLT_CUSTOM_DOMAIN=rvh.bolt.projectn.co sidekick serve
+```
+
 
 ## Using Sidekick
 
@@ -51,24 +57,37 @@ aws s3api get-object --bucket <YOUR_BUCKET> --key <YOUR_OBJECT_KEY>  delete_me.c
 ### Go 
 
 ```Go
-sidekickURL := "http://localhost:7071"
-customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-    if service == s3.ServiceID {
-        return aws.Endpoint{
-            PartitionID:   "aws",
-            URL:           sidekickURL,
-            SigningRegion: region,
-        }, nil
-    }
-    return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-})
-cfg, _:= config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
-s3c := s3.NewFromConfig(cfg, func(options *s3.Options) {
-    options.UsePathStyle = true
-})
+func main() {
+	ctx := context.Background()
+	sidekickURL := "http://localhost:7071"
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == s3.ServiceID {
+			return aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           sidekickURL,
+				SigningRegion: region,
+			}, nil
+		}
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+	cfg, _ := config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
+	s3c := s3.NewFromConfig(cfg, func(options *s3.Options) {
+		options.UsePathStyle = true
+	})
 
-awsResp, err := s3c.GetObject(s.ctx, &s3.GetObjectInput{
-    Bucket: aws.String("foo"),
-    Key:    aws.String("bar.txt"),
-})
+	awsResp, err := s3c.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String("foo"),
+		Key:    aws.String("bar"),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	data, err := io.ReadAll(awsResp.Body)
+	awsResp.Body.Close()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(data))
+}
 ```

@@ -8,7 +8,7 @@ RUN go build .
 
 FROM golang:1.20-alpine
 
-WORKDIR /usr/bin/sidekick
+WORKDIR /usr/bin
 
 COPY --from=0 /go/src/github.com/project-n-oss/sidekick/sidekick .
 RUN ./sidekick --help > /dev/null
