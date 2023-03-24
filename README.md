@@ -52,6 +52,7 @@ Currently you also need to set your s3 client to use `pathStyle` to work.
 
 ```bash
 aws s3api get-object --bucket <YOUR_BUCKET> --key <YOUR_OBJECT_KEY>  delete_me.csv --endpoint-url http://localhost:7071
+aws s3api get-object --bucket sidekick-test-rvh2 --key animals/1.csv delete_me.csv --endpoint-url http://localhost:7071
 ```
 
 ### Go 

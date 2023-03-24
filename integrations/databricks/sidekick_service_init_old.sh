@@ -13,7 +13,22 @@ else
 fi
 chmod +x /usr/bin/sidekick
 
+
+# Setup spark hadoop s3 configuration 
+# https://docs.databricks.com/storage/amazon-s3.html#global-configuration
+# TODO: change <MY_BUCKET> to your crunched bucket
+# If you want access to multiple buckets, just add a new config line for every crunched bucket you want access to.
+cat >/databricks/driver/conf/sidekick-spark-conf.conf <<EOL
+[driver] {
+  "spark.hadoop.fs.s3a.path.style.access" = "true"
+  "spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint" = "http://localhost:7071"
+}
+EOL
+
+
 # Create service file for the sidekick process
+# TODO: Change <YOUR_CUSTOM_BOLT_DOMAIN> to your custom bolt domain
+export BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_BOLT_DOMAIN>
 SERVICE_FILE="/etc/systemd/system/sidekick.service"
 touch $SERVICE_FILE
 
@@ -33,5 +48,3 @@ EOF
 systemctl daemon-reload
 systemctl enable sidekick
 systemctl start sidekick
-
-
