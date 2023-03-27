@@ -6,11 +6,14 @@ SIDEKICK_BIN=/usr/bin/sidekick
 if [ -f "$SIDEKICK_BIN" ]; then
     echo "$SIDEKICK_BIN already installed."
 else 
-    # TODO
+    wget https://github.com/project-n-oss/sidekick/releases/latest/download/sidekick-linux-amd64.tar.gz
+    tar -xzvf sidekick-linux-amd64.tar.gz -C /usr/bin
 fi
-chmod +x /usr/bin/sidekick
+chmod +x $SIDEKICK_BIN
+$SIDEKICK_BIN --help > /dev/null
 
-cat >/databricks/driver/conf/style-path-spark-conf.conf <<EOL
+
+cat > /databricks/driver/conf/style-path-spark-conf.conf <<EOL
 [driver] {
   "spark.hadoop.fs.s3a.path.style.access" = "true"
 }
@@ -31,7 +34,7 @@ Description=Sidekick service file
 
 [Service]
 Environment=BOLT_CUSTOM_DOMAIN=$BOLT_CUSTOM_DOMAIN
-ExecStart=/usr/bin/sidekick serve
+ExecStart=$SIDEKICK_BIN serve -p 7075
 Restart=always
 
 [Install]
@@ -41,5 +44,3 @@ EOF
 systemctl daemon-reload
 systemctl enable sidekick
 systemctl start sidekick
-
-
