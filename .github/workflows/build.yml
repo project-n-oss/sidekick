@@ -1,10 +1,6 @@
-name: Go
+name: Build
 
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+on: push
 
 jobs:
   build:
@@ -32,4 +28,4 @@ jobs:
 
       - name: Staticcheck
         run: |
-          make bin/staticcheck && ./bin/staticcheck 
+          make bin/staticcheck && ./bin/staticcheck

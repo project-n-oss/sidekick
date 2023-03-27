@@ -9,15 +9,16 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sidekick/api"
-	"sidekick/boltrouter"
-	"sidekick/cmd"
-	"sidekick/integration_tests/aws"
-	"sidekick/integration_tests/aws/utils"
 	"strconv"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/project-n-oss/sidekick/api"
+	"github.com/project-n-oss/sidekick/boltrouter"
+	"github.com/project-n-oss/sidekick/cmd"
+	"github.com/project-n-oss/sidekick/integration_tests/aws"
+	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
@@ -39,7 +40,7 @@ func TestMain(m *testing.M) {
 
 var boltIntegration = flag.Bool("i", false, "run bolt integration test suite")
 var local = flag.Bool("l", false, "run sidekick locally")
-var port = flag.Int("p", 8000, "the port for sidekick to listen on")
+var port = flag.Int("p", cmd.DEFAULT_PORT, "the port for sidekick to listen on")
 
 func TestAws(t *testing.T) {
 	if !*boltIntegration {

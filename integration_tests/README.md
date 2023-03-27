@@ -93,5 +93,5 @@ go test -i -v
 In order to specify a specifc test or series of tests you want to run, you can use the `-run=` arg like so:
 
 ```bash
-go test -i -v -run=TestAws/TestAws/TestGetObject
+go test -i -v -run=TestAws/TestGetObject
 ```

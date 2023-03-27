@@ -3,3 +3,5 @@ sidekick
 bin/
 
 .vscode
+compose-dev.yaml
+temp/

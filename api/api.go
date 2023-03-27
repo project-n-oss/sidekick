@@ -5,7 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
-	"sidekick/boltrouter"
+
+	"github.com/project-n-oss/sidekick/boltrouter"
 
 	"go.uber.org/zap"
 )
@@ -44,25 +45,28 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 
 func (a *Api) CreateHandler() http.Handler {
 	handler := http.HandlerFunc(a.routeBase)
+	handler = a.sessionMiddleware(handler)
+
 	return handler
 }
 
 func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
+	sess := CtxSession(req.Context())
 	ctx := req.Context()
 
-	boltReq, err := a.br.NewBoltRequest(ctx, req.Clone(ctx))
+	boltReq, err := sess.br.NewBoltRequest(ctx, req.Clone(ctx))
 	if err != nil {
-		a.InternalError(w, err)
+		a.InternalError(sess.Logger(), w, err)
 		return
 	}
 
-	if a.logger.Level() == zap.DebugLevel {
-		dumpRequest(a.logger, boltReq)
+	if sess.Logger().Level() == zap.DebugLevel {
+		dumpRequest(sess.Logger(), boltReq)
 	}
 
-	resp, err := a.br.DoBoltRequest(boltReq)
+	resp, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
 	if err != nil {
-		a.InternalError(w, err)
+		a.InternalError(sess.Logger(), w, err)
 		return
 	}
 
@@ -74,7 +78,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(resp.StatusCode)
 	if _, err := io.Copy(w, resp.Body); err != nil {
-		a.InternalError(w, err)
+		a.InternalError(sess.Logger(), w, err)
 		return
 
 	}
@@ -83,15 +87,15 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 	boltDump, err := httputil.DumpRequest(boltReq.Bolt, true)
 	if err != nil {
-		zap.Error(err)
+		logger.Error("bolt dump request", zap.Error(err))
 		return
 	}
 
 	awsDump, err := httputil.DumpRequest(boltReq.Aws, true)
 	if err != nil {
-		zap.Error(err)
+		logger.Error("aws dump request", zap.Error(err))
 		return
 	}
 
-	logger.Debug("request dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
+	logger.Debug("BoltRequest dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
 }

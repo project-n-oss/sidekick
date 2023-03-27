@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/require"
 )
@@ -31,8 +32,9 @@ func GetBoltS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	// However, we want to test with the SDK default of 3.
 	cfg.RetryMaxAttempts = retry.DefaultMaxAttempts
 
-	s3c := s3.NewFromConfig(cfg, func(options *s3.Options) {
-		options.UsePathStyle = true
+	s3c := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.Region = awsRegion(t, ctx, cfg)
+		o.UsePathStyle = true
 	})
 
 	return s3c
@@ -43,6 +45,16 @@ func GetAwsS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	require.NoError(t, err)
 
-	s3c := s3.NewFromConfig(cfg)
+	s3c := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.Region = awsRegion(t, ctx, cfg)
+	})
 	return s3c
+}
+
+func awsRegion(t *testing.T, ctx context.Context, cfg aws.Config) string {
+	client := imds.NewFromConfig(cfg)
+
+	output, err := client.GetRegion(ctx, &imds.GetRegionInput{})
+	require.NoError(t, err)
+	return output.Region
 }
