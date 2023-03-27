@@ -19,7 +19,7 @@ You can add edit any bucket endpoints by adding this section in the init_script
 ```bash
 cat >/databricks/driver/conf/sidekick-spark-conf.conf <<EOL
 [driver] {
-  "spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint" = "http://localhost:7077"
+  "spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint" = "http://localhost:7075"
 }
 EOL
 ```
@@ -37,7 +37,7 @@ You can also set the bucket endpoints and `BOLT_CUSTOM_DOMAIN` by changing you c
 You can use the [spark configuration](https://docs.databricks.com/clusters/configure.html#spark-configuration) option in your cluster settings to set the bucket endpoints:
 
 ```
-spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint http://localhost:7077
+spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint http://localhost:7075
 ```
 
 You can then also use the [env configuration](https://docs.databricks.com/clusters/configure.html#environment-variables) option in your cluster settings to set the `BOLT_CUSTOM_DOMAIN`.

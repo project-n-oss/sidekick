@@ -12,7 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const DEFAULT_PORT = 7077
+// https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=104
+const DEFAULT_PORT = 7075
 
 func init() {
 	serveCmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
