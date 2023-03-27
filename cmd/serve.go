@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const DEFAULT_PORT = 7071
+const DEFAULT_PORT = 7077
 
 func init() {
 	serveCmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
