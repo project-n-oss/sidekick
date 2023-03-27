@@ -6,10 +6,7 @@ SIDEKICK_BIN=/usr/bin/sidekick
 if [ -f "$SIDEKICK_BIN" ]; then
     echo "$SIDEKICK_BIN already installed."
 else 
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
-    sudo ./aws/install
-    aws s3 cp s3://sidekick-test-rvh2/bin/sidekick /usr/bin/sidekick
+    # TODO
 fi
 chmod +x /usr/bin/sidekick
 
@@ -21,14 +18,6 @@ EOL
 
 # Add any spark or env config here:
 # --------------------------------------------------
-
-# cat >/databricks/driver/conf/sidekick-spark-conf.conf <<EOL
-# [driver] {
-#   "spark.hadoop.fs.s3a.bucket.<MY_BUCKET>.endpoint" = "http://localhost:7071"
-# }
-# EOL
-
-# export BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_BOLT_DOMAIN>
 
 # --------------------------------------------------
 
