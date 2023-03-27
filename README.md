@@ -41,7 +41,6 @@ running:
 docker run -p 7071:7071 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> sidekick serve
 ```
 
-
 ## Using Sidekick
 
 In order to use sidekick with your aws sdk, you need to update the S3 Client hostname to point to the sidekick url (ex: `localhost:7071`). 
@@ -91,3 +90,19 @@ func main() {
 	fmt.Println(string(data))
 }
 ```
+
+## Contributing
+
+### Versionning
+
+This repository uses [release-please](https://github.com/google-github-actions/release-please-action) to create and manage release.
+
+### Commits
+
+We follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) for our commits and PR titles. This allows us to use release-please to manage our releases.
+
+The most important prefixes you should have in mind are:
+
+- fix: which represents bug fixes, and correlates to a SemVer patch.
+- feat: which represents a new feature, and correlates to a SemVer minor.
+- feat!:, or fix!:, refactor!:, etc., which represent a breaking change (indicated by the !) and will result in a SemVer major.
