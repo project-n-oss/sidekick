@@ -29,10 +29,3 @@ jobs:
       - name: Staticcheck
         run: |
           make bin/staticcheck && ./bin/staticcheck
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            sidekick

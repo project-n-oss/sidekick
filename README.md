@@ -38,13 +38,13 @@ docker build -t sidekick .
 running:
 
 ```bash
-docker run -p 7071:7071 --env BOLT_CUSTOM_DOMAIN=rvh.bolt.projectn.co sidekick serve
+docker run -p 7071:7071 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> sidekick serve
 ```
 
 
 ## Using Sidekick
 
-In order to use sidekick with your aws sdk, you need to update the S3 Client hostname to point to the sidekick url (ex: `localhost:8081`). 
+In order to use sidekick with your aws sdk, you need to update the S3 Client hostname to point to the sidekick url (ex: `localhost:7071`). 
 
 Currently you also need to set your s3 client to use `pathStyle` to work.
 
@@ -52,7 +52,6 @@ Currently you also need to set your s3 client to use `pathStyle` to work.
 
 ```bash
 aws s3api get-object --bucket <YOUR_BUCKET> --key <YOUR_OBJECT_KEY>  delete_me.csv --endpoint-url http://localhost:7071
-aws s3api get-object --bucket sidekick-test-rvh2 --key animals/1.csv delete_me.csv --endpoint-url http://localhost:7071
 ```
 
 ### Go 
