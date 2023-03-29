@@ -20,13 +20,18 @@ Follow the [tutorial](https://docs.google.com/document/d/1SK3gg7th5UbXQpzzhAgvms
 
 ssh into the instance and clone the [sidekick repository](https://github.com/project-n-oss/sidekick)
 
-### Create a test bucket
+### Create a test buckets
+
+You need to create two buckets for the tests:
+- A bucket that will be crunched by bolt
+- A "failover" bucket that will not be touched by bolt, this will force sidekick to failover back to aws calls.
 
 :warning: Make sure you select the same region as the one your cluster is running in.
 
 1. Go to the s3 console in the same account as your cluster.
 2. Create a bucket for the tests. The bucket name should be something like: `sidekick-tests-rvh` where rvh is your initials.
-3. Add the following bucket policies to the bucket:
+3. Create anoter "failover" bucket for the tests. The bucket name should be something like: `sidekick-failover-tests-rvh` where rvh is your initials.
+4. Add the following bucket policies to the buckets:
 
 ```json
 {
@@ -47,6 +52,7 @@ ssh into the instance and clone the [sidekick repository](https://github.com/pro
     ]
 }
 ```
+
 Make sure to replace the following values:
 - `YOUR_ACCOUNT_ID`
 - `PROJECTN_ADMIN_ROLE_OF_CLUSTER` (This should be the admin role assumed by the bolt admin server created when you made the cluster)
@@ -61,14 +67,17 @@ Run the following command to cp the test data to your new bucket:
 
 ```bash
 aws s3 cp ./test_data/ s3://{YOUR_BUCKET}/ --recursive
+aws s3 cp ./test_data/ s3://{YOUR_FAILOVER_BUCKET}/ --recursive
 ```
 
 ### Crunch Bucket
 
 ssh into your cluster's admin server and crunch your new bucket:
 
+:warning: This step only applies to `<YOUR_BUCKET>`, **NOT** `<YOUR_FAILOVER_BUCKET>`.
+
 ```bash
-projectn crunch s3://YOUR_BUCKET
+projectn crunch s3://<YOUR_BUCKET>
 projectn status
 ```
 
@@ -79,9 +88,9 @@ Wait for 100% progress on the status board
 Create a `.env` file in `sidekick/integration_tests`:
 
 ```bash
-BUCKET=YOU_BUCKET
-BOLT_CUSTOM_DOMAIN=YOUR_CLUSTER_DOMAIN
-AWS_REGION=REGION_OF_BUCKET_AND_CLUSTER
+BUCKET=<YOUR_BUCKET>
+FAILOVER_BUCKET=<YOUR_FAILOVER_BUCKET>
+BOLT_CUSTOM_DOMAIN=<YOUR_CLUSTER_DOMAIN>
 ```
 
 You can run test from this directory using the following command:

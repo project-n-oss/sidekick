@@ -77,10 +77,10 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 	handler := api.CreateHandler()
 
 	listenCfg := net.ListenConfig{}
-	addr := "localhost:" + strconv.Itoa(*port)
+	addr := ":" + strconv.Itoa(*port)
 	listner, err := listenCfg.Listen(ctx, "tcp", addr)
 	require.NoError(t, err)
-	utils.SidekickURL = "http://" + addr
+	utils.SidekickURL = "http://localhost" + addr
 
 	go func() {
 		<-ctx.Done()

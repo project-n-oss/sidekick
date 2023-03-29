@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/require"
 )
@@ -24,12 +25,18 @@ func AssertAwsClients[I any](
 	}{
 		{name: "aws", s3c: AwsS3c},
 		{name: "sidekick", s3c: SidekickS3c},
-		// {name: "failover", s3c: AwsS3c},
+		{name: "failover", s3c: SidekickS3c},
 	}
 	responses := make([]reflect.Value, len(testCases))
 	for i, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := invoke(t, tt.s3c, awsOp, ctx, awsInput)
+			// deep copy of input
+			inputCopy := awsInput
+			if tt.name == "failover" {
+				// Change bucket field to the failover bucket
+				reflect.ValueOf(&inputCopy).Elem().FieldByName("Bucket").Set(reflect.ValueOf(aws.String(FailoverBucket)))
+			}
+			resp := invoke(t, tt.s3c, awsOp, ctx, inputCopy)
 			responses[i] = getRespValue(t, resp)
 		})
 	}

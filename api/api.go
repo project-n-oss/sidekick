@@ -43,6 +43,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 	}, nil
 }
 
+// CreateHandler creates the http.Handler for the sidekick api
 func (a *Api) CreateHandler() http.Handler {
 	handler := http.HandlerFunc(a.routeBase)
 	handler = a.sessionMiddleware(handler)

@@ -10,7 +10,8 @@ import (
 
 var (
 	// Input params
-	Bucket string
+	Bucket         string
+	FailoverBucket string
 
 	// Global state
 	SidekickS3c *s3.Client
@@ -20,6 +21,7 @@ var (
 
 func InitVariables(t *testing.T, ctx context.Context) {
 	Bucket = GetEnvStr("BUCKET", "")
+	FailoverBucket = GetEnvStr("FAILOVER_BUCKET", "")
 	require.NotEmpty(t, Bucket)
 	SidekickS3c = GetSidekickS3Client(t, ctx)
 	AwsS3c = GetAwsS3Client(t, ctx)

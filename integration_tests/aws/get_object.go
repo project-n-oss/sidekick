@@ -32,10 +32,11 @@ func (s *AwsSuite) getObject() {
 
 	for _, key := range testDataKeys() {
 		t.Run(key, func(t *testing.T) {
-			utils.AssertAwsClients(t, ctx, "GetObject", &s3.GetObjectInput{
-				Bucket: awsBucket,
-				Key:    aws.String(key),
-			},
+			utils.AssertAwsClients(t, ctx, "GetObject",
+				&s3.GetObjectInput{
+					Bucket: awsBucket,
+					Key:    aws.String(key),
+				},
 				func(t *testing.T, v reflect.Value) reflect.Value {
 					resp := v.Interface().(*s3.GetObjectOutput)
 					buf, err := io.ReadAll(resp.Body)
@@ -43,30 +44,6 @@ func (s *AwsSuite) getObject() {
 					return reflect.ValueOf(buf)
 				},
 			)
-
-			// awsResp, err := utils.AwsS3c.GetObject(s.ctx, &s3.GetObjectInput{
-			// 	Bucket: awsBucket,
-			// 	Key:    aws.String(key),
-			// })
-			// require.NoError(t, err)
-			// require.NotNil(t, awsResp)
-			// awsBuf, err := io.ReadAll(awsResp.Body)
-			// awsResp.Body.Close()
-			// require.NoError(t, err)
-			// awsBody := string(awsBuf)
-
-			// boltResp, err := utils.SidekickS3c.GetObject(s.ctx, &s3.GetObjectInput{
-			// 	Bucket: awsBucket,
-			// 	Key:    aws.String(key),
-			// })
-			// require.NoError(t, err)
-			// require.NotNil(t, boltResp)
-			// boltBuf, err := io.ReadAll(boltResp.Body)
-			// boltResp.Body.Close()
-			// require.NoError(t, err)
-			// boltBody := string(boltBuf)
-
-			// require.Equal(t, awsBody, boltBody)
 		})
 	}
 }
