@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetS3Client returns a S3 client connected to bolt through sidekick
-func GetBoltS3Client(t *testing.T, ctx context.Context) *s3.Client {
+// GetSidekickS3Client returns a S3 client connected to bolt through sidekick
+func GetSidekickS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == s3.ServiceID {
 			return aws.Endpoint{
