@@ -47,8 +47,6 @@ docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> sidekick s
 
 In order to use sidekick with your aws sdk, you need to update the S3 Client hostname to point to the sidekick url (ex: `localhost:7075`). 
 
-Currently you also need to set your s3 client to use `pathStyle` to work.
-
 ### AWS cli
 
 ```bash
@@ -72,9 +70,7 @@ func main() {
 		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
 	})
 	cfg, _ := config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
-	s3c := s3.NewFromConfig(cfg, func(options *s3.Options) {
-		options.UsePathStyle = true
-	})
+	s3c := s3.NewFromConfig(cfg)
 
 	awsResp, err := s3c.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String("foo"),

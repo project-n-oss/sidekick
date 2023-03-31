@@ -65,10 +65,12 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		dumpRequest(sess.Logger(), boltReq)
 	}
 
-	resp, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
+	resp, failover, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
 	if err != nil {
 		a.InternalError(sess.Logger(), w, err)
 		return
+	} else if failover {
+		sess.WithLogger(sess.Logger().With(zap.Bool("failover", true)))
 	}
 
 	for k, values := range resp.Header {

@@ -25,7 +25,11 @@ func (s *AwsSuite) listObjectsV2() {
 		},
 		func(t *testing.T, v reflect.Value) reflect.Value {
 			resp := v.Interface().(*s3.ListObjectsV2Output)
-			return reflect.ValueOf(resp.Contents)
+			keys := make([]string, len(resp.Contents))
+			for i, obj := range resp.Contents {
+				keys[i] = *obj.Key
+			}
+			return reflect.ValueOf(keys)
 		},
 	)
 }

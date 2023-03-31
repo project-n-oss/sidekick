@@ -171,16 +171,19 @@ func extractSourceBucket(req *http.Request) SourceBucket {
 }
 
 // DoBoltRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
-func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, error) {
+// DoBoltRequest will failover to AWS if the Bolt request fails and the config.Failover is set to true.
+// DoboltRequest will return a bool indicating if the request was a failover.
+func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, error) {
 	resp, err := br.boltHttpClient.Do(boltReq.Bolt)
 	if err != nil {
-		return resp, err
+		return resp, false, err
 	} else if resp.StatusCode != 200 && br.config.Failover {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
-		return http.DefaultClient.Do(boltReq.Aws)
+		resp, err := http.DefaultClient.Do(boltReq.Aws)
+		return resp, true, err
 	}
 
-	return resp, nil
+	return resp, false, nil
 }
