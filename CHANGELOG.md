@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/project-n-oss/sidekick/compare/v0.1.1...v0.1.2) (2023-04-04)
+
+
+### Features
+
+* failover tests and non path-style requests ([#8](https://github.com/project-n-oss/sidekick/issues/8)) ([48910dd](https://github.com/project-n-oss/sidekick/commit/48910dd06d29e0b9aa9ca1121516c2672e8afcf2))
+
 ## [0.1.1](https://github.com/project-n-oss/sidekick/compare/v0.1.0...v0.1.1) (2023-03-27)
 
 
