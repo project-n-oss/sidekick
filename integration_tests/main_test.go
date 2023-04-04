@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 }
 
 var boltIntegration = flag.Bool("i", false, "run bolt integration test suite")
-var local = flag.Bool("l", false, "run sidekick locally")
+var sidekickURL = flag.String("sidekick-url", "", "the url sidekick is listening on if ran seperately. If not set, sidekick will be started in a goroutine")
 var port = flag.Int("p", cmd.DEFAULT_PORT, "the port for sidekick to listen on")
 
 func TestAws(t *testing.T) {
@@ -48,7 +48,11 @@ func TestAws(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	SetupSidekick(t, ctx)
+	if *sidekickURL == "" {
+		SetupSidekick(t, ctx)
+	} else {
+		utils.SidekickURL = *sidekickURL
+	}
 
 	suite.Run(t, new(aws.AwsSuite))
 }
@@ -67,8 +71,8 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 
 	cfg := api.Config{
 		BoltRouter: boltrouter.Config{
-			Local:       *local,
 			Passthrough: false,
+			Failover:    true,
 		},
 	}
 
@@ -77,10 +81,10 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 	handler := api.CreateHandler()
 
 	listenCfg := net.ListenConfig{}
-	addr := "localhost:" + strconv.Itoa(*port)
+	addr := ":" + strconv.Itoa(*port)
 	listner, err := listenCfg.Listen(ctx, "tcp", addr)
 	require.NoError(t, err)
-	utils.SidekickURL = "http://" + addr
+	utils.SidekickURL = "http://localhost" + addr
 
 	go func() {
 		<-ctx.Done()

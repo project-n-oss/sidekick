@@ -10,17 +10,19 @@ import (
 
 var (
 	// Input params
-	Bucket string
+	Bucket         string
+	FailoverBucket string
 
 	// Global state
-	BoltS3c     *s3.Client
+	SidekickS3c *s3.Client
 	AwsS3c      *s3.Client
 	SidekickURL string
 )
 
 func InitVariables(t *testing.T, ctx context.Context) {
 	Bucket = GetEnvStr("BUCKET", "")
+	FailoverBucket = GetEnvStr("FAILOVER_BUCKET", "")
 	require.NotEmpty(t, Bucket)
-	BoltS3c = GetBoltS3Client(t, ctx)
+	SidekickS3c = GetSidekickS3Client(t, ctx)
 	AwsS3c = GetAwsS3Client(t, ctx)
 }
