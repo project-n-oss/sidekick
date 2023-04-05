@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/project-n-oss/sidekick/compare/v0.1.2...v0.1.3) (2023-04-05)
+
+
+### Bug Fixes
+
+* rollback to stylepath ([4398f44](https://github.com/project-n-oss/sidekick/commit/4398f447ece0230f53a20f77d281b71a2838f579))
+
 ## [0.1.2](https://github.com/project-n-oss/sidekick/compare/v0.1.1...v0.1.2) (2023-04-04)
 
 
