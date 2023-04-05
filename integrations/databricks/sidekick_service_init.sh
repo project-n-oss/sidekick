@@ -12,6 +12,11 @@ fi
 chmod +x $SIDEKICK_BIN
 $SIDEKICK_BIN --help > /dev/null
 
+cat > /databricks/driver/conf/style-path-spark-conf.conf <<EOL
+[driver] {
+  "spark.hadoop.fs.s3a.path.style.access" = "true"
+}
+EOL
 
 # Add any spark or env config here:
 # --------------------------------------------------

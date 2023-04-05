@@ -34,6 +34,7 @@ func GetSidekickS3Client(t *testing.T, ctx context.Context) *s3.Client {
 
 	s3c := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.Region = awsRegion(t, ctx, cfg)
+		o.UsePathStyle = true
 	})
 
 	return s3c
