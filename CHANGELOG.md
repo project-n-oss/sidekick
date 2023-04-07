@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/project-n-oss/sidekick/compare/v0.1.3...v0.1.4) (2023-04-07)
+
+
+### Features
+
+* added load tests ([#11](https://github.com/project-n-oss/sidekick/issues/11)) ([557531e](https://github.com/project-n-oss/sidekick/commit/557531e05214fc1c32782da41d8e3807d0e5a209))
+
 ## [0.1.3](https://github.com/project-n-oss/sidekick/compare/v0.1.2...v0.1.3) (2023-04-05)
 
 
