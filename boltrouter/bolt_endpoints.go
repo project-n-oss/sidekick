@@ -86,7 +86,7 @@ func (br *BoltRouter) getBoltEndpoints(ctx context.Context) (BoltEndpointsMap, e
 		return BoltEndpointsMap{}, err
 	}
 
-	resp, err := br.boltHttpClient.Do(r)
+	resp, err := br.standardHttpClient.Do(r)
 	if err != nil {
 		return BoltEndpointsMap{}, fmt.Errorf("could not get endpoints from quicksilver: %w", err)
 	}

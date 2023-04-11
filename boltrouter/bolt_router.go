@@ -16,9 +16,10 @@ import (
 type BoltRouter struct {
 	config Config
 
-	boltHttpClient *http.Client
-	boltVars       *BoltVars
-	awsCred        aws.Credentials
+	boltHttpClient     *http.Client
+	standardHttpClient *http.Client
+	boltVars           *BoltVars
+	awsCred            aws.Credentials
 }
 
 // NewBoltRouter creates a new BoltRouter.
@@ -38,6 +39,10 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		Transport: customTransport,
 	}
 
+	standardHttpClient := http.Client{
+		Timeout: time.Duration(90) * time.Second,
+	}
+
 	awsCfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load aws default config: %w", err)
@@ -50,9 +55,10 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 	br := &BoltRouter{
 		config: cfg,
 
-		boltHttpClient: &boltHttpClient,
-		boltVars:       boltVars,
-		awsCred:        cred,
+		boltHttpClient:     &boltHttpClient,
+		standardHttpClient: &standardHttpClient,
+		boltVars:           boltVars,
+		awsCred:            cred,
 	}
 
 	return br, nil
