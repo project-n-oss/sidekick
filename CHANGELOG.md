@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/project-n-oss/sidekick/compare/v0.1.4...v0.1.5) (2023-04-11)
+
+
+### Bug Fixes
+
+* added standard http client for quicksilver ([612110b](https://github.com/project-n-oss/sidekick/commit/612110be01608f8a8e60dd73eee7536b4033160e))
+* overwrite bin in release ([97e28cd](https://github.com/project-n-oss/sidekick/commit/97e28cdd22a8606fe1b0822bae72855f34232e37))
+
 ## [0.1.4](https://github.com/project-n-oss/sidekick/compare/v0.1.3...v0.1.4) (2023-04-07)
 
 
