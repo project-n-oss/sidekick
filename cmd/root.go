@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/joho/godotenv"
@@ -17,6 +17,13 @@ import (
 //go:embed ascii.txt
 var asciiArt string
 
+//go:embed version.md
+var versionFile string
+
+func getVersion() string {
+	return strings.Split(versionFile, " ")[1]
+}
+
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "make output more verbose")
@@ -26,7 +33,8 @@ func init() {
 var logger *zap.Logger
 
 var rootCmd = &cobra.Command{
-	Use:           filepath.Base(os.Args[0]),
+	Use:           "sidekick",
+	Version:       getVersion(),
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
