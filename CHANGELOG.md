@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/project-n-oss/sidekick/compare/v0.1.6...v0.1.7) (2023-04-12)
+
+
+### Features
+
+* docker registry build ([e1d7342](https://github.com/project-n-oss/sidekick/commit/e1d73420477f096e59d2d04e677bf14c6631215a))
+
 ## [0.1.6](https://github.com/project-n-oss/sidekick/compare/v0.1.5...v0.1.6) (2023-04-11)
 
 
