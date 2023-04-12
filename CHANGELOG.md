@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/project-n-oss/sidekick/compare/v0.1.7...v0.1.8) (2023-04-12)
+
+
+### Bug Fixes
+
+* fix github action for docker registry ([079df58](https://github.com/project-n-oss/sidekick/commit/079df58b6f7af7e6b9ecfc176049d1c208e3d14b))
+
 ## [0.1.7](https://github.com/project-n-oss/sidekick/compare/v0.1.6...v0.1.7) (2023-04-12)
 
 
