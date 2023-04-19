@@ -79,7 +79,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	if resp.StatusCode <= 200 || resp.StatusCode >= 300 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		sess.Logger().Warn("Status code is not 2xx in aws response", zap.Int("statusCode", resp.StatusCode))
 	}
 
