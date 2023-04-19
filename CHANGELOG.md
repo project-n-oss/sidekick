@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.9](https://github.com/project-n-oss/sidekick/compare/v0.1.8...v0.1.9) (2023-04-19)
+
+
+### Features
+
+* added docker image CICD ([#18](https://github.com/project-n-oss/sidekick/issues/18)) ([df827f0](https://github.com/project-n-oss/sidekick/commit/df827f0a5937695473208ee480d0541e204d6ea2))
+* log warning for non 2xx aws response ([9593881](https://github.com/project-n-oss/sidekick/commit/95938819a760b083354c89fd1c75e55021a26f21))
+
+
+### Bug Fixes
+
+* fix non 2xx warn logging ([601ad53](https://github.com/project-n-oss/sidekick/commit/601ad532fa1e363925842d6bbf83844c28402065))
+
 ## [0.1.8](https://github.com/project-n-oss/sidekick/compare/v0.1.7...v0.1.8) (2023-04-12)
 
 
