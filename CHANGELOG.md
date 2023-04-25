@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.10](https://github.com/project-n-oss/sidekick/compare/v0.1.9...v0.1.10) (2023-04-25)
+
+
+### Features
+
+* added health check ([8f3b4da](https://github.com/project-n-oss/sidekick/commit/8f3b4da23d8a5fa9b081b0029354a5129edfd00a))
+
+
+### Bug Fixes
+
+* fix status code failover check ([040eb76](https://github.com/project-n-oss/sidekick/commit/040eb768f46fa2763fbee00571e74f123563e798))
+
 ## [0.1.9](https://github.com/project-n-oss/sidekick/compare/v0.1.8...v0.1.9) (2023-04-19)
 
 
