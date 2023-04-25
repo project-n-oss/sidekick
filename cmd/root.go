@@ -53,7 +53,8 @@ var rootCmd = &cobra.Command{
 			WaitForTermSignal()
 		}()
 
-		print(asciiArt)
+		fmt.Println(asciiArt)
+		logger.Sugar().Infof("Version: %s", getVersion())
 
 		return nil
 	},
