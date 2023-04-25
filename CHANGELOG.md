@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/project-n-oss/sidekick/compare/v0.1.10...v0.1.11) (2023-04-25)
+
+
+### Features
+
+* added version output when running ([9cff822](https://github.com/project-n-oss/sidekick/commit/9cff822385d6ab8b44e639bd2bdf166b55cf06d1))
+
 ## [0.1.10](https://github.com/project-n-oss/sidekick/compare/v0.1.9...v0.1.10) (2023-04-25)
 
 
