@@ -177,7 +177,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	resp, err := br.boltHttpClient.Do(boltReq.Bolt)
 	if err != nil {
 		return resp, false, err
-	} else if resp.StatusCode != 200 && br.config.Failover {
+	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
@@ -186,4 +186,8 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	}
 
 	return resp, false, nil
+}
+
+func StatusCodeIs2xx(statusCode int) bool {
+	return statusCode >= 200 && statusCode < 300
 }
