@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: sidekick
+          image: ghcr.io/project-n-oss/sidekick:latest
+          command: ["sidekick", "serve"]
+          env:
+            - name: BOLT_CUSTOM_DOMAIN
+              value: km.bolt.projectn.co
+            - name: AWS_REGION
+              value: us-east-1
+          ports:
+            - containerPort: 7075
+        - name: app
+          image: alpine
+          command: ["/bin/sh", "-c", "echo Hello from BusyBox; sleep 36000"]
+          env:
+            - name: S3_ENDPOINT
+              value: http://localhost:7075
