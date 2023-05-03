@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.14](https://github.com/project-n-oss/sidekick/compare/v0.1.13...v0.1.14) (2023-05-03)
+
+
+### Bug Fixes
+
+* fix docker tag versions ([4905807](https://github.com/project-n-oss/sidekick/commit/4905807c934105f48a41a5bf600153e8d723dc2c))
+
 ## [0.1.13](https://github.com/project-n-oss/sidekick/compare/v0.1.12...v0.1.13) (2023-05-03)
 
 
