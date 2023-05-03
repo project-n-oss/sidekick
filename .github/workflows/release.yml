@@ -139,10 +139,10 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.release.outputs.tag_name }}
 
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:commit-$GITHUB_SHA ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ needs.release.outputs.major }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.release.outputs.tag_name }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ needs.release.outputs.major }}
 
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:commit-$GITHUB_SHA ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ needs.release.outputs.minor }}
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.release.outputs.tag_name }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${{ needs.release.outputs.minor }}
 
   release-bins:
     runs-on: ubuntu-latest
