@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/project-n-oss/sidekick/compare/v0.1.11...v0.1.12) (2023-05-03)
+
+
+### Features
+
+* added ci-cd for docker version tags ([#22](https://github.com/project-n-oss/sidekick/issues/22)) ([b231ae7](https://github.com/project-n-oss/sidekick/commit/b231ae78b9bc7ec88fb80347fb67f76fa475a8bc))
+
 ## [0.1.11](https://github.com/project-n-oss/sidekick/compare/v0.1.10...v0.1.11) (2023-04-25)
 
 
