@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/project-n-oss/sidekick/compare/v0.1.12...v0.1.13) (2023-05-03)
+
+
+### Bug Fixes
+
+* fix release.yml ([ad02307](https://github.com/project-n-oss/sidekick/commit/ad0230765ae4c0b0b4609329115a0cfd3bc5d8d1))
+
 ## [0.1.12](https://github.com/project-n-oss/sidekick/compare/v0.1.11...v0.1.12) (2023-05-03)
 
 
