@@ -65,14 +65,14 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 			duration := time.Since(beginTime)
 			method := r.Method
 			host := r.Host
-			url := r.URL.String()
+			path := r.URL.Path
 			logger := session.Logger().With(
 				zap.Duration("duration", duration),
 				zap.String("method", method),
 				zap.String("host", host),
-				zap.String("url", url),
+				zap.String("path", path),
 			)
-			logger.Info(method + " " + url)
+			logger.Info(method + " " + path)
 			if session.Logger().Level() == zap.DebugLevel {
 				dump, err := httputil.DumpRequest(r, true)
 				if err != nil {

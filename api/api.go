@@ -81,7 +81,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !boltrouter.StatusCodeIs2xx(resp.StatusCode) {
-		sess.Logger().Warn("Status code is not 2xx in aws response", zap.Int("statusCode", resp.StatusCode))
+		sess.Logger().Warn("Status code is not 2xx in s3 response", zap.Int("statusCode", resp.StatusCode))
 	}
 
 	w.WriteHeader(resp.StatusCode)

@@ -127,6 +127,9 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 	req.Host = host
 	req.URL.Scheme = "https"
 	req.RequestURI = ""
+	// This needs to be set to "" in order to fix unicode errors in RawPath
+	// This forces to use the well formated req.URL.Path value instead
+	req.URL.RawPath = ""
 
 	payloadHash := req.Header.Get("X-Amz-Content-Sha256")
 
