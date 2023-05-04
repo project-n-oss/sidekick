@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/project-n-oss/sidekick/compare/v0.1.14...v0.1.15) (2023-05-04)
+
+
+### Bug Fixes
+
+* Fix unicode awsfailover path error ([7d61971](https://github.com/project-n-oss/sidekick/commit/7d6197102187793835ebcb535132177269e79e22))
+
 ## [0.1.14](https://github.com/project-n-oss/sidekick/compare/v0.1.13...v0.1.14) (2023-05-03)
 
 
