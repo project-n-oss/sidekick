@@ -24,9 +24,9 @@ var (
 // GetBoltVars acts as a singleton method wrapper around BoltVars.
 // It garantees that only one instance of BoltVars exists.
 // This method is thread safe.
-func GetBoltVars(logger *zap.Logger) (*BoltVars, error) {
+func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	once.Do(func() {
-		instance, instanceErr = newBoltVars(logger)
+		instance, instanceErr = newBoltVars(ctx, logger)
 	})
 	return instance, instanceErr
 }
@@ -73,7 +73,7 @@ func (bv *BoltVars) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	return nil
 }
 
-func newBoltVars(logger *zap.Logger) (*BoltVars, error) {
+func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	logger.Debug("initializing BoltVars...")
 	ret := &BoltVars{}
 
@@ -81,13 +81,18 @@ func newBoltVars(logger *zap.Logger) (*BoltVars, error) {
 	ret.WriteOrderEndpoints.Set([]string{"main_write_endpoints", "failover_write_endpoints"})
 	ret.HttpReadMethodTypes.Set([]string{http.MethodGet, http.MethodHead}) // S3 operations get converted to one of the standard HTTP request methods https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html
 
-	awsRegion, err := getAwsRegion(logger)
+	isEc2, err := isEc2Instance(ctx, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	awsRegion, err := getAwsRegion(ctx, logger, isEc2)
 	if err != nil {
 		return nil, err
 	}
 	ret.Region.Set(awsRegion)
 
-	awsZoneId, err := getAwsZoneID(logger)
+	awsZoneId, err := getAwsZoneID(ctx, logger, isEc2)
 	if err != nil {
 		return nil, err
 	}
@@ -123,13 +128,14 @@ func newBoltVars(logger *zap.Logger) (*BoltVars, error) {
 	return ret, nil
 }
 
-func getAwsRegion(logger *zap.Logger) (string, error) {
+func getAwsRegion(ctx context.Context, logger *zap.Logger, isEc2 bool) (string, error) {
 	ret, ok := os.LookupEnv("AWS_REGION")
 	if ok {
 		return ret, nil
+	} else if !isEc2 {
+		return "", fmt.Errorf("AWS_REGION env variable is not set")
 	}
 
-	ctx := context.Background()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return "", fmt.Errorf("could not load aws default config: %w", err)
@@ -139,19 +145,20 @@ func getAwsRegion(logger *zap.Logger) (string, error) {
 
 	output, err := client.GetRegion(ctx, &imds.GetRegionInput{})
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("could not get aws region from ec2 metadata service: %w", err)
 	}
 
 	return output.Region, nil
 }
 
-func getAwsZoneID(logger *zap.Logger) (string, error) {
+func getAwsZoneID(ctx context.Context, logger *zap.Logger, isEc2 bool) (string, error) {
 	ret := os.Getenv("AWS_ZONE_ID")
 	if len(ret) > 0 {
 		return ret, nil
+	} else if !isEc2 {
+		return "", nil
 	}
 
-	ctx := context.Background()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return "", fmt.Errorf("could not load aws default config: %w", err)
@@ -163,7 +170,7 @@ func getAwsZoneID(logger *zap.Logger) (string, error) {
 		Path: "placement/availability-zone-id",
 	})
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("could not get aws zone id from ec2 metadata service: %w", err)
 	}
 
 	buf := new(bytes.Buffer)
@@ -171,4 +178,19 @@ func getAwsZoneID(logger *zap.Logger) (string, error) {
 	ret = buf.String()
 
 	return ret, nil
+}
+
+func isEc2Instance(ctx context.Context, logger *zap.Logger) (bool, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return false, fmt.Errorf("could not load aws default config: %w", err)
+	}
+	client := imds.NewFromConfig(cfg)
+	_, err = client.GetMetadata(ctx, &imds.GetMetadataInput{})
+	if err != nil {
+		logger.Warn("not running on ec2 instance", zap.Error(err))
+		return false, nil
+	}
+
+	return true, nil
 }

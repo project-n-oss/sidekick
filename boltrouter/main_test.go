@@ -1,6 +1,7 @@
 package boltrouter
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -46,9 +47,9 @@ func QuicksilverMock(t *testing.T) *httptest.Server {
 	return server
 }
 
-func SetupQuickSilverMock(t *testing.T, logger *zap.Logger) {
+func SetupQuickSilverMock(t *testing.T, ctx context.Context, logger *zap.Logger) {
 	quicksilver := QuicksilverMock(t)
-	boltVars, err := GetBoltVars(logger)
+	boltVars, err := GetBoltVars(ctx, logger)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilver.URL)
 }

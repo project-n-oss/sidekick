@@ -12,7 +12,7 @@ import (
 func TestGetBoltEndpoints(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, logger)
+	SetupQuickSilverMock(t, ctx, logger)
 
 	testCases := []struct {
 		name     string
@@ -38,7 +38,7 @@ func TestGetBoltEndpoints(t *testing.T) {
 func TestSelectBoltEndpoint(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, logger)
+	SetupQuickSilverMock(t, ctx, logger)
 
 	testCases := []struct {
 		name       string
