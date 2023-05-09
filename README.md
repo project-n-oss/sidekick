@@ -13,6 +13,18 @@ Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/pat
 
 ## Running Sidekick
 
+### Env Variables
+
+In order to run sidekick, you first need to set some ENV variables
+
+```bash
+export BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
+# Optional if not running on a ec2 instance or running in a different region
+export AWS_REGION=<YOUR_BOLT_CLUSTER_REGION>
+# Optional if not running on a ec2 instance to force read from a read-replica in this az 
+export AWS_ZONE_ID=<AWS_ZONE_ID> 
+```
+
 ### Local
 
 You can run sidekick directly from the command line:
@@ -40,7 +52,7 @@ docker build -t sidekick .
 running:
 
 ```bash
-docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> sidekick serve
+docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> sidekick serve
 ```
 
 ## Using Sidekick

@@ -24,7 +24,7 @@ type BoltRouter struct {
 
 // NewBoltRouter creates a new BoltRouter.
 func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRouter, error) {
-	boltVars, err := GetBoltVars(logger)
+	boltVars, err := GetBoltVars(ctx, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not get BoltVars: %w", err)
 	}
