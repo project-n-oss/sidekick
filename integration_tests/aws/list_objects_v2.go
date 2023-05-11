@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -12,6 +13,7 @@ import (
 
 func (s *AwsSuite) TestListObjectsV2() {
 	s.Run("List", s.listObjectsV2)
+	s.Run("ListDiffRegion", s.listObjectsV2DiffRegion)
 }
 
 func (s *AwsSuite) listObjectsV2() {
@@ -32,4 +34,24 @@ func (s *AwsSuite) listObjectsV2() {
 			return reflect.ValueOf(keys)
 		},
 	)
+}
+
+func (s *AwsSuite) listObjectsV2DiffRegion() {
+	ctx := s.ctx
+	t := s.T()
+	awsBucket := aws.String(utils.FailoverBucketDiffRegion)
+	region := utils.GetRegionForBucket(t, ctx, utils.FailoverBucketDiffRegion)
+	s3c := utils.GetAwsS3Client(t, ctx, region)
+	s3cSidekick := utils.GetSidekickS3Client(t, ctx, region)
+
+	input := &s3.ListObjectsV2Input{
+		Bucket: awsBucket,
+	}
+
+	awsResp, err := s3c.ListObjectsV2(ctx, input)
+	require.NoError(t, err)
+	sidekickResp, err := s3cSidekick.ListObjectsV2(ctx, input)
+	require.NoError(t, err)
+
+	require.ElementsMatch(t, awsResp.Contents, sidekickResp.Contents)
 }

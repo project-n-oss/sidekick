@@ -31,13 +31,13 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*B
 		return nil, fmt.Errorf("could not get aws credentials: %w", err)
 	}
 
-	failoverRequest, err := newFailoverAwsRequest(ctx, req.Clone(ctx), awsCred, sourceBucket, br.boltVars.Region.Get())
+	failoverRequest, err := newFailoverAwsRequest(ctx, req.Clone(ctx), awsCred, sourceBucket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make failover request: %w", err)
 	}
 
 	authPrefix := randString(4)
-	headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, br.boltVars.Region.Get(), authPrefix)
+	headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
 	}
@@ -117,14 +117,14 @@ func signedAwsHeadRequest(ctx context.Context, req *http.Request, awsCred aws.Cr
 }
 
 // newFailoverAwsRequest creates a standard aws s3 request that can be used as a failover if the Bolt request fails.
-func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket SourceBucket, region string) (*http.Request, error) {
+func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket SourceBucket) (*http.Request, error) {
 	var host string
 	switch sourceBucket.Style {
 	case virtualHostedStyle:
-		host = fmt.Sprintf("%s.s3.%s.amazonaws.com", sourceBucket.Bucket, region)
+		host = fmt.Sprintf("%s.s3.%s.amazonaws.com", sourceBucket.Bucket, sourceBucket.Region)
 	// default to path style
 	default:
-		host = fmt.Sprintf("s3.%s.amazonaws.com", region)
+		host = fmt.Sprintf("s3.%s.amazonaws.com", sourceBucket.Region)
 
 	}
 
@@ -142,7 +142,7 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 	payloadHash := req.Header.Get("X-Amz-Content-Sha256")
 
 	awsSigner := v4.NewSigner()
-	if err := awsSigner.SignHTTP(ctx, awsCred, req, payloadHash, "s3", region, time.Now()); err != nil {
+	if err := awsSigner.SignHTTP(ctx, awsCred, req, payloadHash, "s3", sourceBucket.Region, time.Now()); err != nil {
 		return nil, err
 	}
 
