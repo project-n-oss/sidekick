@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +17,6 @@ type BoltRouter struct {
 	boltHttpClient     *http.Client
 	standardHttpClient *http.Client
 	boltVars           *BoltVars
-	awsCred            aws.Credentials
 }
 
 // NewBoltRouter creates a new BoltRouter.
@@ -43,22 +40,12 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		Timeout: time.Duration(90) * time.Second,
 	}
 
-	awsCfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not load aws default config: %w", err)
-	}
-	cred, err := awsCfg.Credentials.Retrieve(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve aws credentials: %w", err)
-	}
-
 	br := &BoltRouter{
 		config: cfg,
 
 		boltHttpClient:     &boltHttpClient,
 		standardHttpClient: &standardHttpClient,
 		boltVars:           boltVars,
-		awsCred:            cred,
 	}
 
 	return br, nil
