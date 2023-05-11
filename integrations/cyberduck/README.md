@@ -8,7 +8,7 @@ To get started, you will need to run SideKick on your machine. Head over to the 
 
 Next, extract the binary from the downloaded file:
 
-**Linux / macOS**
+**macOS**
 ```bash
 tar -xvf <artifact>.tar.gz
 ```
@@ -21,7 +21,7 @@ Before running the executable, make sure the following environment variables are
 * `BOLT_CUSTOM_DOMAIN`: This is the custom domain you chose during setup.
 * `AWS_REGION`: This is the region of your Bolt deployment.
 
-**Linux / macOS**
+**macOS**
 
 ```bash
 export BOLT_CUSTOM_DOMAIN="your-custom-domain.com"
