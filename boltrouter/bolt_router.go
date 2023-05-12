@@ -64,8 +64,6 @@ func (br *BoltRouter) refreshAWSCredentials(ctx context.Context) error {
 	}
 
 	cred, err := awsCfg.Credentials.Retrieve(ctx)
-	fmt.Printf("Credential can expire %v\n", cred.CanExpire)
-	fmt.Printf("Credential expires at %v\n", cred.Expires)
 	if err != nil {
 		return fmt.Errorf("could not retrieve aws credentials: %w", err)
 	}
