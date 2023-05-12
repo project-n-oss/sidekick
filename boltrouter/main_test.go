@@ -92,13 +92,11 @@ func NewTestS3Client(t *testing.T, ctx context.Context, requestStyle s3RequestSt
 	)
 	require.NoError(t, err)
 
-	// ret.S3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
-	// 	if requestStyle == pathStyle {
-	// 		o.UsePathStyle = true
-	// 	}
-	// 	o.Region = region
-	// })
-	ret.S3Client = s3.NewFromConfig(cfg)
+	ret.S3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
+		if requestStyle == pathStyle {
+			o.UsePathStyle = true
+		}
+	})
 
 	return ret
 }
