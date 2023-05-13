@@ -52,7 +52,9 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		return nil, err
 	}
 
-	go br.refreshAWSCredentialsPeriodically(ctx)
+	if br.awsCred.CanExpire {
+		go br.refreshAWSCredentialsPeriodically(ctx)
+	}
 
 	return br, nil
 }
