@@ -2,6 +2,7 @@ package boltrouter
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,15 @@ import (
 type BoltRequest struct {
 	Bolt *http.Request
 	Aws  *http.Request
+}
+
+type S3RedirectResponse struct {
+	Code      string `xml:"Code"`
+	Message   string `xml:"Message"`
+	Endpoint  string `xml:"Endpoint"`
+	Bucket    string `xml:"Bucket"`
+	RequestId string `xml:"RequestId"`
+	HostId    string `xml:"HostId"`
 }
 
 // NewBoltRequest transforms the passed in intercepted aws http.Request and returns
@@ -161,6 +171,45 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		resp.Body.Close()
 		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
 		resp, err := http.DefaultClient.Do(boltReq.Aws)
+
+		logger.Error(fmt.Sprintf("AWS response code is %v", resp.StatusCode))
+		logger.Error(string(b))
+		if resp.StatusCode == 301 {
+			b, _ = io.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			var s3RedirectResponse S3RedirectResponse
+			err := xml.Unmarshal([]byte(string(b)), &s3RedirectResponse)
+			if err != nil {
+				return resp, true, err
+			}
+
+			if s3RedirectResponse.Code == "PermanentRedirect" {
+				var newRegion string
+				parts := strings.Split(s3RedirectResponse.Endpoint, ".")
+
+				// Retrieve the third-to-last entry
+				if len(parts) >= 3 {
+					substringParts := strings.Split(parts[len(parts)-3], "-")
+
+					// Extract all but the first token
+					if len(substringParts) > 1 {
+						newRegion = strings.Join(substringParts[1:], "-")
+					}
+
+					logger.Info(fmt.Sprintf("New region: %v", newRegion))
+
+					// sourceBucket := extractSourceBucket(boltReq.Aws)
+					// logger.Info(fmt.Sprintf("Extracted bucket %v", sourceBucket.bucket))
+					// awsReqContext := boltReq.Aws.Context
+					// redirectedFailoverRequest, err := newFailoverAwsRequest(awsReqContext, boltReq.Aws.Clone(awsReqContext), br.awsCred, sourceBucket, newRegion)
+					// boltReq.Aws =
+					// resp, err := http.DefaultClient.Do(boltReq.Aws)
+				} else {
+					logger.Error("UH OH")
+				}
+			}
+		}
 		return resp, true, err
 	}
 
