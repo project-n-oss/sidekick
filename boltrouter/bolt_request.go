@@ -168,18 +168,19 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	if err != nil {
 		return resp, false, err
 	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
-		logger.Warn("failing over")
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
-		resp, err := http.DefaultClient.Do(boltReq.Aws)
+		logger.Warn("failing over to AWS")
 
-		logger.Error(fmt.Sprintf("AWS response code is %v", resp.StatusCode))
-		logger.Error(string(b))
-		if resp.StatusCode == 301 {
-			b, _ = io.ReadAll(resp.Body)
-			resp.Body.Close()
+		awsResp, err := http.DefaultClient.Do(boltReq.Aws)
 
+		logger.Info(fmt.Sprintf("initial AWS response code is %v", awsResp.StatusCode))
+		b, _ = io.ReadAll(awsResp.Body)
+		awsResp.Body.Close()
+		logger.Info(string(b))
+		if awsResp.StatusCode == 301 {
+			logger.Info("AWS failover said redirect")
 			var s3RedirectResponse S3RedirectResponse
 			err := xml.Unmarshal([]byte(string(b)), &s3RedirectResponse)
 			if err != nil {
@@ -224,10 +225,13 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 						return resp, true, err
 					}
 
-					resp, err := http.DefaultClient.Do(boltReq.Aws)
-					logger.Error(fmt.Sprintf("%v", err))
-					logger.Info(fmt.Sprintf("redirected failover status code: %v", resp.StatusCode))
-					return resp, true, err
+					redirectedFailoverResp, err := http.DefaultClient.Do(boltReq.Aws)
+					if err != nil {
+						logger.Error(fmt.Sprintf("%v", err))
+					}
+
+					logger.Info(fmt.Sprintf("redirected failover status code: %v", redirectedFailoverResp.StatusCode))
+					return redirectedFailoverResp, true, err
 				} else {
 					logger.Error("UH OH")
 				}
