@@ -174,70 +174,74 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		logger.Warn("failing over to AWS")
 
 		awsResp, err := http.DefaultClient.Do(boltReq.Aws)
-
 		logger.Info(fmt.Sprintf("initial AWS response code is %v", awsResp.StatusCode))
-		b, _ = io.ReadAll(awsResp.Body)
-		awsResp.Body.Close()
-		logger.Info(string(b))
-		if awsResp.StatusCode == 301 {
-			logger.Info("AWS failover said redirect")
-			var s3RedirectResponse S3RedirectResponse
-			err := xml.Unmarshal([]byte(string(b)), &s3RedirectResponse)
-			if err != nil {
-				return resp, true, err
-			}
+		logger.Error(fmt.Sprintf("initial AWS err: %vv", err))
+		if err != nil {
+			return awsResp, true, err
+		} else if !StatusCodeIs2xx(awsResp.StatusCode) {
+			b, _ = io.ReadAll(awsResp.Body)
+			awsResp.Body.Close()
+			logger.Info(string(b))
 
-			if s3RedirectResponse.Code == "PermanentRedirect" {
-				var newRegion string
-				parts := strings.Split(s3RedirectResponse.Endpoint, ".")
+			if awsResp.StatusCode == 301 {
+				logger.Info("AWS failover said redirect")
+				var s3RedirectResponse S3RedirectResponse
+				err := xml.Unmarshal([]byte(string(b)), &s3RedirectResponse)
+				if err != nil {
+					return awsResp, true, err
+				}
 
-				// Retrieve the third-to-last entry
-				if len(parts) >= 3 {
-					substringParts := strings.Split(parts[len(parts)-3], "-")
+				if s3RedirectResponse.Code == "PermanentRedirect" {
+					var newRegion string
+					parts := strings.Split(s3RedirectResponse.Endpoint, ".")
 
-					// Extract all but the first token
-					if len(substringParts) > 1 {
-						newRegion = strings.Join(substringParts[1:], "-")
+					// Retrieve the third-to-last entry
+					if len(parts) >= 3 {
+						substringParts := strings.Split(parts[len(parts)-3], "-")
+
+						// Extract all but the first token
+						if len(substringParts) > 1 {
+							newRegion = strings.Join(substringParts[1:], "-")
+						}
+						// TODO: error checking for if len(substringparts) < 1
+
+						logger.Info(fmt.Sprintf("New region: %v", newRegion))
+						logger.Info(fmt.Sprintf("fail over host: %v", boltReq.Aws.Host))
+						logger.Info(fmt.Sprintf("fail over url: %v", boltReq.Aws.URL.Host))
+
+						// s3.us-west-2.amazonaws.com
+						newHost := fmt.Sprintf("s3.%s.amazonaws.com", newRegion)
+						boltReq.Aws.URL.Host = newHost
+						boltReq.Aws.Host = newHost
+						boltReq.Aws.URL.Scheme = "https"
+						boltReq.Aws.RequestURI = ""
+						boltReq.Aws.URL.RawPath = ""
+
+						awsCred, err := getAwsCredentialsFromRegion(boltReq.Aws.Context(), newRegion)
+						if err != nil {
+							return awsResp, true, fmt.Errorf("could not get aws credentials: %w", err)
+						}
+
+						payloadHash := boltReq.Aws.Header.Get("X-Amz-Content-Sha256")
+						awsSigner := v4.NewSigner()
+						if err := awsSigner.SignHTTP(boltReq.Aws.Context(), awsCred, boltReq.Aws, payloadHash, "s3", newRegion, time.Now()); err != nil {
+							return awsResp, true, err
+						}
+
+						redirectedFailoverResp, err := http.DefaultClient.Do(boltReq.Aws)
+						if err != nil {
+							logger.Error(fmt.Sprintf("redirected failover failed %v", err))
+							return redirectedFailoverResp, true, err
+						}
+						return redirectedFailoverResp, true, err
+					} else {
+						logger.Error("UH OH")
 					}
-					// TODO: error checking for if len(substringparts) < 1
-
-					logger.Info(fmt.Sprintf("New region: %v", newRegion))
-
-					logger.Info(fmt.Sprintf("fail over host: %v", boltReq.Aws.Host))
-					logger.Info(fmt.Sprintf("fail over url: %v", boltReq.Aws.URL.Host))
-
-					// s3.us-west-2.amazonaws.com
-					newHost := fmt.Sprintf("s3.%s.amazonaws.com", newRegion)
-					boltReq.Aws.URL.Host = newHost
-					boltReq.Aws.Host = newHost
-					boltReq.Aws.URL.Scheme = "https"
-					boltReq.Aws.RequestURI = ""
-					boltReq.Aws.URL.RawPath = ""
-
-					awsCred, err := getAwsCredentialsFromRegion(boltReq.Aws.Context(), newRegion)
-					if err != nil {
-						return resp, true, fmt.Errorf("could not get aws credentials: %w", err)
-					}
-
-					payloadHash := boltReq.Aws.Header.Get("X-Amz-Content-Sha256")
-					awsSigner := v4.NewSigner()
-					if err := awsSigner.SignHTTP(boltReq.Aws.Context(), awsCred, boltReq.Aws, payloadHash, "s3", newRegion, time.Now()); err != nil {
-						return resp, true, err
-					}
-
-					redirectedFailoverResp, err := http.DefaultClient.Do(boltReq.Aws)
-					if err != nil {
-						logger.Error(fmt.Sprintf("%v", err))
-					}
-
-					logger.Info(fmt.Sprintf("redirected failover status code: %v", redirectedFailoverResp.StatusCode))
-					return redirectedFailoverResp, true, err
-				} else {
-					logger.Error("UH OH")
 				}
 			}
 		}
-		return resp, true, err
+
+		return awsResp, true, err
 	}
 
 	return resp, false, nil
