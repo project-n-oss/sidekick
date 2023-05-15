@@ -196,15 +196,25 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 					if len(substringParts) > 1 {
 						newRegion = strings.Join(substringParts[1:], "-")
 					}
+					// TODO: error checking for if len(substringparts) < 1
 
 					logger.Info(fmt.Sprintf("New region: %v", newRegion))
 
-					// sourceBucket := extractSourceBucket(boltReq.Aws)
-					// logger.Info(fmt.Sprintf("Extracted bucket %v", sourceBucket.bucket))
-					// awsReqContext := boltReq.Aws.Context
-					// redirectedFailoverRequest, err := newFailoverAwsRequest(awsReqContext, boltReq.Aws.Clone(awsReqContext), br.awsCred, sourceBucket, newRegion)
-					// boltReq.Aws =
-					// resp, err := http.DefaultClient.Do(boltReq.Aws)
+					logger.Info(fmt.Sprintf("fail over host: %v", boltReq.Aws.Host))
+					logger.Info(fmt.Sprintf("fail over url: %v", boltReq.Aws.URL.Host))
+
+					// s3.us-west-2.amazonaws.com
+					newHost := fmt.Sprintf("s3.%s.amazonaws.com", newRegion)
+					boltReq.Aws.URL.Host = newHost
+					boltReq.Aws.Host = newHost
+					boltReq.Aws.URL.Scheme = "https"
+					boltReq.Aws.RequestURI = ""
+					boltReq.Aws.URL.RawPath = ""
+
+					resp, err := http.DefaultClient.Do(boltReq.Aws)
+					logger.Error(fmt.Sprintf("%v", err))
+					logger.Info(fmt.Sprintf("redirected failover status code: %v", resp.StatusCode))
+					return resp, true, err
 				} else {
 					logger.Error("UH OH")
 				}
