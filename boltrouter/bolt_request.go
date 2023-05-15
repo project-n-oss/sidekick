@@ -181,6 +181,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		} else if !StatusCodeIs2xx(awsResp.StatusCode) {
 			b, _ = io.ReadAll(awsResp.Body)
 			awsResp.Body.Close()
+			logger.Info("printint aws response body")
 			logger.Info(string(b))
 
 			if awsResp.StatusCode == 301 {
