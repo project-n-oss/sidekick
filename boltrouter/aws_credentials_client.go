@@ -38,7 +38,7 @@ func newAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Creden
 	return cred, nil
 }
 
-func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context, logger *zap.Logger) {
+func refreshAWSCredentials(ctx context.Context, logger *zap.Logger) {
 
 	awsCredentialsMap.Range(func(key, value interface{}) bool {
 		region := key.(string)
@@ -67,7 +67,7 @@ func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context, log
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				br.RefreshAWSCredentials(ctx, logger)
+				refreshAWSCredentials(ctx, logger)
 			}
 		}
 	}()
