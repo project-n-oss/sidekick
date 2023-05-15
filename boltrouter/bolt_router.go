@@ -48,41 +48,5 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		boltVars:           boltVars,
 	}
 
-	if err := br.refreshAWSCredentials(ctx); err != nil {
-		return nil, err
-	}
-
-	if br.awsCred.CanExpire {
-		go br.refreshAWSCredentialsPeriodically(ctx)
-	}
-
 	return br, nil
-}
-
-func (br *BoltRouter) refreshAWSCredentials(ctx context.Context) error {
-	awsCfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		return fmt.Errorf("could not load aws default config: %w", err)
-	}
-
-	cred, err := awsCfg.Credentials.Retrieve(ctx)
-	if err != nil {
-		return fmt.Errorf("could not retrieve aws credentials: %w", err)
-	}
-
-	br.awsCred = cred
-	return nil
-}
-
-func (br *BoltRouter) refreshAWSCredentialsPeriodically(ctx context.Context) {
-	ticker := time.NewTicker(30 * time.Minute)
-
-	for {
-		select {
-		case <-ctx.Done():
-			ticker.Stop()
-		case <-ticker.C:
-			br.refreshAWSCredentials(ctx)
-		}
-	}
 }
