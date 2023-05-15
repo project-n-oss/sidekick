@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Protocol</key>
+	<string>s3</string>
+	<key>Provider</key>
+	<string>s3-http</string>
+	<key>Nickname</key>
+	<string>SideKick</string>
+	<key>UUID</key>
+	<string>a4a82250-3ea9-4353-b0e0-525f12e7810e</string>
+	<key>Hostname</key>
+	<string>localhost</string>
+	<key>Port</key>
+	<string>7075</string>
+</dict>
+</plist>
