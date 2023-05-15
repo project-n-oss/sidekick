@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -167,6 +168,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	if err != nil {
 		return resp, false, err
 	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
+		logger.Warn("failing over")
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
@@ -210,6 +212,17 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 					boltReq.Aws.URL.Scheme = "https"
 					boltReq.Aws.RequestURI = ""
 					boltReq.Aws.URL.RawPath = ""
+
+					awsCred, err := getAwsCredentialsFromRegion(boltReq.Aws.Context(), newRegion)
+					if err != nil {
+						return resp, true, fmt.Errorf("could not get aws credentials: %w", err)
+					}
+
+					payloadHash := boltReq.Aws.Header.Get("X-Amz-Content-Sha256")
+					awsSigner := v4.NewSigner()
+					if err := awsSigner.SignHTTP(boltReq.Aws.Context(), awsCred, boltReq.Aws, payloadHash, "s3", newRegion, time.Now()); err != nil {
+						return resp, true, err
+					}
 
 					resp, err := http.DefaultClient.Do(boltReq.Aws)
 					logger.Error(fmt.Sprintf("%v", err))
