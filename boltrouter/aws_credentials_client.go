@@ -2,14 +2,13 @@ package boltrouter
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"go.uber.org/zap"
 )
 
 // awsCredentialsMap is used to cache aws credentials for a given region.
@@ -39,8 +38,7 @@ func newAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Creden
 	return cred, nil
 }
 
-func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context) error {
-	var errs []error
+func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context, logger *zap.Logger) {
 
 	awsCredentialsMap.Range(func(key, value interface{}) bool {
 		region := key.(string)
@@ -50,26 +48,16 @@ func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context) error {
 			// if credential can expire, get new credentials for the region
 			refreshedCreds, err := newAwsCredentialsFromRegion(ctx, region)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("aws credential refresh failed for region %s, %w", region, err))
+				logger.Error(fmt.Sprintf("aws credential refresh failed for region %s", region), zap.Error(err))
 				return true
 			}
 			awsCredentialsMap.Store(region, refreshedCreds)
 		}
 		return true
 	})
-
-	if len(errs) > 0 {
-		errStrs := make([]string, len(errs))
-		for i, err := range errs {
-			errStrs[i] = err.Error()
-		}
-		return errors.New(strings.Join(errStrs, "; "))
-	}
-
-	return nil
 }
 
-func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context) {
+func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context, logger *zap.Logger) {
 	ticker := time.NewTicker(30 * time.Minute)
 
 	go func() {
@@ -79,7 +67,7 @@ func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				br.RefreshAWSCredentials(ctx)
+				br.RefreshAWSCredentials(ctx, logger)
 			}
 		}
 	}()
