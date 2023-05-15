@@ -188,8 +188,11 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 				var s3RedirectResponse S3RedirectResponse
 				err := xml.Unmarshal([]byte(string(b)), &s3RedirectResponse)
 				if err != nil {
+					logger.Error(fmt.Sprintf("unmarshall failed: %v", err))
 					return awsResp, true, err
 				}
+
+				logger.Info("unmarshalled redirect response")
 
 				var newRegion string
 				parts := strings.Split(s3RedirectResponse.Endpoint, ".")
