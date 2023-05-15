@@ -70,7 +70,7 @@ func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context) error {
 }
 
 func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(30 * time.Minute)
 
 	go func() {
 		for {
