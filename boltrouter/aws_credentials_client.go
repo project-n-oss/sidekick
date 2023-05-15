@@ -19,10 +19,8 @@ var refreshRoutineScheduled bool = false
 // GetAwsCredentialsFromRegion returns the aws credentials for the given region.
 func getAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Credentials, error) {
 	if awsCred, ok := awsCredentialsMap.Load(region); ok {
-		fmt.Printf("returning existing credentials for region %s\n", region)
 		return awsCred.(aws.Credentials), nil
 	}
-	fmt.Printf("creating new credentials for region %s\n", region)
 	return newAwsCredentialsFromRegion(ctx, region)
 }
 
@@ -49,10 +47,7 @@ func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context) error {
 		region := key.(string)
 		cred := value.(aws.Credentials)
 
-		fmt.Printf("Considering refresh for %v\n", region)
-
 		if cred.CanExpire {
-			fmt.Printf("credentials can expire, region %s\n", region)
 			// if credential can expire, get new credentials for the region
 			refreshedCreds, err := newAwsCredentialsFromRegion(ctx, region)
 			if err != nil {
