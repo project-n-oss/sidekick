@@ -19,9 +19,10 @@ var refreshRoutineScheduled bool = false
 // GetAwsCredentialsFromRegion returns the aws credentials for the given region.
 func getAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Credentials, error) {
 	if awsCred, ok := awsCredentialsMap.Load(region); ok {
+		fmt.Printf("returning existing credentials for region %s\n", region)
 		return awsCred.(aws.Credentials), nil
 	}
-
+	fmt.Printf("creating new credentials for region %s\n", region)
 	return newAwsCredentialsFromRegion(ctx, region)
 }
 
@@ -37,23 +38,21 @@ func newAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Creden
 		return aws.Credentials{}, fmt.Errorf("could not retrieve aws credentials: %w", err)
 	}
 
-	if !refreshRoutineScheduled {
-		refreshRoutineScheduled = true
-		go scheduleRefreshAWSCredentials(ctx)
-	}
-
 	awsCredentialsMap.Store(awsConfig.Region, cred)
 	return cred, nil
 }
 
-func refreshAWSCredentials(ctx context.Context) error {
+func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context) error {
 	var errs []error
+
+	fmt.Println("refreshing aws credentials\n")
 
 	awsCredentialsMap.Range(func(key, value interface{}) bool {
 		region := key.(string)
 		cred := value.(aws.Credentials)
 
 		if cred.CanExpire {
+			fmt.Printf("credentials can expire, region %s\n", region)
 			// if credential can expire, get new credentials for the region
 			refreshedCreds, err := newAwsCredentialsFromRegion(ctx, region)
 			if err != nil {
@@ -76,20 +75,19 @@ func refreshAWSCredentials(ctx context.Context) error {
 	return nil
 }
 
-func scheduleRefreshAWSCredentials(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour)
-	defer ticker.Stop()
+func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context) {
+	ticker := time.NewTicker(time.Second)
 
-	for {
-		select {
-		case <-ctx.Done():
-			// If the context is cancelled, return to stop the goroutine
-			return
-		case <-ticker.C:
-			// Get new credentials here
-			if err := refreshAWSCredentials(ctx); err != nil {
-				// handle error, possibly with a log message
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				fmt.Println("getting new credentialsssssss")
+				br.RefreshAWSCredentials(ctx)
 			}
 		}
-	}
+	}()
 }

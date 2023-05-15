@@ -34,6 +34,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 	}
 	// Refresh endpoints periodically
 	br.RefreshEndpointsPeriodically(ctx)
+	br.RefreshAWSCredentialsPeriodically(ctx)
 
 	return &Api{
 		logger: logger,
