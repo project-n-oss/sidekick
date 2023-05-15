@@ -45,11 +45,11 @@ func newAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Creden
 func (br *BoltRouter) RefreshAWSCredentials(ctx context.Context) error {
 	var errs []error
 
-	fmt.Println("refreshing aws credentials\n")
-
 	awsCredentialsMap.Range(func(key, value interface{}) bool {
 		region := key.(string)
 		cred := value.(aws.Credentials)
+
+		fmt.Printf("Considering refresh for %v\n", region)
 
 		if cred.CanExpire {
 			fmt.Printf("credentials can expire, region %s\n", region)
@@ -85,7 +85,6 @@ func (br *BoltRouter) RefreshAWSCredentialsPeriodically(ctx context.Context) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				fmt.Println("getting new credentialsssssss")
 				br.RefreshAWSCredentials(ctx)
 			}
 		}
