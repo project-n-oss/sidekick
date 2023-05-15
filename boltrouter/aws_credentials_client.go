@@ -14,7 +14,6 @@ import (
 
 // awsCredentialsMap is used to cache aws credentials for a given region.
 var awsCredentialsMap = sync.Map{}
-var refreshRoutineScheduled bool = false
 
 // GetAwsCredentialsFromRegion returns the aws credentials for the given region.
 func getAwsCredentialsFromRegion(ctx context.Context, region string) (aws.Credentials, error) {
