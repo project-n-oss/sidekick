@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,14 +21,23 @@ type BoltRequest struct {
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
 func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*BoltRequest, error) {
-	sourceBucket := extractSourceBucket(req)
-	failoverRequest, err := newFailoverAwsRequest(ctx, req.Clone(ctx), br.awsCred, sourceBucket, br.boltVars.Region.Get())
+	sourceBucket, err := extractSourceBucket(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("could not extract source bucket: %w", err)
+	}
+
+	awsCred, err := getAwsCredentialsFromRegion(ctx, sourceBucket.Region)
+	if err != nil {
+		return nil, fmt.Errorf("could not get aws credentials: %w", err)
+	}
+
+	failoverRequest, err := newFailoverAwsRequest(ctx, req.Clone(ctx), awsCred, sourceBucket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make failover request: %w", err)
 	}
 
 	authPrefix := randString(4)
-	headReq, err := signedAwsHeadRequest(ctx, req, br.awsCred, sourceBucket.bucket, br.boltVars.Region.Get(), authPrefix)
+	headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
 	}
@@ -42,8 +50,8 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*B
 	// RequestURI is the unmodified request-target of the Request-Line (RFC 7230, Section 3.1.1) as sent by the client to a server.
 	//  It is an error to set this field in an HTTP client request.
 	req.RequestURI = ""
-	if sourceBucket.style == virtualHostedStyle {
-		BoltURL = BoltURL.JoinPath(sourceBucket.bucket, req.URL.EscapedPath())
+	if sourceBucket.Style == virtualHostedStyle {
+		BoltURL = BoltURL.JoinPath(sourceBucket.Bucket, req.URL.EscapedPath())
 
 	} else {
 		BoltURL = BoltURL.JoinPath(req.URL.Path)
@@ -109,14 +117,14 @@ func signedAwsHeadRequest(ctx context.Context, req *http.Request, awsCred aws.Cr
 }
 
 // newFailoverAwsRequest creates a standard aws s3 request that can be used as a failover if the Bolt request fails.
-func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket SourceBucket, region string) (*http.Request, error) {
+func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket SourceBucket) (*http.Request, error) {
 	var host string
-	switch sourceBucket.style {
+	switch sourceBucket.Style {
 	case virtualHostedStyle:
-		host = fmt.Sprintf("%s.s3.%s.amazonaws.com", sourceBucket.bucket, region)
+		host = fmt.Sprintf("%s.s3.%s.amazonaws.com", sourceBucket.Bucket, sourceBucket.Region)
 	// default to path style
 	default:
-		host = fmt.Sprintf("s3.%s.amazonaws.com", region)
+		host = fmt.Sprintf("s3.%s.amazonaws.com", sourceBucket.Region)
 
 	}
 
@@ -134,43 +142,11 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 	payloadHash := req.Header.Get("X-Amz-Content-Sha256")
 
 	awsSigner := v4.NewSigner()
-	if err := awsSigner.SignHTTP(ctx, awsCred, req, payloadHash, "s3", region, time.Now()); err != nil {
+	if err := awsSigner.SignHTTP(ctx, awsCred, req, payloadHash, "s3", sourceBucket.Region, time.Now()); err != nil {
 		return nil, err
 	}
 
 	return req.Clone(ctx), nil
-}
-
-type s3RequestStyle string
-
-const (
-	virtualHostedStyle s3RequestStyle = "virtual-hosted-style"
-	pathStyle          s3RequestStyle = "path-style"
-	nAuthDummy         s3RequestStyle = "n-auth-dummy"
-)
-
-type SourceBucket struct {
-	bucket string
-	style  s3RequestStyle
-}
-
-// extractSourceBucket extracts the aws request bucket using Path-style or Virtual-hosted-style requests.
-// https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
-// This method will "n-auth-dummy" if nothing is found
-func extractSourceBucket(req *http.Request) SourceBucket {
-	// virtual-hosted-style
-	if split := strings.Split(req.Host, "."); len(split) > 1 {
-		bucket := split[0]
-		return SourceBucket{bucket: bucket, style: virtualHostedStyle}
-	}
-
-	// path-style request
-	if paths := strings.Split(req.URL.EscapedPath(), "/"); len(paths) > 1 {
-		bucket := paths[1]
-		return SourceBucket{bucket: bucket, style: pathStyle}
-	}
-
-	return SourceBucket{bucket: "n-auth-dummy", style: nAuthDummy}
 }
 
 // DoBoltRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.

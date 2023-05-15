@@ -8,18 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/require"
 )
 
 // GetSidekickS3Client returns a S3 client connected to bolt through sidekick
-func GetSidekickS3Client(t *testing.T, ctx context.Context) *s3.Client {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+func GetSidekickS3Client(t *testing.T, ctx context.Context, region string) *s3.Client {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, signRegion string, options ...interface{}) (aws.Endpoint, error) {
 		if service == s3.ServiceID {
 			return aws.Endpoint{
 				PartitionID:   "aws",
 				URL:           SidekickURL,
-				SigningRegion: region,
+				SigningRegion: signRegion,
 			}, nil
 		}
 		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
@@ -33,7 +34,11 @@ func GetSidekickS3Client(t *testing.T, ctx context.Context) *s3.Client {
 	cfg.RetryMaxAttempts = retry.DefaultMaxAttempts
 
 	s3c := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.Region = awsRegion(t, ctx, cfg)
+		if region == "" {
+			o.Region = awsRegion(t, ctx, cfg)
+		} else {
+			o.Region = region
+		}
 		o.UsePathStyle = true
 	})
 
@@ -41,12 +46,16 @@ func GetSidekickS3Client(t *testing.T, ctx context.Context) *s3.Client {
 }
 
 // GetS3Client returns a default aws S3 client
-func GetAwsS3Client(t *testing.T, ctx context.Context) *s3.Client {
+func GetAwsS3Client(t *testing.T, ctx context.Context, region string) *s3.Client {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	require.NoError(t, err)
 
 	s3c := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.Region = awsRegion(t, ctx, cfg)
+		if region == "" {
+			o.Region = awsRegion(t, ctx, cfg)
+		} else {
+			o.Region = region
+		}
 	})
 	return s3c
 }
@@ -57,4 +66,10 @@ func awsRegion(t *testing.T, ctx context.Context, cfg aws.Config) string {
 	output, err := client.GetRegion(ctx, &imds.GetRegionInput{})
 	require.NoError(t, err)
 	return output.Region
+}
+
+func GetRegionForBucket(t *testing.T, ctx context.Context, bucket string) string {
+	region, err := manager.GetBucketRegion(ctx, AwsS3c, bucket)
+	require.NoError(t, err)
+	return region
 }

@@ -25,6 +25,7 @@ ssh into the instance and clone the [sidekick repository](https://github.com/pro
 You need to create two buckets for the tests:
 - A bucket that will be crunched by bolt
 - A "failover" bucket that will not be touched by bolt, this will force sidekick to failover back to aws calls.
+- A "failover" bucket in a different region, this is usefull to make sure aws failover works in different regions.
 
 :warning: Make sure you select the same region as the one your cluster is running in.
 
@@ -68,6 +69,7 @@ Run the following command to cp the test data to your new bucket:
 ```bash
 aws s3 cp ./test_data/ s3://{YOUR_BUCKET}/ --recursive
 aws s3 cp ./test_data/ s3://{YOUR_FAILOVER_BUCKET}/ --recursive
+aws s3 cp ./test_data/ s3://{YOUR_FAILOVER_BUCKET_DIFF_REGION}/ --recursive
 ```
 
 ### Crunch Bucket
@@ -90,6 +92,7 @@ Create a `.env` file in `sidekick/integration_tests`:
 ```bash
 BUCKET=<YOUR_BUCKET>
 FAILOVER_BUCKET=<YOUR_FAILOVER_BUCKET>
+FAILOVER_BUCKET_DIFF_REGION=<YOUR_FAILOVER_BUCKET_DIFF_REGION>
 BOLT_CUSTOM_DOMAIN=<YOUR_CLUSTER_DOMAIN>
 ```
 

@@ -6,8 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
@@ -52,4 +56,54 @@ func SetupQuickSilverMock(t *testing.T, ctx context.Context, logger *zap.Logger)
 	boltVars, err := GetBoltVars(ctx, logger)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilver.URL)
+}
+
+type TestS3Client struct {
+	req  *http.Request
+	lock sync.RWMutex
+
+	S3Client *s3.Client
+}
+
+func NewTestS3Client(t *testing.T, ctx context.Context, requestStyle s3RequestStyle, region string) *TestS3Client {
+	ret := &TestS3Client{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ret.lock.Lock()
+		ret.req = r
+		ret.lock.Unlock()
+
+		sc := http.StatusOK
+		w.WriteHeader(sc)
+	}))
+
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, signRegion string, options ...interface{}) (aws.Endpoint, error) {
+		if service == s3.ServiceID {
+			return aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           server.URL,
+				SigningRegion: signRegion,
+			}, nil
+		}
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithRegion(region),
+	)
+	require.NoError(t, err)
+
+	ret.S3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
+		if requestStyle == pathStyle {
+			o.UsePathStyle = true
+		}
+	})
+
+	return ret
+}
+
+func (c *TestS3Client) GetRequest(t *testing.T, ctx context.Context) *http.Request {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	require.NotNil(t, c.req)
+	return c.req.Clone(ctx)
 }

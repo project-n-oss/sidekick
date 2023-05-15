@@ -10,8 +10,9 @@ import (
 
 var (
 	// Input params
-	Bucket         string
-	FailoverBucket string
+	Bucket                   string
+	FailoverBucket           string
+	FailoverBucketDiffRegion string
 
 	// Global state
 	SidekickS3c *s3.Client
@@ -22,7 +23,8 @@ var (
 func InitVariables(t *testing.T, ctx context.Context) {
 	Bucket = GetEnvStr("BUCKET", "")
 	FailoverBucket = GetEnvStr("FAILOVER_BUCKET", "")
+	FailoverBucketDiffRegion = GetEnvStr("FAILOVER_BUCKET_DIFF_REGION", "")
 	require.NotEmpty(t, Bucket)
-	SidekickS3c = GetSidekickS3Client(t, ctx)
-	AwsS3c = GetAwsS3Client(t, ctx)
+	SidekickS3c = GetSidekickS3Client(t, ctx, "")
+	AwsS3c = GetAwsS3Client(t, ctx, "")
 }
