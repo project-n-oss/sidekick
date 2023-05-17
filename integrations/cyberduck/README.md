@@ -59,4 +59,4 @@ Now download the SideKick CyberDuck bookmark file, drag it onto your CyberDuck B
 
 Configured to access a single crunched bucket via sidekick. Before dragging the bookmark file onto the CyberDuck window, open the file in a text editor and replace `bucket-name` with the name of your bucket.
 
-- Multi-bucket profile - configure to access all accessible buckets (crunched and not) - tbd
+- **Multi-bucket profile** - configure to access all accessible buckets (crunched and not) - tbd
