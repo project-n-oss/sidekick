@@ -43,8 +43,9 @@ Now that you have SideKick running, start CyberDuck.
 First, you'll need to enable the "S3 (HTTP)" profile.
 
 1. Navigate to Settings
-   Windows: Click "Edit" and then "Preferences"
-   macOS: Click "CyberDuck" in the top left corner and then "Settings"
+
+Windows: Click "Edit" and then "Preferences"
+macOS: Click "CyberDuck" in the top left corner and then "Settings"
 
 2. Then navigate to "Profiles" and search for "s3 http"
 
