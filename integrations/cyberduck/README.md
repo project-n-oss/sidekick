@@ -53,11 +53,10 @@ macOS: Click "CyberDuck" in the top left corner and then "Settings"
 
 Now download the SideKick CyberDuck bookmark file, drag it onto your CyberDuck Bookmarks view and enter your AWS credentials.
 
-Available CyberDuck profiles
+**Available CyberDuck profiles**
 
-- Single-bucket profile
-  Configured to access a single crunched bucket via sidekick. Before dragging the bookmark file onto the CyberDuck window, open the file in a text editor and replace `bucket-name` with the name of your bucket.
+- **Single-bucket profile** - [profile](./sidekick-single-bucket.duck)
 
-[profile](./sidekick-single-bucket.duck)
+Configured to access a single crunched bucket via sidekick. Before dragging the bookmark file onto the CyberDuck window, open the file in a text editor and replace `bucket-name` with the name of your bucket.
 
 - Multi-bucket profile - configure to access all accessible buckets (crunched and not) - tbd
