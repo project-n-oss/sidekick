@@ -16,11 +16,15 @@ import (
 const DEFAULT_PORT = 7075
 
 func init() {
-	serveCmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
-	serveCmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
-	serveCmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
-	serveCmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
+	initServerFlags(serveCmd)
 	rootCmd.AddCommand(serveCmd)
+}
+
+func initServerFlags(cmd *cobra.Command) {
+	cmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
+	cmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
+	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
+	cmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
 }
 
 var serveCmd = &cobra.Command{
@@ -30,18 +34,11 @@ var serveCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		OnShutdown(cancel)
 
-		local, _ := cmd.Flags().GetBool("local")
-		passthrough, _ := cmd.Flags().GetBool("passthrough")
-		failover, _ := cmd.Flags().GetBool("failover")
-		cfg := api.Config{
-			BoltRouter: boltrouter.Config{
-				Local:       local,
-				Passthrough: passthrough,
-				Failover:    failover,
-			},
-		}
+		boltRouterConfig := getBoltRouterConfig(cmd)
 
-		api, err := api.New(ctx, logger, cfg)
+		cfg := api.Config{BoltRouter: boltRouterConfig}
+
+		api, err := api.New(ctx, rootLogger, cfg)
 		if err != nil {
 			return err
 		}
@@ -56,15 +53,30 @@ var serveCmd = &cobra.Command{
 		go func() {
 			<-ctx.Done()
 			if err := server.Shutdown(context.Background()); err != nil {
-				logger.Error(err.Error())
+				rootLogger.Error(err.Error())
 			}
 		}()
 
-		logger.Info(fmt.Sprintf("listening at http://127.0.0.1:%v", port))
+		rootLogger.Info(fmt.Sprintf("listening at http://127.0.0.1:%v", port))
 		if err := server.ListenAndServe(); err != nil {
 			return err
 		}
 
 		return nil
 	},
+}
+
+func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
+	boltRouterConfig := rootConfig.BoltRouter
+	if cmd.Flags().Lookup("local").Changed {
+		boltRouterConfig.Local, _ = cmd.Flags().GetBool("local")
+	}
+	if cmd.Flags().Lookup("passthrough").Changed {
+		boltRouterConfig.Passthrough, _ = cmd.Flags().GetBool("passthrough")
+	}
+	if cmd.Flags().Lookup("failover").Changed {
+		boltRouterConfig.Failover, _ = cmd.Flags().GetBool("failover")
+	}
+
+	return boltRouterConfig
 }
