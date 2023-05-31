@@ -9,12 +9,12 @@
   <key>Scheme</key>
   <string>http</string>
   <key>Nickname</key>
-  <string>SideKick</string>
+  <string>SideKick - Single Bucket</string>
   <key>Hostname</key>
   <string>localhost</string>
   <key>Port</key>
   <string>7075</string>
   <key>Path</key>
-  <string>/kote-test-data</string>
+  <string>/bucket-name</string>
 </dict>
 </plist>
