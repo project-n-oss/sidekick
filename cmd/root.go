@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v2"
 )
 
 //go:embed ascii.txt
@@ -30,7 +32,8 @@ func init() {
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
 }
 
-var logger *zap.Logger
+var rootLogger *zap.Logger
+var rootConfig Config
 
 var rootCmd = &cobra.Command{
 	Use:           "sidekick",
@@ -39,7 +42,10 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		logger = NewLogger(verbose)
+		rootLogger = NewLogger(verbose)
+		OnShutdown(func() {
+			_ = rootLogger.Sync()
+		})
 
 		if _, err := os.Stat(".env"); err == nil {
 			err := godotenv.Load()
@@ -48,13 +54,33 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
+		if config, _ := cmd.Flags().GetString("config"); config != "" {
+			f, err := os.Open(config)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			if err := yaml.NewDecoder(f).Decode(&rootConfig); err != nil {
+				return fmt.Errorf("failed to decode config: %w", err)
+			}
+		} else if f, err := os.Open("config.yaml"); err == nil {
+			defer f.Close()
+			if err := yaml.NewDecoder(f).Decode(&rootConfig); err != nil {
+				return fmt.Errorf("failed to decode config: %w", err)
+			}
+		}
+
+		if err := UnmarshalConfigFromEnv(context.Background(), &rootConfig); err != nil {
+			return err
+		}
+
 		// wait forever for sig signal
 		go func() {
 			WaitForTermSignal()
 		}()
 
 		fmt.Println(asciiArt)
-		logger.Sugar().Infof("Version: %s", getVersion())
+		rootLogger.Sugar().Infof("Version: %s", getVersion())
 
 		return nil
 	},
@@ -70,7 +96,7 @@ func WaitForTermSignal() {
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
 	sig := <-sigs
-	logger.Info("received signal, shutting down", zap.String("signal", sig.String()))
+	rootLogger.Info("received signal, shutting down", zap.String("signal", sig.String()))
 
 	// Do a graceful shutdown
 	Shutdown()
