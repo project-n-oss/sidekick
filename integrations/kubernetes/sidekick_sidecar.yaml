@@ -17,7 +17,7 @@ spec:
           image: ghcr.io/project-n-oss/sidekick:latest
           command: ["sidekick", "serve"]
           env:
-            - name: BOLT_CUSTOM_DOMAIN
+            - name: GRANICA_CUSTOM_DOMAIN
               value: km.bolt.projectn.co
             - name: AWS_REGION
               value: us-east-1

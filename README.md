@@ -19,7 +19,7 @@ Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/pat
 In order to run sidekick, you first need to set some ENV variables
 
 ```bash
-export BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
+export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
 # Optional if not running on a ec2 instance or running in a different region
 export AWS_REGION=<YOUR_BOLT_CLUSTER_REGION>
 # Optional if not running on a ec2 instance to force read from a read-replica in this az
@@ -73,13 +73,13 @@ or pull one from the [containers page](https://github.com/project-n-oss/sidekick
 #### Running on an EC2 Instance using instance profile credentials
 
 ```bash
-docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve
 ```
 
 #### Running on any machine using environment variable credentials
 
 ```bash
-docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve -v
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve -v
 ```
 
 If using temporary credentials, add `--env AWS_SESSION_TOKEN=<YOUR_SESSION_TOKEN>` to the command above. However, this is not recommended since credentials will expire. Instead consider using the credentials profiles file with role assumption directives.
@@ -87,7 +87,7 @@ If using temporary credentials, add `--env AWS_SESSION_TOKEN=<YOUR_SESSION_TOKEN
 #### Running on any machine using the credential profiles file
 
 ```bash
-docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve
 ```
 
 By default, the `default` profile from the credentials file will be used. If you want to use another profile from the credentials file add `--env AWS_DEFAULT_PROFILE=<YOUR_PROFILE>` to the command above.

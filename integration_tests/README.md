@@ -93,7 +93,7 @@ Create a `.env` file in `sidekick/integration_tests`:
 BUCKET=<YOUR_BUCKET>
 FAILOVER_BUCKET=<YOUR_FAILOVER_BUCKET>
 FAILOVER_BUCKET_DIFF_REGION=<YOUR_FAILOVER_BUCKET_DIFF_REGION>
-BOLT_CUSTOM_DOMAIN=<YOUR_CLUSTER_DOMAIN>
+GRANICA_CUSTOM_DOMAIN=<YOUR_CLUSTER_DOMAIN>
 ```
 
 You can run test from this directory using the following command:
