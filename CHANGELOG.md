@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.16](https://github.com/project-n-oss/sidekick/compare/v0.1.15...v0.1.16) (2023-06-06)
+
+
+### Features
+
+* add CyberDuck integration docs ([#29](https://github.com/project-n-oss/sidekick/issues/29)) ([1f09f9f](https://github.com/project-n-oss/sidekick/commit/1f09f9f31b4efda9005cc9e94d28caa1963a99f4))
+* allow boltrouter config to be set from env ([#36](https://github.com/project-n-oss/sidekick/issues/36)) ([17aa433](https://github.com/project-n-oss/sidekick/commit/17aa433229efd7f367d7250fdb5018d1dd586132))
+* changed BOLT_CUSTOM_DOMAIN to GRANICA_CUSTOM_DOMAIN ([#37](https://github.com/project-n-oss/sidekick/issues/37)) ([c19ff28](https://github.com/project-n-oss/sidekick/commit/c19ff28c674325238fd2e3bb5a7bbfa8782ae43b))
+* cleaned up bolt_vars for non ec2 use ([#27](https://github.com/project-n-oss/sidekick/issues/27)) ([97829ed](https://github.com/project-n-oss/sidekick/commit/97829edce7fe041b3d3ab1f78c196c56338b2aba))
+* Multi region support ([#30](https://github.com/project-n-oss/sidekick/issues/30)) ([bb62e1e](https://github.com/project-n-oss/sidekick/commit/bb62e1ecae7b95d93bd59fe532975b8fca12c876))
+* refresh AWS credentials periodically ([#31](https://github.com/project-n-oss/sidekick/issues/31)) ([ffbba32](https://github.com/project-n-oss/sidekick/commit/ffbba32d3086404cede424acd76b757b68619495))
+* S3 GUI client integration instructions ([#35](https://github.com/project-n-oss/sidekick/issues/35)) ([c3fc76f](https://github.com/project-n-oss/sidekick/commit/c3fc76f9535d9f443525d0670ad5369c10260957))
+
+
+### Bug Fixes
+
+* add instrucitons when using temp credentials ([#34](https://github.com/project-n-oss/sidekick/issues/34)) ([c30ec05](https://github.com/project-n-oss/sidekick/commit/c30ec05d369449235e5587266c32dad191cc400d))
+* complete Docker instructions,  aware of different credential scenarios ([#33](https://github.com/project-n-oss/sidekick/issues/33)) ([3402935](https://github.com/project-n-oss/sidekick/commit/3402935dc83f9a218f9bb63676edcc42d3bf000f))
+
 ## [0.1.15](https://github.com/project-n-oss/sidekick/compare/v0.1.14...v0.1.15) (2023-05-04)
 
 
