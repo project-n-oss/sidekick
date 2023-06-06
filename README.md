@@ -26,6 +26,24 @@ export AWS_REGION=<YOUR_BOLT_CLUSTER_REGION>
 export AWS_ZONE_ID=<AWS_ZONE_ID>
 ```
 
+### Failover 
+
+Sidekick automatically failovers the request to s3 if the bolt request fails. For example This is usefull when the object does not exist in bolt yet.
+You can disable failover by passing a flag or setting a ENV variable:
+
+```bash
+# Using flag
+go run main serve --failover=false
+# Using binary
+./sidekick serve --failover=false
+```
+
+```bash
+# Using env variable
+export SIDEKICK_BOLTROUTER_FAILOVER=true
+go run main serve
+```
+
 ### Local
 
 You can run sidekick directly from the command line:

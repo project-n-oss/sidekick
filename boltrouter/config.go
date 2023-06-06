@@ -3,11 +3,11 @@ package boltrouter
 type Config struct {
 	// If set, boltrouter will be running in local mode.
 	// For example, boultrouter will not query quicksilver to get endpoints.
-	Local bool
+	Local bool `yaml:"Local"`
 
 	// Enable pass through in Bolt.
-	Passthrough bool
+	Passthrough bool `yaml:"Passthrough"`
 
 	// Enable failover to a aws request if the Bolt request fails.
-	Failover bool
+	Failover bool `yaml:"Failover"`
 }

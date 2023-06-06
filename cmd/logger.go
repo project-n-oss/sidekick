@@ -6,10 +6,19 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/sys/unix"
+	"golang.org/x/term"
 )
 
 func NewLogger(verbose bool) *zap.Logger {
-	logEncoder := getConsoleEncoder()
+	var logEncoder zapcore.Encoder
+	if !term.IsTerminal(unix.Stdout) {
+		encoderConfig := getEncoderConfig()
+		encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+		logEncoder = zapcore.NewJSONEncoder(encoderConfig)
+	} else {
+		logEncoder = zapcore.NewConsoleEncoder(getEncoderConfig())
+	}
 
 	zapAtom := zap.NewAtomicLevel()
 	zapAtom.SetLevel(zapcore.InfoLevel)
@@ -29,20 +38,15 @@ func NewLogger(verbose bool) *zap.Logger {
 		zapAtom.SetLevel(zapcore.DebugLevel)
 	}
 
-	OnShutdown(func() {
-		_ = logger.Sync()
-	})
-
 	return ret
 }
 
-func getConsoleEncoder() zapcore.Encoder {
+func getEncoderConfig() zapcore.EncoderConfig {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = customMilliTimeEncoder
-	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	encoderConfig.CallerKey = "caller"
-	return zapcore.NewConsoleEncoder(encoderConfig)
+	return encoderConfig
 }
 
 func customMilliTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
