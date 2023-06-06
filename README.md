@@ -82,6 +82,8 @@ docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_R
 docker run -p 7075:7075 --env BOLT_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve -v
 ```
 
+If using temporary credentials, add `--env AWS_SESSION_TOKEN=<YOUR_SESSION_TOKEN>` to the command above. However, this is not recommended since credentials will expire. Instead consider using the credentials profiles file with role assumption directives.
+
 #### Running on any machine using the credential profiles file
 
 ```bash
