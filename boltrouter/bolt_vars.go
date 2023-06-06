@@ -98,9 +98,14 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	}
 	ret.ZoneId.Set(awsZoneId)
 
-	boltCustomDomain, ok := os.LookupEnv("BOLT_CUSTOM_DOMAIN")
+	var boltCustomDomain string
+	boltCustomDomain, ok := os.LookupEnv("GRANICA_CUSTOM_DOMAIN")
 	if !ok {
-		return nil, fmt.Errorf("BOLT_CUSTOM_DOMAIN env variable is not set")
+		// Keeping this for backwards compatibility
+		boltCustomDomain, ok = os.LookupEnv("BOLT_CUSTOM_DOMAIN")
+		if !ok {
+			return nil, fmt.Errorf("GRANICA_CUSTOM_DOMAIN or BOLT_CUSTOM_DOMAIN env variable is not set")
+		}
 	}
 	ret.BoltCustomDomain.Set(boltCustomDomain)
 	ret.BoltHostname.Set(fmt.Sprintf("bolt.%s.%s", ret.Region.Get(), ret.BoltCustomDomain.Get()))

@@ -32,7 +32,7 @@ cat > $SERVICE_FILE << EOF
 Description=Sidekick service file
 
 [Service]
-Environment=BOLT_CUSTOM_DOMAIN=$BOLT_CUSTOM_DOMAIN
+Environment=GRANICA_CUSTOM_DOMAIN=$GRANICA_CUSTOM_DOMAIN
 ExecStart=$SIDEKICK_BIN serve -p 7075
 Restart=always
 
