@@ -3,8 +3,10 @@ package boltrouter
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/Pallinder/go-randomdata"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -31,8 +33,9 @@ func TestBoltRequest(t *testing.T) {
 			require.NoError(t, err)
 			br.RefreshEndpoints(ctx)
 			boltVars := br.boltVars
+			body := strings.NewReader(randomdata.Paragraph())
 
-			req, err := http.NewRequest(tt.httpMethod, "test.projectn.co", nil)
+			req, err := http.NewRequest(tt.httpMethod, "test.projectn.co", body)
 			req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
 			require.NoError(t, err)
 

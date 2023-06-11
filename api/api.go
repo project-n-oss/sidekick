@@ -71,7 +71,10 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		a.InternalError(sess.Logger(), w, err)
 		return
-	} else if failover {
+	}
+
+	sess.WithLogger(sess.Logger().With(zap.Int("statusCode", resp.StatusCode)))
+	if failover {
 		sess.WithLogger(sess.Logger().With(zap.Bool("failover", true)))
 	}
 
@@ -82,7 +85,10 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !boltrouter.StatusCodeIs2xx(resp.StatusCode) {
-		sess.Logger().Warn("Status code is not 2xx in s3 response", zap.Int("statusCode", resp.StatusCode))
+		body := boltrouter.CopyRespBody(resp)
+		b, _ := io.ReadAll(body)
+		body.Close()
+		sess.Logger().Warn("Status code is not 2xx in s3 response", zap.String("body", string(b)))
 	}
 
 	w.WriteHeader(resp.StatusCode)

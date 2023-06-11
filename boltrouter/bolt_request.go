@@ -31,7 +31,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*B
 		return nil, fmt.Errorf("could not get aws credentials: %w", err)
 	}
 
-	failoverRequest, err := newFailoverAwsRequest(ctx, req.Clone(ctx), awsCred, sourceBucket)
+	failoverRequest, err := newFailoverAwsRequest(ctx, req, awsCred, sourceBucket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make failover request: %w", err)
 	}
@@ -128,25 +128,30 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 
 	}
 
-	req.Header.Del("Authorization")
-	req.Header.Del("X-Amz-Security-Token")
+	clone := req.Clone(ctx)
 
-	req.URL.Host = host
-	req.Host = host
-	req.URL.Scheme = "https"
-	req.RequestURI = ""
+	clone.Header.Del("Authorization")
+	clone.Header.Del("X-Amz-Security-Token")
+
+	clone.URL.Host = host
+	clone.Host = host
+	clone.URL.Scheme = "https"
+	clone.RequestURI = ""
 	// This needs to be set to "" in order to fix unicode errors in RawPath
 	// This forces to use the well formated req.URL.Path value instead
-	req.URL.RawPath = ""
+	clone.URL.RawPath = ""
+
+	// req.Clone(ctx) does not clone Body, need to clone body manually
+	CopyReqBody(req, clone)
 
 	payloadHash := req.Header.Get("X-Amz-Content-Sha256")
 
 	awsSigner := v4.NewSigner()
-	if err := awsSigner.SignHTTP(ctx, awsCred, req, payloadHash, "s3", sourceBucket.Region, time.Now()); err != nil {
+	if err := awsSigner.SignHTTP(ctx, awsCred, clone, payloadHash, "s3", sourceBucket.Region, time.Now()); err != nil {
 		return nil, err
 	}
 
-	return req.Clone(ctx), nil
+	return clone, nil
 }
 
 // DoBoltRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
@@ -159,7 +164,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
+		logger.Warn("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
 		resp, err := http.DefaultClient.Do(boltReq.Aws)
 		return resp, true, err
 	}

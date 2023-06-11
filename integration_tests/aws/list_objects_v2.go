@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +21,7 @@ func (s *AwsSuite) listObjectsV2() {
 	ctx := s.ctx
 	t := s.T()
 	awsBucket := aws.String(utils.Bucket)
+	expectedKeys := testDataKeys()
 
 	utils.AssertAwsClients(t, ctx, "ListObjectsV2",
 		&s3.ListObjectsV2Input{
@@ -31,6 +33,7 @@ func (s *AwsSuite) listObjectsV2() {
 			for i, obj := range resp.Contents {
 				keys[i] = *obj.Key
 			}
+			assert.ElementsMatch(t, expectedKeys, keys)
 			return reflect.ValueOf(keys)
 		},
 	)
