@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -22,7 +21,6 @@ func (s *AwsSuite) listObjectsV2() {
 	ctx := s.ctx
 	t := s.T()
 	awsBucket := aws.String(utils.Bucket)
-
 	expectedKeys := testDataKeys()
 
 	utils.AssertAwsClients(t, ctx, "ListObjectsV2",
@@ -34,7 +32,6 @@ func (s *AwsSuite) listObjectsV2() {
 			keys := make([]string, len(resp.Contents))
 			for i, obj := range resp.Contents {
 				keys[i] = *obj.Key
-				fmt.Println(*obj.Key)
 			}
 			assert.ElementsMatch(t, expectedKeys, keys)
 			return reflect.ValueOf(keys)
