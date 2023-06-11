@@ -25,7 +25,7 @@ func AssertAwsClients[I any](
 	}{
 		{name: "Aws", s3c: AwsS3c},
 		{name: "Sidekick", s3c: SidekickS3c},
-		// {name: "Failover", s3c: SidekickS3c},
+		{name: "Failover", s3c: SidekickS3c},
 	}
 	responses := make([]reflect.Value, len(testCases))
 	for i, tt := range testCases {
