@@ -85,8 +85,9 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !boltrouter.StatusCodeIs2xx(resp.StatusCode) {
-		b, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		body := boltrouter.CopyRespBody(resp)
+		b, _ := io.ReadAll(body)
+		body.Close()
 		sess.Logger().Warn("Status code is not 2xx in s3 response", zap.String("body", string(b)))
 	}
 

@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"crypto/md5"
+	_ "embed"
+	"encoding/base64"
 	"io"
 	"strings"
 	"testing"
 
-	"github.com/Pallinder/go-randomdata"
 	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,51 +18,41 @@ import (
 
 func (s *AwsSuite) TestPutObject() {
 	s.Run("Put", s.putObject)
+	s.Run("PutWrongMD5", s.putObjectWrongMD5)
 }
 
-// func testDataKeys() []string {
-// 	return []string{
-// 		"animals/1.csv",
-// 		"animals/2.csv",
-// 		"cities/1.json",
-// 		"cities/2.json",
-// 	}
-// }
+//go:embed put_data.txt
+var put_data string
 
 func (s *AwsSuite) putObject() {
 	ctx := s.ctx
 	t := s.T()
 	awsBucket := aws.String(utils.Bucket)
+	awsKey := aws.String("put_data.txt")
 	region := utils.GetRegionForBucket(t, ctx, utils.Bucket)
-	s3c := utils.GetAwsS3Client(t, ctx, region)
 	s3cSidekick := utils.GetSidekickS3Client(t, ctx, region)
 
-	data := randomdata.Paragraph()
-	reader := strings.NewReader(data)
+	md5Hash := md5.Sum([]byte(put_data))
+	md5HashStr := base64.StdEncoding.EncodeToString(md5Hash[:])
 
+	reader := strings.NewReader(put_data)
 	input := &s3.PutObjectInput{
-		Bucket: awsBucket,
-		Key:    aws.String("foo.txt"),
-		Body:   reader,
+		Bucket:      awsBucket,
+		Key:         awsKey,
+		Body:        reader,
+		ContentType: aws.String("text/plain"),
+		ContentMD5:  aws.String(md5HashStr),
 	}
-	awsResp, err := s3c.PutObject(ctx, input)
+	awsResp, err := s3cSidekick.PutObject(ctx, input)
 	require.NoError(t, err)
 	assert.NotNil(t, awsResp)
-	// awsResp, err = s3cSidekick.PutObject(ctx, input)
-	// require.NoError(t, err)
-	// assert.NotNil(t, awsResp)
+
 	t.Cleanup(func() {
 		_, err := s3cSidekick.DeleteObject(ctx, &s3.DeleteObjectInput{
-			Bucket: input.Bucket,
-			Key:    input.Key,
+			Bucket: awsBucket,
+			Key:    awsKey,
 		})
 		require.NoError(t, err)
-		// getObjResp, err := s3cSidekick.GetObject(ctx, &s3.GetObjectInput{
-		// 	Bucket: input.Bucket,
-		// 	Key:    input.Key,
-		// })
-		// require.NoError(t, err)
-		// assert.NotNil(t, getObjResp)
 	})
 
 	testCases := []struct {
@@ -72,8 +64,8 @@ func (s *AwsSuite) putObject() {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			getObjResp, err := tt.s3c.GetObject(ctx, &s3.GetObjectInput{
-				Bucket: input.Bucket,
-				Key:    input.Key,
+				Bucket: awsBucket,
+				Key:    awsKey,
 			})
 			require.NoError(t, err)
 			defer getObjResp.Body.Close()
@@ -82,7 +74,31 @@ func (s *AwsSuite) putObject() {
 
 			retData, err := io.ReadAll(getObjResp.Body)
 			require.NoError(t, err)
-			assert.Equal(t, data, string(retData))
+			assert.Equal(t, put_data, string(retData))
 		})
 	}
+}
+
+func (s *AwsSuite) putObjectWrongMD5() {
+	ctx := s.ctx
+	t := s.T()
+	awsBucket := aws.String(utils.Bucket)
+	awsKey := aws.String("put_data.txt")
+	region := utils.GetRegionForBucket(t, ctx, utils.Bucket)
+	s3cSidekick := utils.GetSidekickS3Client(t, ctx, region)
+
+	md5Hash := md5.Sum([]byte(put_data + "wrong"))
+	md5HashStr := base64.StdEncoding.EncodeToString(md5Hash[:])
+
+	reader := strings.NewReader(put_data)
+	input := &s3.PutObjectInput{
+		Bucket:      awsBucket,
+		Key:         awsKey,
+		Body:        reader,
+		ContentType: aws.String("text/plain"),
+		ContentMD5:  aws.String(md5HashStr),
+	}
+	awsResp, err := s3cSidekick.PutObject(ctx, input)
+	require.Error(t, err)
+	assert.Nil(t, awsResp)
 }
