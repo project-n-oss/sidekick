@@ -159,7 +159,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-		logger.Warn("bolt request failed", zap.Int("status code", resp.StatusCode), zap.String("msg", string(b)))
+		logger.Warn("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
 		resp, err := http.DefaultClient.Do(boltReq.Aws)
 		return resp, true, err
 	}
