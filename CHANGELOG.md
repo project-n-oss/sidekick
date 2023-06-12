@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/project-n-oss/sidekick/compare/v0.1.16...v0.1.17) (2023-06-11)
+
+
+### Features
+
+* put object tests and better logging ([#38](https://github.com/project-n-oss/sidekick/issues/38)) ([43e84ab](https://github.com/project-n-oss/sidekick/commit/43e84ab091188c9b3fb7d3f4c8b77e22430edce8))
+
 ## [0.1.16](https://github.com/project-n-oss/sidekick/compare/v0.1.15...v0.1.16) (2023-06-06)
 
 
