@@ -6,13 +6,12 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"golang.org/x/sys/unix"
 	"golang.org/x/term"
 )
 
 func NewLogger(verbose bool) *zap.Logger {
 	var logEncoder zapcore.Encoder
-	if !term.IsTerminal(unix.Stdout) {
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
 		encoderConfig := getEncoderConfig()
 		encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 		logEncoder = zapcore.NewJSONEncoder(encoderConfig)
