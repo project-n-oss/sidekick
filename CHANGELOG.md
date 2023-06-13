@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.18](https://github.com/project-n-oss/sidekick/compare/v0.1.17...v0.1.18) (2023-06-13)
+
+
+### Features
+
+* changed BOLT_CUSTOM_DOMAIN to GRANICA_CUSTOM_DOMAIN ([6575e0b](https://github.com/project-n-oss/sidekick/commit/6575e0b22be9cafb3a9aee36529e22165b4cff50))
+
+
+### Bug Fixes
+
+* fix terminal logger for windows ([9336da4](https://github.com/project-n-oss/sidekick/commit/9336da40895efbee6befabc3e218a9b4182724e3))
+
 ## [0.1.17](https://github.com/project-n-oss/sidekick/compare/v0.1.16...v0.1.17) (2023-06-11)
 
 
