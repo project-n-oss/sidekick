@@ -33,7 +33,7 @@ func init() {
 }
 
 var rootLogger *zap.Logger
-var rootConfig Config
+var rootConfig = NewConfig()
 
 var rootCmd = &cobra.Command{
 	Use:           "sidekick",

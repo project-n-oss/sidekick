@@ -16,6 +16,12 @@ type Config struct {
 	BoltRouter boltrouter.Config `yaml:"BoltRouter"`
 }
 
+func NewConfig() Config {
+	return Config{
+		BoltRouter: boltrouter.NewConfig(),
+	}
+}
+
 const configPrefix = "SIDEKICK"
 
 // UnmarshalConfigFromEnv populates config with values from environment variables. The names of the

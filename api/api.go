@@ -73,10 +73,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sess.WithLogger(sess.Logger().With(zap.Int("statusCode", resp.StatusCode)))
-	if failover {
-		sess.WithLogger(sess.Logger().With(zap.Bool("failover", true)))
-	}
+	sess.WithLogger(sess.Logger().With(zap.Int("statusCode", resp.StatusCode)).With(zap.Bool("failover", failover)))
 
 	for k, values := range resp.Header {
 		for _, v := range values {

@@ -77,6 +77,5 @@ func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
 	if cmd.Flags().Lookup("failover").Changed {
 		boltRouterConfig.Failover, _ = cmd.Flags().GetBool("failover")
 	}
-
 	return boltRouterConfig
 }
