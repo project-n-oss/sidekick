@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.19](https://github.com/project-n-oss/sidekick/compare/v0.1.18...v0.1.19) (2023-06-14)
+
+
+### Bug Fixes
+
+* fix default failover value ([#41](https://github.com/project-n-oss/sidekick/issues/41)) ([d23fa41](https://github.com/project-n-oss/sidekick/commit/d23fa4148c0c9a2cba34cf83b81bfe32aaa3bacc))
+
 ## [0.1.18](https://github.com/project-n-oss/sidekick/compare/v0.1.17...v0.1.18) (2023-06-13)
 
 
