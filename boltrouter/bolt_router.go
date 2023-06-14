@@ -40,6 +40,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		Timeout: time.Duration(90) * time.Second,
 	}
 
+	logger.Debug("config", zap.Any("config", cfg))
 	br := &BoltRouter{
 		config: cfg,
 

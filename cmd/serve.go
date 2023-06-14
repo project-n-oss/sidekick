@@ -68,15 +68,8 @@ var serveCmd = &cobra.Command{
 
 func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
 	boltRouterConfig := rootConfig.BoltRouter
-	if cmd.Flags().Lookup("local").Changed {
-		boltRouterConfig.Local, _ = cmd.Flags().GetBool("local")
-	}
-	if cmd.Flags().Lookup("passthrough").Changed {
-		boltRouterConfig.Passthrough, _ = cmd.Flags().GetBool("passthrough")
-	}
-	if cmd.Flags().Lookup("failover").Changed {
-		boltRouterConfig.Failover, _ = cmd.Flags().GetBool("failover")
-	}
-
+	boltRouterConfig.Local, _ = cmd.Flags().GetBool("local")
+	boltRouterConfig.Passthrough, _ = cmd.Flags().GetBool("passthrough")
+	boltRouterConfig.Failover, _ = cmd.Flags().GetBool("failover")
 	return boltRouterConfig
 }
