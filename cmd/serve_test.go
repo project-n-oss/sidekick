@@ -28,7 +28,7 @@ func TestServeCmdConfig(t *testing.T) {
 		cfg := getBoltRouterConfig(testServeCmd)
 		assert.Equal(t, false, cfg.Local)
 		assert.Equal(t, false, cfg.Passthrough)
-		assert.Equal(t, false, cfg.Failover)
+		assert.Equal(t, true, cfg.Failover)
 	})
 
 	t.Run("EnvOnly", func(t *testing.T) {

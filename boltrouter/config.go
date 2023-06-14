@@ -11,3 +11,11 @@ type Config struct {
 	// Enable failover to a aws request if the Bolt request fails.
 	Failover bool `yaml:"Failover"`
 }
+
+func NewConfig() Config {
+	return Config{
+		Local:       false,
+		Passthrough: false,
+		Failover:    true,
+	}
+}
