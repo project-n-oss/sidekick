@@ -2,15 +2,34 @@ package boltrouter
 
 import (
 	"context"
+	fipssha256 "crypto/sha256"
 	"fmt"
+	"hash"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	md5simd "github.com/minio/md5-simd"
+	"github.com/minio/minio-go/v7/pkg/signer"
+	awsSigner "github.com/project-n-oss/sidekick/boltrouter/signer/aws"
+	"github.com/project-n-oss/sidekick/common"
 	"go.uber.org/zap"
 )
+
+// hashWrapper implements the md5simd.Hasher interface.
+type hashWrapper struct {
+	hash.Hash
+}
+
+func newSHA256Hasher() md5simd.Hasher {
+	return &hashWrapper{Hash: fipssha256.New()}
+}
+
+func (m *hashWrapper) Close() {
+	m.Hash = nil
+}
 
 type BoltRequest struct {
 	Bolt *http.Request
@@ -21,7 +40,8 @@ type BoltRequest struct {
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
 func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*BoltRequest, error) {
-	sourceBucket, err := extractSourceBucket(ctx, req)
+	boltReq := req.Clone(ctx)
+	sourceBucket, err := extractSourceBucket(ctx, boltReq)
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
 	}
@@ -37,83 +57,61 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*B
 	}
 
 	authPrefix := randString(4)
-	headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
+	headReq, err := awsSigner.SignedAwsHeadRequest(ctx, boltReq, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
 	}
 
-	BoltURL, err := br.SelectBoltEndpoint(ctx, req.Method)
+	BoltURL, err := br.SelectBoltEndpoint(ctx, boltReq.Method)
 	if err != nil {
 		return nil, err
 	}
 
 	// RequestURI is the unmodified request-target of the Request-Line (RFC 7230, Section 3.1.1) as sent by the client to a server.
 	//  It is an error to set this field in an HTTP client request.
-	req.RequestURI = ""
+	boltReq.RequestURI = ""
 	if sourceBucket.Style == virtualHostedStyle {
-		BoltURL = BoltURL.JoinPath(sourceBucket.Bucket, req.URL.EscapedPath())
+		BoltURL = BoltURL.JoinPath(sourceBucket.Bucket, boltReq.URL.EscapedPath())
 
 	} else {
-		BoltURL = BoltURL.JoinPath(req.URL.Path)
+		BoltURL = BoltURL.JoinPath(boltReq.URL.Path)
 	}
 	// Bolt will only accept query if path starts with "/".
 	// Bolt will return a 400 error otherwise
 	BoltURL.Path = "/" + BoltURL.Path
-	BoltURL.RawQuery = req.URL.RawQuery
-	req.URL = BoltURL
-	req.URL.Scheme = "https"
+	BoltURL.RawQuery = boltReq.URL.RawQuery
+	boltReq.URL = BoltURL
+	boltReq.URL.Scheme = "https"
 
 	if v := headReq.Header.Get("X-Amz-Security-Token"); v != "" {
-		req.Header.Set("X-Amz-Security-Token", v)
+		boltReq.Header.Set("X-Amz-Security-Token", v)
 	}
 	if v := headReq.Header.Get("X-Amz-Date"); v != "" {
-		req.Header.Set("X-Amz-Date", v)
+		boltReq.Header.Set("X-Amz-Date", v)
 	}
 	if v := headReq.Header.Get("Authorization"); v != "" {
-		req.Header.Set("Authorization", v)
+		boltReq.Header.Set("Authorization", v)
 	}
 	if v := headReq.Header.Get("X-Amz-Content-Sha256"); v != "" {
-		req.Header.Set("X-Amz-Content-Sha256", v)
+		boltReq.Header.Set("X-Amz-Content-Sha256", v)
 	}
 
-	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
-	req.Host = br.boltVars.BoltHostname.Get()
-	req.Header.Set("X-Bolt-Auth-Prefix", authPrefix)
-	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
+	boltReq.Header.Set("Host", br.boltVars.BoltHostname.Get())
+	boltReq.Host = br.boltVars.BoltHostname.Get()
+	boltReq.Header.Set("X-Bolt-Auth-Prefix", authPrefix)
+	boltReq.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), boltReq.Header.Get("User-Agent")))
 
 	if !br.config.Passthrough {
-		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
+		boltReq.Header.Set("X-Bolt-Passthrough-Read", "disable")
 	}
+
+	dataLen := boltReq.ContentLength
+	boltReq = signer.StreamingSignV4(boltReq, awsCred.AccessKeyID, awsCred.SecretAccessKey, awsCred.SessionToken, br.boltVars.Region.Get(), dataLen, time.Now(), newSHA256Hasher())
 
 	return &BoltRequest{
-		Bolt: req.Clone(ctx),
+		Bolt: boltReq.Clone(ctx),
 		Aws:  failoverRequest.Clone(ctx),
 	}, nil
-}
-
-// SHA value for empty payload. As head object request is with empty payload
-// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/aws/signer/v4#Signer.SignHTTP
-const emptyPayloadHash string = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-
-// signedAwsHeadRequest returns a new Head http.Request signed by AWS v4 signer.
-func signedAwsHeadRequest(ctx context.Context, req *http.Request, awsCred aws.Credentials, sourceBucket string, region string, authPrefix string) (*http.Request, error) {
-	headObjectURL := fmt.Sprintf("https://s3.%s.amazonaws.com/%s/%s/auth", region, sourceBucket, authPrefix)
-	headReq, err := http.NewRequestWithContext(ctx, http.MethodHead, headObjectURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if v := req.Header.Get("X-Amz-Security-Token"); v != "" {
-		headReq.Header.Set("X-Amz-Security-Token", v)
-	}
-	headReq.Header.Set("X-Amz-Content-Sha256", emptyPayloadHash)
-
-	// TODO: change signing time/skew clock to take advantage of bolt caching
-	awsSigner := v4.NewSigner()
-	if err := awsSigner.SignHTTP(ctx, awsCred, headReq, emptyPayloadHash, "s3", region, time.Now()); err != nil {
-		return nil, err
-	}
-	return headReq, nil
 }
 
 // newFailoverAwsRequest creates a standard aws s3 request that can be used as a failover if the Bolt request fails.
@@ -142,7 +140,7 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 	clone.URL.RawPath = ""
 
 	// req.Clone(ctx) does not clone Body, need to clone body manually
-	CopyReqBody(req, clone)
+	common.CopyReqBody(req, clone)
 
 	payloadHash := req.Header.Get("X-Amz-Content-Sha256")
 

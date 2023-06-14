@@ -25,6 +25,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 	if err != nil {
 		return nil, fmt.Errorf("could not get BoltVars: %w", err)
 	}
+	logger.Debug("config", zap.Any("config", cfg))
 
 	// custom transport is needed to allow certificate validation from bolt hostname
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()

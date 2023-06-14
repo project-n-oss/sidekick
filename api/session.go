@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/project-n-oss/sidekick/boltrouter"
+	"github.com/project-n-oss/sidekick/common"
 	"go.uber.org/zap"
 )
 
@@ -61,6 +62,13 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 			zap.String("user_agent", r.UserAgent()),
 		))
 
+		var bodyCopy []byte
+		// only copy the body if we're in debug mode
+		// This needs to happen before we do the request or the body will be read and empty
+		if session.Logger().Level() == zap.DebugLevel {
+			bodyCopy = common.ExtractReqBody(r)
+		}
+
 		defer func() {
 			duration := time.Since(beginTime)
 			method := r.Method
@@ -74,12 +82,12 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 			)
 			logger.Info(method + " " + path)
 			if session.Logger().Level() == zap.DebugLevel {
-				dump, err := httputil.DumpRequest(r, true)
+				dump, err := httputil.DumpRequest(r, false)
 				if err != nil {
 					logger.Error("session dump request", zap.Error(err))
 					return
 				}
-				logger.Debug("session request dump", zap.String("dump", string(dump)))
+				logger.Debug("session request dump", zap.String("dump", string(dump)), zap.String("body", string(bodyCopy)))
 			}
 		}()
 

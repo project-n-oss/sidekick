@@ -7,6 +7,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/project-n-oss/sidekick/boltrouter"
+	"github.com/project-n-oss/sidekick/common"
 
 	"go.uber.org/zap"
 )
@@ -82,7 +83,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !boltrouter.StatusCodeIs2xx(resp.StatusCode) {
-		body := boltrouter.CopyRespBody(resp)
+		body := common.CopyRespBody(resp)
 		b, _ := io.ReadAll(body)
 		body.Close()
 		sess.Logger().Warn("Status code is not 2xx in s3 response", zap.String("body", string(b)))

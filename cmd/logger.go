@@ -6,18 +6,17 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"golang.org/x/term"
 )
 
 func NewLogger(verbose bool) *zap.Logger {
 	var logEncoder zapcore.Encoder
-	if !term.IsTerminal(int(os.Stdout.Fd())) {
-		encoderConfig := getEncoderConfig()
-		encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-		logEncoder = zapcore.NewJSONEncoder(encoderConfig)
-	} else {
-		logEncoder = zapcore.NewConsoleEncoder(getEncoderConfig())
-	}
+	// if !term.IsTerminal(int(os.Stdout.Fd())) {
+	encoderConfig := getEncoderConfig()
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	logEncoder = zapcore.NewJSONEncoder(encoderConfig)
+	// } else {
+	// logEncoder = zapcore.NewConsoleEncoder(getEncoderConfig())
+	// }
 
 	zapAtom := zap.NewAtomicLevel()
 	zapAtom.SetLevel(zapcore.InfoLevel)

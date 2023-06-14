@@ -1,4 +1,4 @@
-package boltrouter
+package common
 
 import (
 	"bytes"
@@ -13,6 +13,15 @@ func CopyReqBody(src *http.Request, dest *http.Request) {
 	b.ReadFrom(src.Body)
 	src.Body = io.NopCloser(&b)
 	dest.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
+}
+
+// ExtractReqBody extract the request body and returns the body.
+// this allows reading a request body multiple times without "closing" it
+func ExtractReqBody(src *http.Request) []byte {
+	var b bytes.Buffer
+	b.ReadFrom(src.Body)
+	src.Body = io.NopCloser(&b)
+	return b.Bytes()
 }
 
 // copyResp copies the response body and returns a new response with the copied body.
