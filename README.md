@@ -94,53 +94,13 @@ By default, the `default` profile from the credentials file will be used. If you
 
 ## Using Sidekick
 
-In order to use sidekick with your aws sdk, you need to update the S3 Client hostname to point to the sidekick url (ex: `localhost:7075`).
-Currently you also need to set your s3 client to use `pathStyle` to work.
+### AWS sdks
 
-### AWS cli
+You can find examples on how to setup your aws sdk clients to work with sidekick [here](./integrations/AWS_SDK.md)
 
-```bash
-aws s3api get-object --bucket <YOUR_BUCKET> --key <YOUR_OBJECT_KEY>  delete_me.csv --endpoint-url http://localhost:7075
-```
+### 3rd Party Integrations
 
-### Go
-
-```Go
-func main() {
-	ctx := context.Background()
-	sidekickURL := "http://localhost:7075"
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if service == s3.ServiceID {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           sidekickURL,
-				SigningRegion: region,
-			}, nil
-		}
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-	cfg, _ := config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
-	s3c := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = true
-	})
-
-	awsResp, err := s3c.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String("foo"),
-		Key:    aws.String("bar"),
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	data, err := io.ReadAll(awsResp.Body)
-	awsResp.Body.Close()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(data))
-}
-
-```
+You can find more information to integrated sidekick with 3 party tools/frameworks/services [here](./integrations/)
 
 ## Contributing
 
