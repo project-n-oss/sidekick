@@ -96,7 +96,7 @@ By default, the `default` profile from the credentials file will be used. If you
 
 ### AWS sdks
 
-You can find examples on how to setup your aws sdk clients to work with sidekick [here](AWS_SDK.md)
+You can find examples on how to setup your aws sdk clients to work with sidekick [here](./integrations/AWS_SDK.md)
 
 ### 3rd Party Integrations
 
