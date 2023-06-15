@@ -84,7 +84,7 @@ func main() {
 <a name="java"></a>
 ## Java
 
-Currently the Java sdk by default uses the [streamin signature](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html) when uploading objects. Sidekick does not currenlty support and you need to disable the chunk encoding when creating the client as shown below
+Currently the Java sdk by default uses the [streamin signature](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html) when uploading objects. Sidekick does not currenlty support this and you need to disable the chunk encoding when creating the client as shown below.
 
 ``` java
 import com.amazonaws.AmazonServiceException;
