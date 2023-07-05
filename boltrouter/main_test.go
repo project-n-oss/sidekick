@@ -88,7 +88,6 @@ func NewTestS3Client(t *testing.T, ctx context.Context, requestStyle s3RequestSt
 	})
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithEndpointResolverWithOptions(customResolver),
-		config.WithRegion(region),
 	)
 	require.NoError(t, err)
 
@@ -96,6 +95,7 @@ func NewTestS3Client(t *testing.T, ctx context.Context, requestStyle s3RequestSt
 		if requestStyle == pathStyle {
 			o.UsePathStyle = true
 		}
+		o.Region = region
 	})
 
 	return ret

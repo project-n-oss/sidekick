@@ -20,8 +20,8 @@ type BoltRequest struct {
 // NewBoltRequest transforms the passed in intercepted aws http.Request and returns
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
-func (br *BoltRouter) NewBoltRequest(ctx context.Context, req *http.Request) (*BoltRequest, error) {
-	sourceBucket, err := extractSourceBucket(ctx, req)
+func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
+	sourceBucket, err := extractSourceBucket(ctx, logger, req, br.boltVars.Region.Get())
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
 	}

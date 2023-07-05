@@ -57,7 +57,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	sess := CtxSession(req.Context())
 	ctx := req.Context()
 
-	boltReq, err := sess.br.NewBoltRequest(ctx, req.Clone(ctx))
+	boltReq, err := sess.br.NewBoltRequest(ctx, sess.Logger(), req.Clone(ctx))
 	if err != nil {
 		a.InternalError(sess.Logger(), w, err)
 		return
