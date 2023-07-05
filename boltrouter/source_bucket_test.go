@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap/zaptest"
 )
 
 func TestExtractSourceBucket(t *testing.T) {
 	ctx := context.Background()
+	logger := zaptest.NewLogger(t)
 	testCase := []struct {
 		requestStyle s3RequestStyle
 		region       string
@@ -33,11 +35,27 @@ func TestExtractSourceBucket(t *testing.T) {
 			})
 
 			req := testS3Client.GetRequest(t, ctx)
-			sourceBucket, err := extractSourceBucket(ctx, req)
+			sourceBucket, err := extractSourceBucket(ctx, logger, req, "foo")
 			assert.NoError(t, err)
 			assert.Equal(t, bucketName, sourceBucket.Bucket)
 			assert.Equal(t, tc.requestStyle, sourceBucket.Style)
 			assert.Equal(t, tc.region, sourceBucket.Region)
 		})
 	}
+
+	t.Run("DefaultRegionFallback", func(t *testing.T) {
+		bucketName := randomdata.SillyName()
+
+		testS3Client := NewTestS3Client(t, ctx, pathStyle, "")
+		testS3Client.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket: aws.String(bucketName),
+		})
+
+		req := testS3Client.GetRequest(t, ctx)
+		sourceBucket, err := extractSourceBucket(ctx, logger, req, "foo")
+		assert.NoError(t, err)
+		assert.Equal(t, bucketName, sourceBucket.Bucket)
+		assert.Equal(t, pathStyle, sourceBucket.Style)
+		assert.Equal(t, "foo", sourceBucket.Region)
+	})
 }

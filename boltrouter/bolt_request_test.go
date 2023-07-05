@@ -39,7 +39,7 @@ func TestBoltRequest(t *testing.T) {
 			req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
 			require.NoError(t, err)
 
-			boltReq, err := br.NewBoltRequest(ctx, req)
+			boltReq, err := br.NewBoltRequest(ctx, logger, req)
 			require.NoError(t, err)
 			require.NotNil(t, boltReq)
 			boltHttpRequest := boltReq.Bolt
