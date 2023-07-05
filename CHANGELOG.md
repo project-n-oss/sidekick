@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.20](https://github.com/project-n-oss/sidekick/compare/v0.1.19...v0.1.20) (2023-07-05)
+
+
+### Features
+
+* default back to aws region ([#44](https://github.com/project-n-oss/sidekick/issues/44)) ([61096f1](https://github.com/project-n-oss/sidekick/commit/61096f121a821e5fd6ea9b77770f32aaf22af551))
+
 ## [0.1.19](https://github.com/project-n-oss/sidekick/compare/v0.1.18...v0.1.19) (2023-06-14)
 
 
