@@ -33,17 +33,17 @@ func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 
 // BoltInfo is the type returned by quicksilver.
 // It follows this schema:
-//
-//		{
-//		  "main_write_endpoints": [],
-//			"failover_write_endpoints": [],
-//			"main_read_endpoints": [],
-//			"failover_read_endpoints": [],
-//			"cluster_healthy": bool,
-//		  "client_behavior_params": {
-//		    "cleaner_on": bool
-//			  "crunch_traffic_percent": int
-//		  }
+
+//	{
+//		"main_write_endpoints": [],
+//		"failover_write_endpoints": [],
+//		"main_read_endpoints": [],
+//		"failover_read_endpoints": [],
+//		"cluster_healthy": bool,
+//		"client_behavior_params": {
+//			"cleaner_on": bool
+//			"crunch_traffic_percent": int
+//		}
 //	}
 type BoltInfo map[string]interface{}
 
