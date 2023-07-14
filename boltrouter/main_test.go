@@ -26,10 +26,10 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	mainWriteEndpoints     []string = []string{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
-	failoverWriteEndpoints []string = []string{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
-	mainReadEndpoints      []string = []string{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
-	failoverReadEndpoints  []string = []string{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
+	mainWriteEndpoints     []string = interface{}{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
+	failoverWriteEndpoints []string = interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
+	mainReadEndpoints      []string = interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
+	failoverReadEndpoints  []string = interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
 	defaultClusterHealthy       = true
 	defaultClientBehaviorParams = map[string]interface{}{
