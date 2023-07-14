@@ -17,14 +17,17 @@ func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) 
 	boltEndpoints := br.boltVars.BoltInfo.Get()
 	for _, key := range preferredOrder {
 		availableEndpoints, ok := boltEndpoints[key]
-		// cast availableEndpoints to []string
-		availableEndpointsStrSlice, castOk := availableEndpoints.([]string)
+		availableEndpointsSlice, castOk := availableEndpoints.([]interface{})
 		if !castOk {
 			return nil, fmt.Errorf("could not cast availableEndpoints to []string")
 		}
-		if ok && len(availableEndpointsStrSlice) > 0 {
-			randomIndex := rand.Intn(len(availableEndpointsStrSlice))
-			selectedEndpoint := availableEndpointsStrSlice[randomIndex]
+		availableEndpointsStr := make([]string, len(availableEndpointsSlice))
+		for i, v := range availableEndpointsSlice {
+			availableEndpointsStr[i] = v.(string)
+		}
+		if ok && len(availableEndpointsStr) > 0 {
+			randomIndex := rand.Intn(len(availableEndpointsStr))
+			selectedEndpoint := availableEndpointsStr[randomIndex]
 			return url.Parse(fmt.Sprintf("https://%s", selectedEndpoint))
 		}
 	}
@@ -124,7 +127,6 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 	}
 
 	if clusterHealthyBool {
-		// cast clientBehaviorParams to map[string]interface{}
 		clientBehaviorParams, ok := clientBehaviorParams.(map[string]interface{})
 		if !ok {
 			return "", "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
@@ -134,8 +136,8 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 		if crunchTrafficPercent == nil {
 			return "", "", fmt.Errorf("could not get crunch_traffic_percent from clientBehaviorParams")
 		}
-		// cast crunchTrafficPercent to int
-		crunchTrafficPercentInt, ok := crunchTrafficPercent.(int)
+
+		crunchTrafficPercentInt, ok := crunchTrafficPercent.(float64)
 		if !ok {
 			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to int")
 		}
@@ -144,7 +146,7 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		rnd := r.Intn(totalWeight)
 
-		if rnd <= (crunchTrafficPercentInt * totalWeight / 100) {
+		if rnd < (int(crunchTrafficPercentInt) * totalWeight / 100) {
 			return "bolt", "traffic splitting", nil
 		} else {
 			return "s3", "traffic splitting", nil

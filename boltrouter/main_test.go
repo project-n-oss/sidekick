@@ -26,15 +26,15 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	mainWriteEndpoints     []string = interface{}{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
-	failoverWriteEndpoints []string = interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
-	mainReadEndpoints      []string = interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
-	failoverReadEndpoints  []string = interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
+	mainWriteEndpoints     []interface{} = []interface{}{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
+	failoverWriteEndpoints []interface{} = []interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
+	mainReadEndpoints      []interface{} = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
+	failoverReadEndpoints  []interface{} = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
 	defaultClusterHealthy       = true
 	defaultClientBehaviorParams = map[string]interface{}{
 		"cleaner_on":             true,
-		"crunch_traffic_percent": 20,
+		"crunch_traffic_percent": 20.0,
 	}
 
 	quicksilverResponse map[string]interface{} = map[string]interface{}{
@@ -47,14 +47,10 @@ var (
 	}
 )
 
-type QuicksilverMock struct {
-	server *httptest.Server
-}
-
 func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}) *httptest.Server {
 	quicksilverResponse["cluster_healthy"] = clusterHealthy
-	if clientBehaviorParams != nil || len(clientBehaviorParams) > 0 {
-		quicksilverResponse["client_behavior_params"] = clientBehaviorParams
+	for k, v := range clientBehaviorParams {
+		quicksilverResponse["client_behavior_params"].(map[string]interface{})[k] = v
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
