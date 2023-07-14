@@ -31,18 +31,34 @@ var (
 	mainReadEndpoints      []string = []string{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
 	failoverReadEndpoints  []string = []string{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
-	quicksilverResponse map[string][]string = map[string][]string{
+	defaultClusterHealthy       = true
+	defaultClientBehaviorParams = map[string]interface{}{
+		"cleaner_on":             true,
+		"crunch_traffic_percent": 20,
+	}
+
+	quicksilverResponse map[string]interface{} = map[string]interface{}{
 		"main_write_endpoints":     mainWriteEndpoints,
 		"failover_write_endpoints": failoverWriteEndpoints,
 		"main_read_endpoints":      mainReadEndpoints,
 		"failover_read_endpoints":  failoverReadEndpoints,
+		"cluster_healthy":          defaultClusterHealthy,
+		"client_behavior_params":   defaultClientBehaviorParams,
 	}
 )
 
-func QuicksilverMock(t *testing.T) *httptest.Server {
+type QuicksilverMock struct {
+	server *httptest.Server
+}
+
+func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}) *httptest.Server {
+	quicksilverResponse["cluster_healthy"] = clusterHealthy
+	if clientBehaviorParams != nil || len(clientBehaviorParams) > 0 {
+		quicksilverResponse["client_behavior_params"] = clientBehaviorParams
+	}
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sc := http.StatusOK
-
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(sc)
 		json.NewEncoder(w).Encode(quicksilverResponse)
@@ -51,8 +67,8 @@ func QuicksilverMock(t *testing.T) *httptest.Server {
 	return server
 }
 
-func SetupQuickSilverMock(t *testing.T, ctx context.Context, logger *zap.Logger) {
-	quicksilver := QuicksilverMock(t)
+func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, logger *zap.Logger) {
+	quicksilver := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams)
 	boltVars, err := GetBoltVars(ctx, logger)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilver.URL)
