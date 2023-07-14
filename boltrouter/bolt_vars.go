@@ -39,12 +39,7 @@ func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 //			"failover_write_endpoints": [],
 //			"main_read_endpoints": [],
 //			"failover_read_endpoints": [],
-//			"cluster_health_metrics": {
-//			  "metric_name": {
-//				  "timestamp": 0,
-//	      "value": 0
-//				}
-//		  },
+//			"cluster_healthy": bool,
 //		  "client_behavior_params": {
 //		    "cleaner_on": bool
 //			  "crunch_traffic_percent": int
