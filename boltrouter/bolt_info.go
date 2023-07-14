@@ -17,9 +17,14 @@ func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) 
 	boltEndpoints := br.boltVars.BoltInfo.Get()
 	for _, key := range preferredOrder {
 		availableEndpoints, ok := boltEndpoints[key]
-		if ok && len(availableEndpoints) > 0 {
-			randomIndex := rand.Intn(len(availableEndpoints))
-			selectedEndpoint := availableEndpoints[randomIndex]
+		// cast availableEndpoints to []string
+		availableEndpointsStrSlice, castOk := availableEndpoints.([]string)
+		if !castOk {
+			return nil, fmt.Errorf("could not cast availableEndpoints to []string")
+		}
+		if ok && len(availableEndpointsStrSlice) > 0 {
+			randomIndex := rand.Intn(len(availableEndpointsStrSlice))
+			selectedEndpoint := availableEndpointsStrSlice[randomIndex]
 			return url.Parse(fmt.Sprintf("https://%s", selectedEndpoint))
 		}
 	}
@@ -41,7 +46,8 @@ func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
 	return writeOrderEnpoints
 }
 
-// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshEndpoints every 2min
+// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshBoltInfo every 2min
+// TODO: refresh every 10-20 seconds
 func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
 	ticker := time.NewTicker(120 * time.Second)
 	go func() {
@@ -60,11 +66,11 @@ func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
 // RefreshBoltInfo refreshes the BoltVars.BoltInfo variable and restarts the refresh interval.
 // Call this method to force refresh BoltVars.BoltInfo.
 func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
-	endpoints, err := br.getBoltInfo(ctx)
+	info, err := br.getBoltInfo(ctx)
 	if err != nil {
 		return fmt.Errorf("could not refresh bolt info: %w", err)
 	}
-	br.boltVars.BoltInfo.Set(endpoints)
+	br.boltVars.BoltInfo.Set(info)
 	return nil
 }
 
@@ -88,7 +94,7 @@ func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 
 	resp, err := br.standardHttpClient.Do(r)
 	if err != nil {
-		return BoltInfo{}, fmt.Errorf("could not get endpoints from quicksilver: %w", err)
+		return BoltInfo{}, fmt.Errorf("could not get info from quicksilver: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -99,4 +105,51 @@ func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 	}
 
 	return info, nil
+}
+
+// select initial request destination based on cluster_health_metrics and client_behavior_params
+func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string, err error) {
+	boltInfo := br.boltVars.BoltInfo.Get()
+
+	clusterHealthy := boltInfo["cluster_healthy"]
+	clientBehaviorParams := boltInfo["client_behavior_params"]
+
+	if clusterHealthy == nil || clientBehaviorParams == nil {
+		return "", "", fmt.Errorf("could not select initial request target")
+	}
+
+	clusterHealthyBool, ok := clusterHealthy.(bool)
+	if !ok {
+		return "", "", fmt.Errorf("could not cast boltHealthy to bool")
+	}
+
+	if clusterHealthyBool {
+		// cast clientBehaviorParams to map[string]interface{}
+		clientBehaviorParams, ok := clientBehaviorParams.(map[string]interface{})
+		if !ok {
+			return "", "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
+		}
+
+		crunchTrafficPercent := clientBehaviorParams["crunch_traffic_percent"]
+		if crunchTrafficPercent == nil {
+			return "", "", fmt.Errorf("could not get crunch_traffic_percent from clientBehaviorParams")
+		}
+		// cast crunchTrafficPercent to int
+		crunchTrafficPercentInt, ok := crunchTrafficPercent.(int)
+		if !ok {
+			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to int")
+		}
+
+		totalWeight := 1000
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		rnd := r.Intn(totalWeight)
+
+		if rnd <= (crunchTrafficPercentInt * totalWeight / 100) {
+			return "bolt", "traffic splitting", nil
+		} else {
+			return "s3", "traffic splitting", nil
+		}
+	} else {
+		return "s3", "cluster unhealthy", nil
+	}
 }
