@@ -14,7 +14,7 @@ import (
 func TestBoltRequest(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, logger)
+	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), logger)
 
 	testCases := []struct {
 		name       string
