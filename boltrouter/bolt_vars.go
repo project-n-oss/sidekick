@@ -47,10 +47,10 @@ func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 //		  },
 //		  "client_behavior_params": {
 //		    "cleaner_on": bool
-//			  "param_name": int
+//			  "crunch_traffic_percent": int
 //		  }
 //	}
-type BoltInfo map[string][]string
+type BoltInfo map[string]interface{}
 
 // BoltVars is a singleton struct keeping track of Bolt variables accross threads.
 // This is used in BoltRouter to route requests appropriately.
