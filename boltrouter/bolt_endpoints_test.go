@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestGetBoltEndpoints(t *testing.T) {
+func TestGetBoltInfo(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
 	SetupQuickSilverMock(t, ctx, logger)
@@ -28,7 +28,7 @@ func TestGetBoltEndpoints(t *testing.T) {
 			br, err := NewBoltRouter(ctx, logger, tt.cfg)
 			require.NoError(t, err)
 
-			endpoints, err := br.getBoltEndpoints(ctx)
+			endpoints, err := br.getBoltInfo(ctx)
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, map[string][]string(endpoints))
 		})
@@ -56,7 +56,7 @@ func TestSelectBoltEndpoint(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			br, err := NewBoltRouter(ctx, logger, tt.cfg)
-			br.RefreshEndpoints(ctx)
+			br.RefreshBoltInfo(ctx)
 			require.NoError(t, err)
 
 			endpoint, err := br.SelectBoltEndpoint(ctx, tt.httpMethod)

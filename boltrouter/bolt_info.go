@@ -14,7 +14,7 @@ import (
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) (*url.URL, error) {
 	preferredOrder := br.getPreferredEndpointOrder(reqMethod)
-	boltEndpoints := br.boltVars.BoltEndpoints.Get()
+	boltEndpoints := br.boltVars.BoltInfo.Get()
 	for _, key := range preferredOrder {
 		availableEndpoints, ok := boltEndpoints[key]
 		if ok && len(availableEndpoints) > 0 {
@@ -41,14 +41,14 @@ func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
 	return writeOrderEnpoints
 }
 
-// RefreshEndpointsPeriodically starts a goroutine that calls RefreshEndpoints every 2min
-func (br *BoltRouter) RefreshEndpointsPeriodically(ctx context.Context) {
+// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshEndpoints every 2min
+func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
 	ticker := time.NewTicker(120 * time.Second)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				br.RefreshEndpoints(ctx)
+				br.RefreshBoltInfo(ctx)
 			case <-ctx.Done():
 				ticker.Stop()
 				return
@@ -57,46 +57,46 @@ func (br *BoltRouter) RefreshEndpointsPeriodically(ctx context.Context) {
 	}()
 }
 
-// RefreshEndpoints refreshes the BoltVars.BoltEndpoints variable and restarts the refresh interval.
-// Call this method to force refresh BoltVars.BoltEndpoints.
-func (br *BoltRouter) RefreshEndpoints(ctx context.Context) error {
-	endpoints, err := br.getBoltEndpoints(ctx)
+// RefreshBoltInfo refreshes the BoltVars.BoltInfo variable and restarts the refresh interval.
+// Call this method to force refresh BoltVars.BoltInfo.
+func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
+	endpoints, err := br.getBoltInfo(ctx)
 	if err != nil {
-		return fmt.Errorf("could not refresh bolt endpoints: %w", err)
+		return fmt.Errorf("could not refresh bolt info: %w", err)
 	}
-	br.boltVars.BoltEndpoints.Set(endpoints)
+	br.boltVars.BoltInfo.Set(endpoints)
 	return nil
 }
 
-// getBoltEndpoints queries quicksilver and returns a BoltEndpointsMap.
+// getBoltInfo queries quicksilver and returns a BoltInfo.
 // It will always return an empty mapif running in local mode.
-func (br *BoltRouter) getBoltEndpoints(ctx context.Context) (BoltEndpointsMap, error) {
+func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 	// If running locally, we can't connect to quicksilver.
 	if br.config.Local {
-		return BoltEndpointsMap{}, nil
+		return BoltInfo{}, nil
 	}
 
 	if br.boltVars.QuicksilverURL.Get() == "" || br.boltVars.Region.Get() == "" {
-		return BoltEndpointsMap{}, fmt.Errorf("quicksilverUrl: '%v' or region '%v' are not set", br.boltVars.QuicksilverURL.Get(), br.boltVars.Region.Get())
+		return BoltInfo{}, fmt.Errorf("quicksilverUrl: '%v' or region '%v' are not set", br.boltVars.QuicksilverURL.Get(), br.boltVars.Region.Get())
 	}
 
 	requestURL := br.boltVars.QuicksilverURL.Get()
 	r, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
-		return BoltEndpointsMap{}, err
+		return BoltInfo{}, err
 	}
 
 	resp, err := br.standardHttpClient.Do(r)
 	if err != nil {
-		return BoltEndpointsMap{}, fmt.Errorf("could not get endpoints from quicksilver: %w", err)
+		return BoltInfo{}, fmt.Errorf("could not get endpoints from quicksilver: %w", err)
 	}
 
 	defer resp.Body.Close()
-	var endpoints BoltEndpointsMap
-	err = json.NewDecoder(resp.Body).Decode(&endpoints)
+	var info BoltInfo
+	err = json.NewDecoder(resp.Body).Decode(&info)
 	if err != nil {
-		return BoltEndpointsMap{}, nil
+		return BoltInfo{}, nil
 	}
 
-	return endpoints, nil
+	return info, nil
 }
