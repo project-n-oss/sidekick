@@ -116,8 +116,12 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 	clusterHealthy := boltInfo["cluster_healthy"]
 	clientBehaviorParams := boltInfo["client_behavior_params"]
 
-	if clusterHealthy == nil || clientBehaviorParams == nil {
-		return "", "", fmt.Errorf("could not select initial request target")
+	if clusterHealthy == nil {
+		return "", "", fmt.Errorf("could not select initial request target, cluster_healthy is nil")
+	}
+
+	if clientBehaviorParams == nil {
+		return "", "", fmt.Errorf("could not select initial request target, client_behavior_params is nil")
 	}
 
 	clusterHealthyBool, ok := clusterHealthy.(bool)
