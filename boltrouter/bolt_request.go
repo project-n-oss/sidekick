@@ -80,6 +80,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 	req.Host = br.boltVars.BoltHostname.Get()
 	req.Header.Set("X-Bolt-Auth-Prefix", authPrefix)
 	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
+	req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
 
 	if !br.config.Passthrough {
 		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
