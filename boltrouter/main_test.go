@@ -31,7 +31,6 @@ var (
 	mainReadEndpoints      []interface{} = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
 	failoverReadEndpoints  []interface{} = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
-	defaultClusterHealthy       = true
 	defaultClientBehaviorParams = map[string]interface{}{
 		"cleaner_on":             true,
 		"crunch_traffic_percent": 20.0,
@@ -42,15 +41,20 @@ var (
 		"failover_write_endpoints": failoverWriteEndpoints,
 		"main_read_endpoints":      mainReadEndpoints,
 		"failover_read_endpoints":  failoverReadEndpoints,
-		"cluster_healthy":          defaultClusterHealthy,
-		"client_behavior_params":   defaultClientBehaviorParams,
 	}
 )
 
-func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}) *httptest.Server {
-	quicksilverResponse["cluster_healthy"] = clusterHealthy
-	for k, v := range clientBehaviorParams {
-		quicksilverResponse["client_behavior_params"].(map[string]interface{})[k] = v
+func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool) *httptest.Server {
+	// Reset quicksilverResponse to default
+	delete(quicksilverResponse, "client_behavior_params")
+	delete(quicksilverResponse, "cluster_healthy")
+
+	if intelligentQS {
+		quicksilverResponse["cluster_healthy"] = clusterHealthy
+		quicksilverResponse["client_behavior_params"] = defaultClientBehaviorParams
+		for k, v := range clientBehaviorParams {
+			quicksilverResponse["client_behavior_params"].(map[string]interface{})[k] = v
+		}
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -63,8 +67,8 @@ func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams 
 	return server
 }
 
-func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, logger *zap.Logger) {
-	quicksilver := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams)
+func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool, logger *zap.Logger) {
+	quicksilver := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
 	boltVars, err := GetBoltVars(ctx, logger)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilver.URL)

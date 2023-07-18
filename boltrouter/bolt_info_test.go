@@ -12,7 +12,7 @@ import (
 func TestGetBoltInfo(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": 50.0}, logger)
+	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": 50.0}, true, logger)
 
 	testCases := []struct {
 		name     string
@@ -38,7 +38,7 @@ func TestGetBoltInfo(t *testing.T) {
 func TestSelectBoltEndpoint(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": 60.0}, logger)
+	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": 60.0}, true, logger)
 
 	testCases := []struct {
 		name       string
@@ -77,15 +77,17 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 		clientBehaviorParams map[string]interface{}
 		expected             string
 		reason               string
+		intelligentQS        bool
 	}{
-		{name: "ClusterUnhealthy", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 70}, expected: "s3", reason: "cluster unhealthy"},
-		{name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 0}, expected: "s3", reason: "traffic splitting"},
-		{name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 100}, expected: "bolt", reason: "traffic splitting"},
+		{name: "ClusterUnhealthy", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 70}, expected: "s3", reason: "cluster unhealthy", intelligentQS: true},
+		{name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 0}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
+		{name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 100}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
+		{name: "BackwardsCompat", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: "bolt", reason: "backwards compatibility", intelligentQS: false},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			SetupQuickSilverMock(t, ctx, tt.clusterHealthy, tt.clientBehaviorParams, logger)
+			SetupQuickSilverMock(t, ctx, tt.clusterHealthy, tt.clientBehaviorParams, tt.intelligentQS, logger)
 			br, err := NewBoltRouter(ctx, logger, tt.cfg)
 			br.RefreshBoltInfo(ctx)
 			require.NoError(t, err)
