@@ -79,9 +79,9 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 		reason               string
 		intelligentQS        bool
 	}{
-		{name: "ClusterUnhealthy", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 70}, expected: "s3", reason: "cluster unhealthy", intelligentQS: true},
-		{name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 0}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
-		{name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": 100}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
+		{name: "ClusterUnhealthy", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: "s3", reason: "cluster unhealthy", intelligentQS: true},
+		{name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
+		{name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
 		{name: "BackwardsCompat", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: "bolt", reason: "backwards compatibility", intelligentQS: false},
 	}
 
