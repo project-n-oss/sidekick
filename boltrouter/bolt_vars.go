@@ -119,7 +119,7 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 
 	userAgentPrefix, ok := os.LookupEnv("USER_AGENT_PREFIX")
 	if !ok {
-		userAgentPrefix = "projectn/"
+		userAgentPrefix = "granica-sidekick/"
 	} else {
 		userAgentPrefix = fmt.Sprintf("%s/", userAgentPrefix)
 	}
