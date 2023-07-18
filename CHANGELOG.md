@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.21](https://github.com/project-n-oss/sidekick/compare/v0.1.20...v0.1.21) (2023-07-17)
+
+
+### Features
+
+* **KRY-627:** set X-Bolt-Availability-Zone header in Bolt requests ([#46](https://github.com/project-n-oss/sidekick/issues/46)) ([951623b](https://github.com/project-n-oss/sidekick/commit/951623b7e0bb02cdee535ed897556629382de95c))
+
 ## [0.1.20](https://github.com/project-n-oss/sidekick/compare/v0.1.19...v0.1.20) (2023-07-05)
 
 
