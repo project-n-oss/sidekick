@@ -177,13 +177,24 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 			resp, err := http.DefaultClient.Do(boltReq.Aws)
 			return resp, true, err
 		}
-
 		return resp, false, nil
 	} else {
 		resp, err := http.DefaultClient.Do(boltReq.Aws)
-		return resp, true, err
+		if err != nil {
+			return resp, false, err
+		} else if !StatusCodeIs2xx(resp.StatusCode) {
+			// if the request to AWS failed and cleaner is on, fall back to Bolt
+			cleanerOn, err := br.GetCleanerStatus()
+			if err != nil {
+				return resp, false, err
+			}
+			if cleanerOn {
+				resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+				return resp, true, err
+			}
+		}
+		return resp, false, nil
 	}
-
 }
 
 func StatusCodeIs2xx(statusCode int) bool {

@@ -110,6 +110,17 @@ func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 	return info, nil
 }
 
+func (br *BoltRouter) GetCleanerStatus() (bool, error) {
+	boltInfo := br.boltVars.BoltInfo.Get()
+	clientBehaviorParams := boltInfo["client_behavior_params"].(map[string]interface{})
+	cleanerOn := clientBehaviorParams["cleaner_on"]
+	cleanerOnBool, ok := cleanerOn.(bool)
+	if !ok {
+		return false, fmt.Errorf("could not cast cleanerOn to bool")
+	}
+	return cleanerOnBool, nil
+}
+
 // select initial request destination based on cluster_health_metrics and client_behavior_params
 func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string, err error) {
 	boltInfo := br.boltVars.BoltInfo.Get()
