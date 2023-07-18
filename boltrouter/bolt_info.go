@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -140,16 +141,16 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 			return "", "", fmt.Errorf("could not get crunch_traffic_percent from clientBehaviorParams")
 		}
 
-		crunchTrafficPercentFloat, ok := crunchTrafficPercent.(float64)
-		if !ok {
-			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to float")
+		crunchTrafficPercentInt, err := strconv.Atoi(crunchTrafficPercent.(string))
+		if err != nil {
+			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to int")
 		}
 
 		totalWeight := 1000
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		rnd := r.Intn(totalWeight)
 
-		if rnd < (int(crunchTrafficPercentFloat) * totalWeight / 100) {
+		if rnd < (int(crunchTrafficPercentInt) * totalWeight / 100) {
 			return "bolt", "traffic splitting", nil
 		} else {
 			return "s3", "traffic splitting", nil
