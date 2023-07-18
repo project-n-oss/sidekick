@@ -140,16 +140,16 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 			return "", "", fmt.Errorf("could not get crunch_traffic_percent from clientBehaviorParams")
 		}
 
-		crunchTrafficPercentInt, ok := crunchTrafficPercent.(float64)
+		crunchTrafficPercentFloat, ok := crunchTrafficPercent.(float64)
 		if !ok {
-			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to int")
+			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to float")
 		}
 
 		totalWeight := 1000
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		rnd := r.Intn(totalWeight)
 
-		if rnd < (int(crunchTrafficPercentInt) * totalWeight / 100) {
+		if rnd < (int(crunchTrafficPercentFloat) * totalWeight / 100) {
 			return "bolt", "traffic splitting", nil
 		} else {
 			return "s3", "traffic splitting", nil
