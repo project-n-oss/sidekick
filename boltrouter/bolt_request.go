@@ -189,8 +189,11 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 				return resp, false, err
 			}
 			if cleanerOn {
+				logger.Warn("aws request failed, cleaner is on, falling back to bolt")
 				resp, err := br.boltHttpClient.Do(boltReq.Bolt)
 				return resp, true, err
+			} else {
+				logger.Warn("aws request failed, cleaner is off, doing nothing")
 			}
 		}
 		return resp, false, nil
