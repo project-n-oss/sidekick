@@ -50,7 +50,7 @@ func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
 	return writeOrderEnpoints
 }
 
-// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshBoltInfo every 2min
+// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshBoltInfo every 10 seconds
 func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
 	ticker := time.NewTicker(10 * time.Second)
 	go func() {
