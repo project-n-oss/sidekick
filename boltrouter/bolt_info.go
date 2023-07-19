@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const (
+	BoltInfoRefreshInterval = 10 * time.Second
+)
+
 // SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in requMethod.
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) (*url.URL, error) {
@@ -50,9 +54,9 @@ func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
 	return writeOrderEnpoints
 }
 
-// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshBoltInfo every 10 seconds
+// RefreshBoltInfoPeriodically starts a goroutine that calls RefreshBoltInfo every BoltInfoRefreshInterval seconds
 func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(BoltInfoRefreshInterval)
 	go func() {
 		for {
 			select {
