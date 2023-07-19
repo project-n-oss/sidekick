@@ -84,6 +84,18 @@ projectn status
 
 Wait for 100% progress on the status board
 
+### Make sure `crunch_traffic_percent` is set to `"100"`
+
+Current integration tests assume that all traffic will first hit Bolt, therefore, ensure that this setting is set.
+
+On the Admin Server run:
+
+```
+kubectl describe cm client-behavior-params
+```
+
+Make sure `crunch_traffic_percent` is set to `"100"`. Edit the configmap appropriately (`kubectl edit cm client-behavior-params`)
+
 ## Running the tests
 
 Create a `.env` file in `sidekick/integration_tests`:
