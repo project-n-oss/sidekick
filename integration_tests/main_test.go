@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-var boltIntegration = flag.Bool("i", false, "run bolt integration test suite")
+var boltIntegration = flag.Bool("bi", false, "run bolt integration test suite")
 var sidekickURL = flag.String("sidekick-url", "", "the url sidekick is listening on if ran seperately. If not set, sidekick will be started in a goroutine")
 var port = flag.Int("p", cmd.DEFAULT_PORT, "the port for sidekick to listen on")
 
@@ -82,19 +82,19 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 
 	listenCfg := net.ListenConfig{}
 	addr := ":" + strconv.Itoa(*port)
-	listner, err := listenCfg.Listen(ctx, "tcp", addr)
+	listener, err := listenCfg.Listen(ctx, "tcp", addr)
 	require.NoError(t, err)
 	utils.SidekickURL = "http://localhost" + addr
 
 	go func() {
 		<-ctx.Done()
-		err := listner.Close()
+		err := listener.Close()
 		require.NoError(t, err)
 		logger.Sync()
 	}()
 
 	go func() {
-		err := http.Serve(listner, handler)
+		err := http.Serve(listener, handler)
 		if err != nil {
 			logger.Error(fmt.Errorf("server err: %w", err).Error())
 		}
