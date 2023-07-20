@@ -50,7 +50,7 @@ export SIDEKICK_BOLTROUTER_FAILOVER=true
 go run main serve
 ```
 
-In the context of traffic splitting, if S3 is tried first due to the defined traffic distribution, Sidekick will automatically failover to Bolt if the initial request to S3 encounters an error. This guarantees that the requested object can still be retrieved from Bolt, preserving the desired traffic splitting behavior and ensuring data availability and consistency.
+In the context of traffic splitting, if S3 is tried first due to the defined traffic distribution, Sidekick will automatically failover to Bolt if the initial request to S3 returns a `404 NoSuchKey`. This guarantees that the requested object can still be retrieved from Bolt, preserving the desired traffic splitting behavior and ensuring data availability and consistency.
 
 ### Local
 
