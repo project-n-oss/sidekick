@@ -184,7 +184,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 			return resp, false, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 {
 			// if the request to AWS failed with 404: NoSuchKey, fall back to Bolt
-			logger.Warn("aws request failed, cleaner is on, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
+			logger.Warn("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
 			resp, err := br.boltHttpClient.Do(boltReq.Bolt)
 			return resp, true, err
 		}
