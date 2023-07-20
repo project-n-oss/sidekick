@@ -182,7 +182,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		resp, err := http.DefaultClient.Do(boltReq.Aws)
 		if err != nil {
 			return resp, false, err
-		} else if !StatusCodeIs2xx(resp.StatusCode) {
+		} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 {
 			// if the request to AWS failed and cleaner is on, fall back to Bolt
 			cleanerOn, err := br.GetCleanerStatus()
 			if err != nil {
