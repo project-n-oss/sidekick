@@ -1,1 +1,1 @@
-x-release-please-version 0.1.24
+x-release-please-version 0.1.25
