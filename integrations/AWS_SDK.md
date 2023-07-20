@@ -5,11 +5,13 @@ Currently you also need to set your s3 client to use `pathStyle` to work.
 
 Here are some examples of how to use various aws sdks to work with sidekick:
 
-1. [Aws cli](#aws-cli)
-1. [Go](#go)
-1. [Java](#java)
+1. [AWS CLI](#aws-cli)
+2. [Go](#go)
+3. [Java](#java)
+4. [Python](#python)
 
 <a name="aws-cli"></a>
+
 ## AWS cli
 
 ```bash
@@ -17,6 +19,7 @@ aws s3api get-object --bucket <YOUR_BUCKET> --key <YOUR_OBJECT_KEY>  delete_me.c
 ```
 
 <a name="go"></a>
+
 ## Go
 
 ```Go
@@ -81,12 +84,14 @@ func main() {
 	fmt.Println(string(data))
 }
 ```
+
 <a name="java"></a>
+
 ## Java
 
 Currently the Java sdk by default uses the [streamin signature](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html) when uploading objects. Sidekick does not currenlty support this and you need to disable the chunk encoding when creating the client as shown below.
 
-``` java
+```java
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
@@ -102,7 +107,7 @@ import java.nio.file.Paths;
 
 /**
  * Upload a file to an Amazon S3 bucket.
- * 
+ *
  * This code expects that you have AWS credentials set up per:
  * http://docs.aws.amazon.com/java-sdk/latest/developer-guide/setup-credentials.html
  */
@@ -147,4 +152,46 @@ public class PutObject {
         System.out.println("Done!");
     }
 }
+```
+
+<a name="java"></a>
+
+## Python
+
+```python
+import boto3
+
+# Create a session with a custom endpoint URL
+session = boto3.Session()
+s3_client = session.client(
+    service_name='s3',
+    endpoint_url='http://localhost:7075',
+)
+
+# Specify the bucket name
+bucket_name = 'sidekick-tests-km' # Specify your bucket name
+
+print('Listing bucket ' + bucket_name)
+
+# List objects in the bucket
+response = s3_client.list_objects_v2(Bucket=bucket_name)
+
+objs = []
+# Print the object keys
+if 'Contents' in response:
+    for obj in response['Contents']:
+        objs.append(obj['Key'])
+        print(obj['Key'])
+else:
+    print('No objects found in the bucket.')
+
+print('')
+
+object_key = objs[-1]
+print('Getting object ' + object_key)
+response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+
+object_content = response['Body'].read().decode('utf-8')
+print('Printing first 150 chars of object ' + object_key)
+print(object_content[:150])
 ```
