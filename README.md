@@ -34,7 +34,7 @@ Traffic splitting configuration is managed through the `client-behavior-params` 
 
 ### Failover
 
-Sidekick automatically failovers the request to s3 if the bolt request fails. For example This is usefull when the object does not exist in bolt yet.
+Sidekick automatically failovers the request to s3 if the bolt request fails. For example This is useful when the object does not exist in bolt yet.
 You can disable failover by passing a flag or setting a ENV variable:
 
 ```bash
@@ -112,7 +112,7 @@ You can find more information to integrated sidekick with 3 party tools/framewor
 
 ## Contributing
 
-### Versionning
+### Versioning
 
 This repository uses [release-please](https://github.com/google-github-actions/release-please-action) to create and manage release.
 
