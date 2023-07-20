@@ -110,6 +110,14 @@ You can find examples on how to setup your aws sdk clients to work with sidekick
 
 You can find more information to integrated sidekick with 3 party tools/frameworks/services [here](./integrations/)
 
+### Pre Built  binaries
+Sidekick binaries are hosted and released from Github. Please check our [releases page](./releases).
+To download any release of our linux amd64 binary run:
+
+```bash
+wget https://github.com/project-n-oss/sidekick/releases/{release}/download/sidekick-linux-amd64.tar.gz
+```
+
 ## Contributing
 
 ### Versioning
