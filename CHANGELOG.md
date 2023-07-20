@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.22](https://github.com/project-n-oss/sidekick/compare/v0.1.21...v0.1.22) (2023-07-20)
+
+
+### Features
+
+* **KRY-624:** A more intelligent SideKick ([#47](https://github.com/project-n-oss/sidekick/issues/47)) ([0735c85](https://github.com/project-n-oss/sidekick/commit/0735c85e243d61abd7700e89cdaffef58ada9f72))
+
 ## [0.1.21](https://github.com/project-n-oss/sidekick/compare/v0.1.20...v0.1.21) (2023-07-17)
 
 
