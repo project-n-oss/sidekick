@@ -160,6 +160,7 @@ public class PutObject {
 
 ```python
 import boto3
+import sys
 
 # Create a session with a custom endpoint URL
 session = boto3.Session()
@@ -184,6 +185,9 @@ if 'Contents' in response:
         print(obj['Key'])
 else:
     print('No objects found in the bucket.')
+
+if len(objs) == 0:
+  sys.exit(0)
 
 print('')
 
