@@ -23,6 +23,7 @@ ssh into the instance and clone the [sidekick repository](https://github.com/pro
 ### Create a test buckets
 
 You need to create two buckets for the tests:
+
 - A bucket that will be crunched by bolt
 - A "failover" bucket that will not be touched by bolt, this will force sidekick to failover back to aws calls.
 - A "failover" bucket in a different region, this is usefull to make sure aws failover works in different regions.
@@ -36,25 +37,23 @@ You need to create two buckets for the tests:
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "Statement1",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::{YOUR_ACCOUNT_ID}:role/{PROJECTN_ADMIN_ROLE_OF_CLUSTER}"
-            },
-            "Action": "s3:*",
-            "Resource": [
-                "arn:aws:s3:::{BUCKET_NAME}/*",
-                "arn:aws:s3:::{BUCKET_NAME}"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Statement1",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::{YOUR_ACCOUNT_ID}:role/{PROJECTN_ADMIN_ROLE_OF_CLUSTER}"
+      },
+      "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::{BUCKET_NAME}/*", "arn:aws:s3:::{BUCKET_NAME}"]
+    }
+  ]
 }
 ```
 
 Make sure to replace the following values:
+
 - `YOUR_ACCOUNT_ID`
 - `PROJECTN_ADMIN_ROLE_OF_CLUSTER` (This should be the admin role assumed by the bolt admin server created when you made the cluster)
 - `BUCKET_NAME`
@@ -85,6 +84,18 @@ projectn status
 
 Wait for 100% progress on the status board
 
+### Make sure `crunch_traffic_percent` is set to `"100"`
+
+Current integration tests assume that all traffic will first hit Bolt, therefore, ensure that this setting is set.
+
+On the Admin Server run:
+
+```
+kubectl describe cm client-behavior-params
+```
+
+Make sure `crunch_traffic_percent` is set to `"100"`. Edit the configmap appropriately (`kubectl edit cm client-behavior-params`)
+
 ## Running the tests
 
 Create a `.env` file in `sidekick/integration_tests`:
@@ -99,11 +110,11 @@ GRANICA_CUSTOM_DOMAIN=<YOUR_CLUSTER_DOMAIN>
 You can run test from this directory using the following command:
 
 ```bash
-go test -i -v 
+go test -bi -v
 ```
 
 In order to specify a specifc test or series of tests you want to run, you can use the `-run=` arg like so:
 
 ```bash
-go test -i -v -run=TestAws/TestGetObject
+go test -bi -v -run=TestAws/TestGetObject
 ```

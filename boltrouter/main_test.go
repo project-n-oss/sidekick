@@ -26,12 +26,17 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	mainWriteEndpoints     []string = []string{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
-	failoverWriteEndpoints []string = []string{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
-	mainReadEndpoints      []string = []string{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
-	failoverReadEndpoints  []string = []string{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
+	mainWriteEndpoints     []interface{} = []interface{}{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
+	failoverWriteEndpoints []interface{} = []interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
+	mainReadEndpoints      []interface{} = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
+	failoverReadEndpoints  []interface{} = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
-	quicksilverResponse map[string][]string = map[string][]string{
+	defaultClientBehaviorParams = map[string]interface{}{
+		"cleaner_on":             true,
+		"crunch_traffic_percent": 20.0,
+	}
+
+	quicksilverResponse map[string]interface{} = map[string]interface{}{
 		"main_write_endpoints":     mainWriteEndpoints,
 		"failover_write_endpoints": failoverWriteEndpoints,
 		"main_read_endpoints":      mainReadEndpoints,
@@ -39,10 +44,21 @@ var (
 	}
 )
 
-func QuicksilverMock(t *testing.T) *httptest.Server {
+func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool) *httptest.Server {
+	// Reset quicksilverResponse to default
+	delete(quicksilverResponse, "client_behavior_params")
+	delete(quicksilverResponse, "cluster_healthy")
+
+	if intelligentQS {
+		quicksilverResponse["cluster_healthy"] = clusterHealthy
+		quicksilverResponse["client_behavior_params"] = defaultClientBehaviorParams
+		for k, v := range clientBehaviorParams {
+			quicksilverResponse["client_behavior_params"].(map[string]interface{})[k] = v
+		}
+	}
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sc := http.StatusOK
-
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(sc)
 		json.NewEncoder(w).Encode(quicksilverResponse)
@@ -51,8 +67,8 @@ func QuicksilverMock(t *testing.T) *httptest.Server {
 	return server
 }
 
-func SetupQuickSilverMock(t *testing.T, ctx context.Context, logger *zap.Logger) {
-	quicksilver := QuicksilverMock(t)
+func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool, logger *zap.Logger) {
+	quicksilver := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
 	boltVars, err := GetBoltVars(ctx, logger)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilver.URL)

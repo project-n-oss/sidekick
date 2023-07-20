@@ -14,7 +14,7 @@ import (
 func TestBoltRequest(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, logger)
+	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
 
 	testCases := []struct {
 		name       string
@@ -31,7 +31,7 @@ func TestBoltRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			br, err := NewBoltRouter(ctx, logger, tt.cfg)
 			require.NoError(t, err)
-			br.RefreshEndpoints(ctx)
+			br.RefreshBoltInfo(ctx)
 			boltVars := br.boltVars
 			body := strings.NewReader(randomdata.Paragraph())
 
@@ -46,7 +46,7 @@ func TestBoltRequest(t *testing.T) {
 			require.Equal(t, req.Method, boltHttpRequest.Method)
 
 			endpointOrder := br.getPreferredEndpointOrder(req.Method)
-			endpoints := boltVars.BoltEndpoints.Get()[endpointOrder[0]]
+			endpoints := boltVars.BoltInfo.Get()[endpointOrder[0]]
 			require.Contains(t, endpoints, boltHttpRequest.URL.Hostname())
 
 			require.Equal(t, boltVars.BoltHostname.Get(), boltHttpRequest.Header.Get("Host"))

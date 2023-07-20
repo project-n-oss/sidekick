@@ -31,16 +31,21 @@ func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	return instance, instanceErr
 }
 
-// BoltEndpointsMap is the type returned by quicksilver.
+// BoltInfo is the type returned by quicksilver.
 // It follows this schema:
-//
+
 //	{
-//	  "main_write_endpoints": [],
-//	  "failover_write_endpoints": [],
-//	  "main_read_endpoints": [],
-//	  "failover_read_endpoints": []
+//		"main_write_endpoints": [],
+//		"failover_write_endpoints": [],
+//		"main_read_endpoints": [],
+//		"failover_read_endpoints": [],
+//		"cluster_healthy": bool,
+//		"client_behavior_params": {
+//			"cleaner_on": bool
+//			"crunch_traffic_percent": int
+//		}
 //	}
-type BoltEndpointsMap map[string][]string
+type BoltInfo map[string]interface{}
 
 // BoltVars is a singleton struct keeping track of Bolt variables accross threads.
 // This is used in BoltRouter to route requests appropriately.
@@ -57,7 +62,7 @@ type BoltVars struct {
 	UserAgentPrefix  AtomicVar[string]
 	BoltHostname     AtomicVar[string]
 	QuicksilverURL   AtomicVar[string]
-	BoltEndpoints    AtomicVar[BoltEndpointsMap]
+	BoltInfo         AtomicVar[BoltInfo]
 }
 
 func (bv *BoltVars) MarshalLogObject(enc zapcore.ObjectEncoder) error {
@@ -114,7 +119,7 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 
 	userAgentPrefix, ok := os.LookupEnv("USER_AGENT_PREFIX")
 	if !ok {
-		userAgentPrefix = "projectn/"
+		userAgentPrefix = "granica-sidekick/"
 	} else {
 		userAgentPrefix = fmt.Sprintf("%s/", userAgentPrefix)
 	}
@@ -127,7 +132,7 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	}
 	ret.QuicksilverURL.Set(quicksilverURL)
 
-	ret.BoltEndpoints.Set(BoltEndpointsMap{})
+	ret.BoltInfo.Set(BoltInfo{})
 
 	logger.Debug("done!", zap.Object("BoltVars", ret))
 	return ret, nil

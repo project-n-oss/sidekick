@@ -1,7 +1,11 @@
 # Load Tests
 
-[k6](https://k6.io/docs/)
+Run load tests on SideKick with [k6](https://k6.io/docs/).
 
+## Dependencies
+
+- Install [k7](https://k6.io/docs/get-started/installation/)
+- Install `npm`
 
 ## Running
 
@@ -17,6 +21,7 @@ BUCKET=<BUCKET>
 Run sidekick locally in a different terminal and run the following commands:
 
 ```bash
+npm install
 npm run bundle
 npm run get
 ```

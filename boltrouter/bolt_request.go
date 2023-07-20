@@ -159,18 +159,37 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoBoltRequest will failover to AWS if the Bolt request fails and the config.Failover is set to true.
 // DoboltRequest will return a bool indicating if the request was a failover.
 func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, error) {
-	resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+	initialRequestTarget, reason, err := br.SelectInitialRequestTarget()
 	if err != nil {
-		return resp, false, err
-	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
-		b, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		logger.Warn("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
-		resp, err := http.DefaultClient.Do(boltReq.Aws)
-		return resp, true, err
+		return nil, false, err
 	}
 
-	return resp, false, nil
+	logger.Info("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
+
+	if initialRequestTarget == "bolt" {
+		resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+		if err != nil {
+			return resp, false, err
+		} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
+			b, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			logger.Warn("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
+			resp, err := http.DefaultClient.Do(boltReq.Aws)
+			return resp, true, err
+		}
+		return resp, false, nil
+	} else {
+		resp, err := http.DefaultClient.Do(boltReq.Aws)
+		if err != nil {
+			return resp, false, err
+		} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 {
+			// if the request to AWS failed with 404: NoSuchKey, fall back to Bolt
+			logger.Warn("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
+			resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+			return resp, true, err
+		}
+		return resp, false, nil
+	}
 }
 
 func StatusCodeIs2xx(statusCode int) bool {

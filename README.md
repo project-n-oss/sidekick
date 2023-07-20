@@ -26,7 +26,13 @@ export AWS_REGION=<YOUR_BOLT_CLUSTER_REGION>
 export AWS_ZONE_ID=<AWS_ZONE_ID>
 ```
 
-### Failover 
+### Traffic Splitting
+
+Traffic splitting provides a mechanism to precisely control how traffic is distributed between Bolt (Crunch) and S3, enabling gradual rollouts and offering numerous benefits. This capability allows you to onboard your applications in a safe and controlled manner, minimizing risks and ensuring smooth transitions.
+
+Traffic splitting configuration is managed through the `client-behavior-params` ConfigMap in the Bolt (Crunch) Kubernetes cluster. This ConfigMap can be edited on your behalf by the Granica team or by you via `custom.vars` or directly editing the ConfigMap (the latter option is not recommended as it can cause state drift.) For further guidance on the traffic splitting configuration, reach out to the Granica team.
+
+### Failover
 
 Sidekick automatically failovers the request to s3 if the bolt request fails. For example This is usefull when the object does not exist in bolt yet.
 You can disable failover by passing a flag or setting a ENV variable:
@@ -43,6 +49,8 @@ go run main serve --failover=false
 export SIDEKICK_BOLTROUTER_FAILOVER=true
 go run main serve
 ```
+
+In the context of traffic splitting, if S3 is tried first due to the defined traffic distribution, Sidekick will automatically failover to Bolt if the initial request to S3 returns a `404 NoSuchKey`. This guarantees that the requested object can still be retrieved from Bolt, preserving the desired traffic splitting behavior and ensuring data availability and consistency.
 
 ### Local
 

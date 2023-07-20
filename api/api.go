@@ -29,11 +29,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 	}
 
 	// force refresh endpoints at the start
-	if err := br.RefreshEndpoints(ctx); err != nil {
+	if err := br.RefreshBoltInfo(ctx); err != nil {
 		return nil, err
 	}
 	// Refresh endpoints periodically
-	br.RefreshEndpointsPeriodically(ctx)
+	br.RefreshBoltInfoPeriodically(ctx)
 	br.RefreshAWSCredentialsPeriodically(ctx, logger)
 
 	return &Api{
