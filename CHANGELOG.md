@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.24](https://github.com/project-n-oss/sidekick/compare/v0.1.23...v0.1.24) (2023-07-20)
+
+
+### Bug Fixes
+
+* fix 2 typos in readme ([#52](https://github.com/project-n-oss/sidekick/issues/52)) ([82eea5c](https://github.com/project-n-oss/sidekick/commit/82eea5c1b2d2451ead3b1c10dcb02286bfe042ed))
+
 ## [0.1.23](https://github.com/project-n-oss/sidekick/compare/v0.1.22...v0.1.23) (2023-07-20)
 
 
