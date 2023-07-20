@@ -33,6 +33,9 @@ func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) 
 		if ok && len(availableEndpointsStr) > 0 {
 			randomIndex := rand.Intn(len(availableEndpointsStr))
 			selectedEndpoint := availableEndpointsStr[randomIndex]
+			if br.config.Local {
+				return url.Parse(fmt.Sprintf("http://%s", selectedEndpoint))
+			}
 			return url.Parse(fmt.Sprintf("https://%s", selectedEndpoint))
 		}
 	}
@@ -86,7 +89,16 @@ func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
 func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 	// If running locally, we can't connect to quicksilver.
 	if br.config.Local {
-		return BoltInfo{}, nil
+		if br.config.BoltEndpointOverride == "" {
+			return BoltInfo{}, nil
+		}
+		endpoints := make(BoltInfo)
+		endpoints["main_write_endpoints"] = []interface{}{br.config.BoltEndpointOverride}
+		endpoints["failover_write_endpoints"] = []interface{}{br.config.BoltEndpointOverride}
+		endpoints["main_read_endpoints"] = []interface{}{br.config.BoltEndpointOverride}
+		endpoints["failover_read_endpoints"] = []interface{}{br.config.BoltEndpointOverride}
+		endpoints["cluster_healthy"] = true
+		return endpoints, nil
 	}
 
 	if br.boltVars.QuicksilverURL.Get() == "" || br.boltVars.Region.Get() == "" {
