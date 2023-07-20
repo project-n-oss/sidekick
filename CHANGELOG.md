@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.23](https://github.com/project-n-oss/sidekick/compare/v0.1.22...v0.1.23) (2023-07-20)
+
+
+### Bug Fixes
+
+* new release ([b4cf490](https://github.com/project-n-oss/sidekick/commit/b4cf490c98c86513eaf69ba2caf2e5d3568839d5))
+
 ## [0.1.22](https://github.com/project-n-oss/sidekick/compare/v0.1.21...v0.1.22) (2023-07-20)
 
 
