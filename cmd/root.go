@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gopkg.in/yaml.v2"
 )
 
@@ -42,7 +43,25 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		logLevel, _ := cmd.Flags().GetString("log-level")
-		rootLogger = NewLogger(logLevel)
+		var zapLogLevel zapcore.Level
+		switch logLevel {
+		case "debug":
+			zapLogLevel = zapcore.DebugLevel
+		case "info":
+			zapLogLevel = zapcore.InfoLevel
+		case "warn":
+			zapLogLevel = zapcore.WarnLevel
+		case "error":
+			zapLogLevel = zapcore.ErrorLevel
+		case "fatal":
+			zapLogLevel = zapcore.FatalLevel
+		case "panic":
+			zapLogLevel = zapcore.PanicLevel
+		default:
+			zapLogLevel = zapcore.InfoLevel
+		}
+		rootLogger = NewLogger(zapLogLevel)
+
 		OnShutdown(func() {
 			_ = rootLogger.Sync()
 		})

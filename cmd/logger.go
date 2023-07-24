@@ -9,7 +9,7 @@ import (
 	"golang.org/x/term"
 )
 
-func NewLogger(logLevel string) *zap.Logger {
+func NewLogger(logLevel zapcore.Level) *zap.Logger {
 	var logEncoder zapcore.Encoder
 	if !term.IsTerminal(int(os.Stdout.Fd())) {
 		encoderConfig := getEncoderConfig()
@@ -20,7 +20,7 @@ func NewLogger(logLevel string) *zap.Logger {
 	}
 
 	zapAtom := zap.NewAtomicLevel()
-	zapAtom.SetLevel(zapcore.InfoLevel)
+	zapAtom.SetLevel(logLevel)
 
 	ret := zap.New(
 		zapcore.NewCore(
@@ -32,26 +32,7 @@ func NewLogger(logLevel string) *zap.Logger {
 		zap.AddCallerSkip(1),
 	)
 
-	// set zap log level based on logLevel input
-	var zapLogLevel zapcore.Level
-	switch logLevel {
-	case "debug":
-		zapLogLevel = zapcore.DebugLevel
-	case "info":
-		zapLogLevel = zapcore.InfoLevel
-	case "warn":
-		zapLogLevel = zapcore.WarnLevel
-	case "error":
-		zapLogLevel = zapcore.ErrorLevel
-	case "fatal":
-		zapLogLevel = zapcore.FatalLevel
-	case "panic":
-		zapLogLevel = zapcore.PanicLevel
-	default:
-		zapLogLevel = zapcore.InfoLevel
-	}
-
-	zapAtom.SetLevel(zapLogLevel)
+	zapAtom.SetLevel(logLevel)
 
 	return ret
 }
