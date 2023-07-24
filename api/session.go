@@ -76,7 +76,7 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 			if session.Logger().Level() == zap.DebugLevel {
 				dump, err := httputil.DumpRequest(r, true)
 				if err != nil {
-					logger.Error("session dump request", zap.Error(err))
+					logger.Error("error dumping session request", zap.Error(err))
 					return
 				}
 				logger.Debug("session request dump", zap.String("dump", string(dump)))

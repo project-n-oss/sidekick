@@ -168,7 +168,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		return nil, false, err
 	}
 
-	logger.Info("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
+	logger.Debug("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
 
 	if initialRequestTarget == "bolt" {
 		resp, err := br.boltHttpClient.Do(boltReq.Bolt)
@@ -177,7 +177,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
 			b, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
-			logger.Warn("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
+			logger.Error("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
 			resp, err := http.DefaultClient.Do(boltReq.Aws)
 			return resp, true, err
 		}
@@ -188,7 +188,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 			return resp, false, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 {
 			// if the request to AWS failed with 404: NoSuchKey, fall back to Bolt
-			logger.Warn("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
+			logger.Error("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
 			resp, err := br.boltHttpClient.Do(boltReq.Bolt)
 			return resp, true, err
 		}

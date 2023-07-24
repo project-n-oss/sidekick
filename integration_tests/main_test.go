@@ -59,7 +59,7 @@ func TestAws(t *testing.T) {
 
 func SetupSidekick(t *testing.T, ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
-	logger := cmd.NewLogger(false)
+	logger := cmd.NewLogger("debug")
 
 	go func() {
 		sigs := make(chan os.Signal, 1)
