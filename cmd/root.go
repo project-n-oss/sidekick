@@ -28,7 +28,7 @@ func getVersion() string {
 
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "make output more verbose")
+	rootCmd.PersistentFlags().StringP("log-level", "", "info", "log level. one of: debug, info, warn, error, fatal, panic")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
 }
 
@@ -41,8 +41,8 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		verbose, _ := cmd.Flags().GetBool("verbose")
-		rootLogger = NewLogger(verbose)
+		logLevel, _ := cmd.Flags().GetString("log-level")
+		rootLogger = NewLogger(logLevel)
 		OnShutdown(func() {
 			_ = rootLogger.Sync()
 		})
@@ -80,7 +80,7 @@ var rootCmd = &cobra.Command{
 		}()
 
 		fmt.Println(asciiArt)
-		rootLogger.Sugar().Infof("Version: %s", getVersion())
+		fmt.Printf("Version: %s\n", getVersion())
 
 		return nil
 	},
