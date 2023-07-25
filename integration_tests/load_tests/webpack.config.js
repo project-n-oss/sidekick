@@ -6,6 +6,7 @@ module.exports = {
   mode: "production",
   entry: {
     get: "./src/get.test.js",
+    put: "./src/put.test.js",
   },
   output: {
     path: path.resolve(__dirname, "dist"), // eslint-disable-line
