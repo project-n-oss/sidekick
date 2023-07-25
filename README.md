@@ -16,7 +16,7 @@ Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/pat
 
 ### Env Variables
 
-In order to run sidekick, you first need to set some ENV variables
+In order to run Sidekick, you first need to set some ENV variables
 
 ```bash
 export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
