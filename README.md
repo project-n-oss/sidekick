@@ -68,6 +68,10 @@ run the following command to learn more about the options:
 go run main.go serve --help
 ```
 
+### Logging
+
+Sidekick supports a `--log-level` argument to control the logging level. By default, the logging level is set to `info`. However, you can set a more verbose log level, such as debug, to enable detailed debugging information. For all available logging options run `./sidekick --help`.
+
 ### Docker
 
 Build the docker image:
@@ -110,7 +114,8 @@ You can find examples on how to setup your aws sdk clients to work with sidekick
 
 You can find more information to integrated sidekick with 3 party tools/frameworks/services [here](./integrations/)
 
-### Pre Built  binaries
+### Pre Built binaries
+
 Sidekick binaries are hosted and released from Github. Please check our [releases page](./releases).
 To download any release of our linux amd64 binary run:
 

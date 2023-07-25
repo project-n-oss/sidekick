@@ -99,13 +99,13 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 	boltDump, err := httputil.DumpRequest(boltReq.Bolt, true)
 	if err != nil {
-		logger.Error("bolt dump request", zap.Error(err))
+		logger.Error("dumping bolt request", zap.Error(err))
 		return
 	}
 
 	awsDump, err := httputil.DumpRequest(boltReq.Aws, true)
 	if err != nil {
-		logger.Error("aws dump request", zap.Error(err))
+		logger.Error("dumping aws request", zap.Error(err))
 		return
 	}
 
