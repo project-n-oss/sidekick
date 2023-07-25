@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.25](https://github.com/project-n-oss/sidekick/compare/v0.1.24...v0.1.25) (2023-07-25)
+
+
+### Features
+
+* **KRY-634:** Add sidekick local run to support local bolt endpoint ([#49](https://github.com/project-n-oss/sidekick/issues/49)) ([7bf67c7](https://github.com/project-n-oss/sidekick/commit/7bf67c7568e28de2d2f400bc66c38e8deb172c6e))
+* **KRY-636:** Add support for multiple logging levels and clean up logging ([#56](https://github.com/project-n-oss/sidekick/issues/56)) ([28737ad](https://github.com/project-n-oss/sidekick/commit/28737ad5a1660208dde4d74adf58b4496fc9f9b5))
+
+
+### Bug Fixes
+
+* Add prebuilt binary info ([#54](https://github.com/project-n-oss/sidekick/issues/54)) ([1397abc](https://github.com/project-n-oss/sidekick/commit/1397abcf87cc89074738e4a89eaf2540740c33a5))
+
 ## [0.1.25](https://github.com/project-n-oss/sidekick/compare/v0.1.24...v0.1.25) (2023-07-20)
 
 
