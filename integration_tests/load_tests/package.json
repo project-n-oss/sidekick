@@ -6,7 +6,7 @@
   "scripts": {
     "bundle": "webpack",
     "get": "k6 run dist/get.bundle.js",
-    "post": "k6 run dist/post.bundle.js"
+    "put": "k6 run dist/put.bundle.js"
   },
   "keywords": [],
   "author": "",

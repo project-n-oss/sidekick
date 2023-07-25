@@ -10,16 +10,14 @@ export const options = {
   ],
 };
 
-
 const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, BUCKET } =
   process.env;
 
-  const awsConfig = new AWSConfig({
+const awsConfig = new AWSConfig({
   region: AWS_REGION,
   accessKeyId: AWS_ACCESS_KEY_ID,
   secretAccessKey: AWS_SECRET_ACCESS_KEY,
 });
-
 
 const bucket = BUCKET;
 const key = "writes/1.csv";
