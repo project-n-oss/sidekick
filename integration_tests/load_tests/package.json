@@ -5,7 +5,8 @@
   "main": "get.js",
   "scripts": {
     "bundle": "webpack",
-    "get": "k6 run dist/get.bundle.js"
+    "get": "k6 run dist/get.bundle.js",
+    "post": "k6 run dist/post.bundle.js"
   },
   "keywords": [],
   "author": "",
