@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.26](https://github.com/project-n-oss/sidekick/compare/v0.1.25...v0.1.26) (2023-07-25)
+
+
+### Bug Fixes
+
+* letter casing ([#59](https://github.com/project-n-oss/sidekick/issues/59)) ([e45caa7](https://github.com/project-n-oss/sidekick/commit/e45caa7f4f1c3322b562f43e4a50a110f7de09a0))
+* trigger releases ([c0107cb](https://github.com/project-n-oss/sidekick/commit/c0107cbfc78be09526d52fa4cb0e5bb0624e56ad))
+
 ## [0.1.25](https://github.com/project-n-oss/sidekick/compare/v0.1.24...v0.1.25) (2023-07-25)
 
 
