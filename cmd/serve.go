@@ -23,7 +23,6 @@ func init() {
 func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
 	cmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
-	cmd.Flags().String("bolt-endpoint-override", "", "Specify the local bolt endpoint to override in local mode.")
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
 	cmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
 }
@@ -71,9 +70,6 @@ func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
 	boltRouterConfig := rootConfig.BoltRouter
 	if cmd.Flags().Lookup("local").Changed {
 		boltRouterConfig.Local, _ = cmd.Flags().GetBool("local")
-	}
-	if cmd.Flags().Lookup("bolt-endpoint-override").Changed {
-		boltRouterConfig.BoltEndpointOverride, _ = cmd.Flags().GetString("bolt-endpoint-override")
 	}
 	if cmd.Flags().Lookup("passthrough").Changed {
 		boltRouterConfig.Passthrough, _ = cmd.Flags().GetBool("passthrough")
