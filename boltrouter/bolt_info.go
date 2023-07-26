@@ -20,6 +20,11 @@ const (
 func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) (*url.URL, error) {
 	preferredOrder := br.getPreferredEndpointOrder(reqMethod)
 	boltEndpoints := br.boltVars.BoltInfo.Get()
+
+	if len(boltEndpoints) == 0 {
+		return nil, fmt.Errorf("boltInfo is empty")
+	}
+
 	for _, key := range preferredOrder {
 		availableEndpoints, ok := boltEndpoints[key]
 		availableEndpointsSlice, castOk := availableEndpoints.([]interface{})
