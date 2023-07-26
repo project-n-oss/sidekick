@@ -53,6 +53,7 @@ export default async function () {
     },
   });
 
+  const batches = []
   for (let i = 0; i < 50; i++) {
     const uniqueFilename = generateUniqueFilename();
     const signedRequest = signer.sign(
@@ -70,10 +71,13 @@ export default async function () {
           signingService: "s3",
         }
       );
-    
-    const res = http.put(signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers });
-    check(res, {
-      "is status 200": (r) => r.status === 200,
-    });
+
+    batches.push(["PUT", signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers }]);
   }
+
+  const responses = http.batch(batches);
+  // check all responses where 200
+  check(responses, {
+    "is status 200": (r) => r.status === 200,
+  });
 }
