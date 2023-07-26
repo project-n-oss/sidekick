@@ -5,10 +5,10 @@ import { AWSConfig, SignatureV4 } from "https://jslib.k6.io/aws/0.7.1/aws.js";
 export const options = {
   stages: [
     { duration: "5s", target: 100 },  // 100 users for 5 seconds
-    { duration: "10s", target: 700},   // ramp up to 700 users over the next 3 minutes
+    { duration: "10s", target: 700},   // ramp up to 700 users over the next 10 seconds
     { duration: "30s", target: 700 },  // stay at 700 users for 2 minutes
-    { duration: "10s", target: 1000 }, // ramp up to 1000 users over the next 2 minutes
-    { duration: "2m", target: 1000 }, // stay at 1000 users for 2 minutes
+    { duration: "10s", target: 1000 }, // ramp up to 1000 users over the next 10 seconds
+    { duration: "30s", target: 1000 }, // stay at 1000 users for 2 minutes
     { duration: "30s", target: 0 },    // ramp down to 0 users over the next 1 minute
   ],
 };
