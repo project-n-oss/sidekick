@@ -7,10 +7,10 @@ export const options = {
     { duration: "5s", target: 100 },  // 100 users for 5 seconds
     { duration: "10s", target: 700},   // ramp up to 700 users over the next 3 minutes
     { duration: "30s", target: 700 },  // stay at 700 users for 2 minutes
-    { duration: "10s", target: 10000 }, // ramp up to 1000 users over the next 2 minutes
-    { duration: "2m", target: 10000 }, // stay at 1000 users for 2 minutes
-    { duration: "30s", target: 50000 },  // ramp up to 50000 users over the next 30 seconds
-    { duration: "1m", target: 50000 }, // stay at 50000 users for 1 minute
+    { duration: "10s", target: 1000 }, // ramp up to 1000 users over the next 2 minutes
+    { duration: "2m", target: 1000 }, // stay at 1000 users for 2 minutes
+    { duration: "30s", target: 1500 },  // ramp up to 15000 users over the next 30 seconds
+    { duration: "1m", target: 1500 }, // stay at 15000 users for 1 minute
     { duration: "30s", target: 0 },    // ramp down to 0 users over the next 1 minute
   ],
 };
@@ -55,30 +55,41 @@ export default async function () {
     },
   });
 
-  const uniqueFilename = generateUniqueFilename();
-  const someStrData = generateRandomString(objSize);
-
-  const signedRequest = signer.sign(
-    {
+  // Create an array of size 100 be fed into http.batch
+  const batch = [];
+  for (let i = 0; i < 100; i++) {
+    const uniqueFilename = generateUniqueFilename();
+    const signedRequest = signer.sign(
+        {
+          method: "PUT",
+          protocol: "http",
+          hostname: "localhost:7075",
+          path: `/${bucket}/${uniqueFilename}`,
+          headers: {},
+          uriEscapePath: false,
+          applyChecksum: true,
+        },
+        {
+          signingDate: new Date(),
+          signingService: "s3",
+        }
+      );
+    batch.push({
       method: "PUT",
-      protocol: "http",
-      hostname: "localhost:7075",
-      path: `/${bucket}/${uniqueFilename}`,
-      headers: {},
-      uriEscapePath: false,
-      applyChecksum: true,
-    },
-    {
-      signingDate: new Date(),
-      signingService: "s3",
-    }
-  );
+      url: "localhost:7075",
+      body: generateRandomString(objSize),
+      params: {
+        headers: signedRequest.headers,
+      },
+    });
+  }
+  // Make the batch request
+  const responses = http.batch(batch);
 
-  // Make a PUT request to the signed URL with the file in the body
-  const res = http.put(signedRequest.url, someStrData, {
-    headers: signedRequest.headers,
-  });
-  check(res, {
-    "is status 200": (r) => r.status === 200,
+  // check that respones returned 200
+  responses.forEach((res) => {
+    check(res, {
+      "is status 200": (r) => r.status === 200,
+    });
   });
 }
