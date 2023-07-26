@@ -76,7 +76,7 @@ export default async function () {
       );
     batch.push({
       method: "PUT",
-      url: "localhost:7075",
+      url: signedRequest.url,
       body: generateRandomString(objSize),
       params: {
         headers: signedRequest.headers,
