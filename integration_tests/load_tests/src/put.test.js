@@ -4,14 +4,16 @@ import { AWSConfig, SignatureV4 } from "https://jslib.k6.io/aws/0.7.1/aws.js";
 
 export const options = {
   stages: [
-    { duration: "5s", target: 100 },
-    { duration: "10s", target: 100 },
-    { duration: "5s", target: 0 },
+    { duration: "5s", target: 100 },  // 100 users for 5 seconds
+    { duration: "3m", target: 700},   // ramp up to 700 users over the next 3 minutes
+    { duration: "2m", target: 700 },  // stay at 700 users for 2 minutes
+    { duration: "2m", target: 1000 }, // ramp up to 1000 users over the next 2 minutes
+    { duration: "2m", target: 1000 }, // stay at 1000 users for 2 minutes
+    { duration: "1m", target: 0 },    // ramp down to 0 users over the next 1 minute
   ],
 };
 
-const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, BUCKET } =
-  process.env;
+const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, BUCKET } = process.env;
 
 const awsConfig = new AWSConfig({
   region: AWS_REGION,
@@ -20,7 +22,26 @@ const awsConfig = new AWSConfig({
 });
 
 const bucket = BUCKET;
-const key = "writes/1.csv";
+const objSize = 6144;
+
+// Function to generate random alphanumeric characters
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+};
+
+// Generate a unique filename using a timestamp and a random string
+function generateUniqueFilename() {
+  const timestamp = Date.now();
+  const randomString = generateRandomString(8); // Adjust the length as needed
+  const filename = `${timestamp}-${randomString}.txt`; // You can change the file extension as needed
+  return filename;
+};
 
 export default async function () {
   const signer = new SignatureV4({
@@ -32,12 +53,15 @@ export default async function () {
     },
   });
 
+  const uniqueFilename = generateUniqueFilename();
+  const someStrData = generateRandomString(objSize);
+
   const signedRequest = signer.sign(
     {
       method: "PUT",
       protocol: "http",
       hostname: "localhost:7075",
-      path: `/${bucket}/${key}`,
+      path: `/${bucket}/${uniqueFilename}`,
       headers: {},
       uriEscapePath: false,
       applyChecksum: true,
@@ -49,7 +73,7 @@ export default async function () {
   );
 
   // Make a PUT request to the signed URL with the file in the body
-  const res = http.put(signedRequest.url, "Hello World!", {
+  const res = http.put(signedRequest.url, someStrData, {
     headers: signedRequest.headers,
   });
   check(res, {
