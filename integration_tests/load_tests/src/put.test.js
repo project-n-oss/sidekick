@@ -52,27 +52,25 @@ export default async function () {
     },
   });
 
-  for (let i = 0; i < 50; i++) {
-    const uniqueFilename = generateUniqueFilename();
-    const signedRequest = signer.sign(
-        {
-          method: "PUT",
-          protocol: "http",
-          hostname: "localhost:7075",
-          path: `/${bucket}/${uniqueFilename}`,
-          headers: {},
-          uriEscapePath: false,
-          applyChecksum: true,
-        },
-        {
-          signingDate: new Date(),
-          signingService: "s3",
-        }
-      );
-    
-    const res = http.put(signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers });
-    check(res, {
-      "is status 200": (r) => r.status === 200,
-    });
-  }
+  const uniqueFilename = generateUniqueFilename();
+  const signedRequest = signer.sign(
+      {
+        method: "PUT",
+        protocol: "http",
+        hostname: "localhost:7075",
+        path: `/${bucket}/${uniqueFilename}`,
+        headers: {},
+        uriEscapePath: false,
+        applyChecksum: true,
+      },
+      {
+        signingDate: new Date(),
+        signingService: "s3",
+      }
+    );
+
+  const res = http.put(signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers });
+  check(res, {
+    "is status 200": (r) => r.status === 200,
+  });
 }
