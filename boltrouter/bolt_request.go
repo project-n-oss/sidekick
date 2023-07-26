@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -75,10 +74,10 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 	BoltURL.Path = "/" + BoltURL.Path
 	BoltURL.RawQuery = req.URL.RawQuery
 	req.URL = BoltURL
-	if strings.Contains(BoltURL.Path, "https") {
-		req.URL.Scheme = "https"
-	} else {
+	if br.config.Local {
 		req.URL.Scheme = "http"
+	} else {
+		req.URL.Scheme = "https"
 	}
 	if v := headReq.Header.Get("X-Amz-Security-Token"); v != "" {
 		req.Header.Set("X-Amz-Security-Token", v)
