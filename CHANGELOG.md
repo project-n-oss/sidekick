@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.27](https://github.com/project-n-oss/sidekick/compare/v0.1.26...v0.1.27) (2023-07-26)
+
+
+### Bug Fixes
+
+* revert "feat(KRY-634): Add sidekick local run to support local bolt endpoint" ([#60](https://github.com/project-n-oss/sidekick/issues/60)) ([9e8e919](https://github.com/project-n-oss/sidekick/commit/9e8e91918f7db86b87e6cb11d20f1691b921a395))
+
 ## [0.1.26](https://github.com/project-n-oss/sidekick/compare/v0.1.25...v0.1.26) (2023-07-25)
 
 
