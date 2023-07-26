@@ -7,7 +7,7 @@ export const options = {
     { duration: "5s", target: 1000 },  // 100 users for 5 seconds
     { duration: "10s", target: 1000 },  // stay at 700 users for 2 minutes
     { duration: "5s", target: 1500 }, // ramp up to 1000 users over the next 10 seconds
-    { duration: "30s", target: 1500 }, // stay at 1000 users for 2 minutes
+    { duration: "10s", target: 1500 }, // stay at 1000 users for 2 minutes
     { duration: "5s", target: 0 },    // ramp down to 0 users over the next 1 minute
   ],
 };
