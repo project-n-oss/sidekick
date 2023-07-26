@@ -4,12 +4,11 @@ import { AWSConfig, SignatureV4 } from "https://jslib.k6.io/aws/0.7.1/aws.js";
 
 export const options = {
   stages: [
-    { duration: "5s", target: 100 },  // 100 users for 5 seconds
-    { duration: "10s", target: 700},   // ramp up to 700 users over the next 10 seconds
-    { duration: "30s", target: 700 },  // stay at 700 users for 2 minutes
-    { duration: "10s", target: 1000 }, // ramp up to 1000 users over the next 10 seconds
-    { duration: "30s", target: 1000 }, // stay at 1000 users for 2 minutes
-    { duration: "30s", target: 0 },    // ramp down to 0 users over the next 1 minute
+    { duration: "5s", target: 1000 },  // 100 users for 5 seconds
+    { duration: "10s", target: 1000 },  // stay at 700 users for 2 minutes
+    { duration: "5s", target: 1500 }, // ramp up to 1000 users over the next 10 seconds
+    { duration: "30s", target: 1500 }, // stay at 1000 users for 2 minutes
+    { duration: "5s", target: 0 },    // ramp down to 0 users over the next 1 minute
   ],
 };
 
@@ -53,7 +52,6 @@ export default async function () {
     },
   });
 
-  const batches = []
   for (let i = 0; i < 50; i++) {
     const uniqueFilename = generateUniqueFilename();
     const signedRequest = signer.sign(
@@ -71,13 +69,10 @@ export default async function () {
           signingService: "s3",
         }
       );
-
-    batches.push(["PUT", signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers }]);
+    
+    const res = http.put(signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers });
+    check(res, {
+      "is status 200": (r) => r.status === 200,
+    });
   }
-
-  const responses = http.batch(batches);
-  // check all responses where 200
-  check(responses, {
-    "is status 200": (r) => r.status === 200,
-  });
 }
