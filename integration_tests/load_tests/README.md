@@ -4,7 +4,7 @@ Run load tests on SideKick with [k6](https://k6.io/docs/).
 
 ## Dependencies
 
-- Install [k7](https://k6.io/docs/get-started/installation/)
+- Install [k6](https://k6.io/docs/get-started/installation/)
 - Install `npm`
 
 ## Running
