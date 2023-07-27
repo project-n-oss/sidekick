@@ -4,11 +4,13 @@ import { AWSConfig, SignatureV4 } from "https://jslib.k6.io/aws/0.7.1/aws.js";
 
 export const options = {
   stages: [
-    { duration: "5s", target: 500 },  // ramp up to 500 users over 5 seconds
-    { duration: "45s", target: 500 }, // stay at 500 users for 45 seconds
+    { duration: "20s", target: 2000 },  // ramp up to 2000 users over 5 seconds
+    { duration: "10s", target: 2000 }, // stay at 2000 users for 10 seconds
     { duration: "5s", target: 0 },    // ramp down to 0 users over 5 seconds
   ],
 };
+
+const batch_size = 25;
 
 const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, BUCKET } = process.env;
 
@@ -50,7 +52,7 @@ export function setup() {
     },
   });
   const batch = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < batch_size; i++) {
     const uniqueFilename = generateUniqueFilename();
     const signedRequest = signer.sign(
       {
