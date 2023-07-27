@@ -5,20 +5,21 @@ import { AWSConfig, SignatureV4 } from "https://jslib.k6.io/aws/0.7.1/aws.js";
 
 export const options = {
   scenarios: {
-    rps_batched: {
+    rps_batched: { // ~ 2k ops / second
       executor: 'constant-arrival-rate',
       duration: '1m',
       rate: 250,
       timeUnit: '1s',
-      preAllocatedVUs: 2000 // above 200, start getting TCP read errors (connection reset by peer)
+      preAllocatedVUs: 2000 // above 2000, start getting TCP read errors (connection reset by peer)
     },
-    // ramping_batched: {
+    // ramping_batched: { // ~ 1.7k ops / second
     //   executor: 'ramping-vus',
     //   stages: [
-    //     { duration: "30s", target: 500 },  // ramp up to 2000 users over 5 seconds
-    //     { duration: "10s", target: 500 }, // stay at 2000 users for 10 seconds
+    //     { duration: "10s", target: 2000 },  // ramp up to 2000 users over 5 seconds
+    //     { duration: "20s", target: 2000 }, // stay at 2000 users for 10 seconds
     //     { duration: "5s", target: 0 },    // ramp down to 0 users over 5 seconds
-    //   ]
+    //   ],
+    //   gracefulRampDown: "1m",
     // }
   }
 };
