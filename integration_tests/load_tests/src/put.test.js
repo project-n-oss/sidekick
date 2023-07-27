@@ -4,11 +4,9 @@ import { AWSConfig, SignatureV4 } from "https://jslib.k6.io/aws/0.7.1/aws.js";
 
 export const options = {
   stages: [
-    { duration: "5s", target: 1000 },  // 100 users for 5 seconds
-    { duration: "10s", target: 1000 },  // stay at 700 users for 2 minutes
-    { duration: "5s", target: 1500 }, // ramp up to 1000 users over the next 10 seconds
-    { duration: "10s", target: 1500 }, // stay at 1000 users for 2 minutes
-    { duration: "5s", target: 0 },    // ramp down to 0 users over the next 1 minute
+    { duration: "5s", target: 500 },  // ramp up to 500 users over 5 seconds
+    { duration: "45s", target: 500 }, // stay at 500 users for 45 seconds
+    { duration: "5s", target: 0 },    // ramp down to 0 users over 5 seconds
   ],
 };
 
@@ -42,7 +40,7 @@ function generateUniqueFilename() {
   return filename;
 };
 
-export default async function () {
+export function setup() {
   const signer = new SignatureV4({
     service: "s3",
     region: awsConfig.region,
@@ -51,9 +49,10 @@ export default async function () {
       secretAccessKey: awsConfig.secretAccessKey,
     },
   });
-
-  const uniqueFilename = generateUniqueFilename();
-  const signedRequest = signer.sign(
+  const batch = [];
+  for (let i = 0; i < 50; i++) {
+    const uniqueFilename = generateUniqueFilename();
+    const signedRequest = signer.sign(
       {
         method: "PUT",
         protocol: "http",
@@ -69,8 +68,26 @@ export default async function () {
       }
     );
 
-  const res = http.put(signedRequest.url, generateRandomString(objSize), { headers: signedRequest.headers });
-  check(res, {
-    "is status 200": (r) => r.status === 200,
+    batch.push({
+      method: "PUT",
+      url: signedRequest.url,
+      body: generateRandomString(objSize),
+      params: {
+        headers: signedRequest.headers,
+      },
+    });
+  }
+  return { data: batch };
+}
+
+export default async function (data) {
+  // Make the batch request
+  const responses = http.batch(data.data);
+
+  // check that respones returned 200
+  responses.forEach((res) => {
+    check(res, {
+      "is status 200": (r) => r.status === 200,
+    });
   });
 }
