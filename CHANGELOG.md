@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.28](https://github.com/project-n-oss/sidekick/compare/v0.1.27...v0.1.28) (2023-07-26)
+
+
+### Features
+
+* return proper error if boltInfo is empty ([#63](https://github.com/project-n-oss/sidekick/issues/63)) ([83a35cb](https://github.com/project-n-oss/sidekick/commit/83a35cb4352014747d13306e4440f08089944f56))
+
 ## [0.1.27](https://github.com/project-n-oss/sidekick/compare/v0.1.26...v0.1.27) (2023-07-26)
 
 
