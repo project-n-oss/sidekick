@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.29](https://github.com/project-n-oss/sidekick/compare/v0.1.28...v0.1.29) (2023-08-09)
+
+
+### Features
+
+* log analytics in debug mode for each request made by Sidekick ([#66](https://github.com/project-n-oss/sidekick/issues/66)) ([2bfc2fa](https://github.com/project-n-oss/sidekick/commit/2bfc2fa6972ced37cee6f2eeb37cc69721f324d1))
+
 ## [0.1.28](https://github.com/project-n-oss/sidekick/compare/v0.1.27...v0.1.28) (2023-07-26)
 
 
