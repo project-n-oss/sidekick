@@ -167,25 +167,37 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	logger.Debug("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
 
 	if initialRequestTarget == "bolt" {
+		beginTime := time.Now()
 		resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+		duration := time.Since(beginTime)
+		LogAnalytics(logger, boltReq, duration, initialRequestTarget, reason, resp, false)
 		if err != nil {
 			return resp, false, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
 			b, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			logger.Error("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
+			beginTime := time.Now()
 			resp, err := http.DefaultClient.Do(boltReq.Aws)
+			duration := time.Since(beginTime)
+			LogAnalytics(logger, boltReq, duration, initialRequestTarget, reason, resp, true)
 			return resp, true, err
 		}
 		return resp, false, nil
 	} else {
+		beginTime := time.Now()
 		resp, err := http.DefaultClient.Do(boltReq.Aws)
+		duration := time.Since(beginTime)
+		LogAnalytics(logger, boltReq, duration, initialRequestTarget, reason, resp, false)
 		if err != nil {
 			return resp, false, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 {
 			// if the request to AWS failed with 404: NoSuchKey, fall back to Bolt
 			logger.Error("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
+			beginTime := time.Now()
 			resp, err := br.boltHttpClient.Do(boltReq.Bolt)
+			duration := time.Since(beginTime)
+			LogAnalytics(logger, boltReq, duration, initialRequestTarget, reason, resp, true)
 			return resp, true, err
 		}
 		return resp, false, nil
@@ -194,4 +206,19 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 
 func StatusCodeIs2xx(statusCode int) bool {
 	return statusCode >= 200 && statusCode < 300
+}
+
+// function to log analytics
+func LogAnalytics(logger *zap.Logger, boltReq *BoltRequest, duration time.Duration, initialRequestTarget string, reason string, resp *http.Response, failover bool) {
+	if logger.Level() == zap.DebugLevel {
+		logger.Debug("[ANALYTICS]",
+			zap.Int("requestBodySize", int(boltReq.Bolt.ContentLength)),
+			zap.Duration("duration", duration),
+			zap.String("method", boltReq.Bolt.Method),
+			zap.String("requestTarget", initialRequestTarget),
+			zap.String("requestTargetReason", reason),
+			zap.Int("responseCode", resp.StatusCode),
+			zap.Bool("failover", failover),
+		)
+	}
 }
