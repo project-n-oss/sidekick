@@ -172,6 +172,7 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoBoltRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
 	boltRequestAnalytics := &BoltRequestAnalytics{}
+	boltRequestAnalytics.Method = boltReq.Bolt.Method
 	boltRequestAnalytics.RequestBodySize = int(boltReq.Bolt.ContentLength)
 
 	initialRequestTarget, reason, err := br.SelectInitialRequestTarget()
