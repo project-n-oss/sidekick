@@ -119,7 +119,6 @@ func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 
 func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytics, err error) {
 	defaultValue := "N/A"
-	isError := err != nil
 
 	logger.Debug("BoltRequestAnalytics dump",
 		zap.Any("RequestBodySize", orDefault(analytics.RequestBodySize, defaultValue)),
@@ -130,7 +129,7 @@ func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytic
 		zap.Any("BoltRequestResponseStatusCode", analytics.BoltRequestResponseStatusCode),
 		zap.Any("AwsRequestDuration", analytics.AwsRequestDuration),
 		zap.Any("AwsRequestResponseStatusCode", analytics.AwsRequestResponseStatusCode),
-		zap.Any("IsError", isError),
+		zap.Any("Error", orDefault(err, defaultValue)),
 	)
 }
 
