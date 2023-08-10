@@ -190,6 +190,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		duration := time.Since(beginTime)
 		boltRequestAnalytics.BoltRequestDuration = duration
 		if err != nil {
+			boltRequestAnalytics.BoltRequestResponseStatusCode = resp.StatusCode
 			return resp, false, boltRequestAnalytics, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
 			b, _ := io.ReadAll(resp.Body)
@@ -226,6 +227,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 			}
 			return resp, true, boltRequestAnalytics, err
 		}
+		boltRequestAnalytics.AwsRequestResponseStatusCode = resp.StatusCode
 		return resp, false, boltRequestAnalytics, nil
 	}
 }

@@ -70,7 +70,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	resp, failover, analytics, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
 
 	if sess.Logger().Level() == zap.DebugLevel {
-		dumpAnalytics(sess.Logger(), analytics)
+		dumpAnalytics(sess.Logger(), analytics, err)
 	}
 
 	if err != nil {
@@ -117,8 +117,10 @@ func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 	logger.Debug("BoltRequest dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
 }
 
-func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytics) {
+func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytics, err error) {
 	defaultValue := "N/A"
+	isError := err != nil
+
 	logger.Debug("BoltRequestAnalytics dump",
 		zap.Any("RequestBodySize", orDefault(analytics.RequestBodySize, defaultValue)),
 		zap.Any("Method", orDefault(analytics.Method, defaultValue)),
@@ -128,6 +130,7 @@ func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytic
 		zap.Any("BoltRequestResponseStatusCode", analytics.BoltRequestResponseStatusCode),
 		zap.Any("AwsRequestDuration", analytics.AwsRequestDuration),
 		zap.Any("AwsRequestResponseStatusCode", analytics.AwsRequestResponseStatusCode),
+		zap.Any("IsError", isError),
 	)
 }
 
