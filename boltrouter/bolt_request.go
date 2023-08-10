@@ -171,13 +171,19 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoboltRequest will return a bool indicating if the request was a failover.
 // DoBoltRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
-	boltRequestAnalytics := &BoltRequestAnalytics{}
-	boltRequestAnalytics.Method = boltReq.Bolt.Method
-	boltRequestAnalytics.RequestBodySize = int(boltReq.Bolt.ContentLength)
-
 	initialRequestTarget, reason, err := br.SelectInitialRequestTarget()
-	boltRequestAnalytics.InitialRequestTarget = initialRequestTarget
-	boltRequestAnalytics.InitialRequestTargetReason = reason
+
+	boltRequestAnalytics := &BoltRequestAnalytics{
+		RequestBodySize:               int(boltReq.Bolt.ContentLength),
+		Method:                        boltReq.Bolt.Method,
+		InitialRequestTarget:          initialRequestTarget,
+		InitialRequestTargetReason:    reason,
+		BoltRequestDuration:           time.Duration(0),
+		BoltRequestResponseStatusCode: -1,
+		AwsRequestDuration:            -1,
+		AwsRequestResponseStatusCode:  -1,
+	}
+
 	if err != nil {
 		return nil, false, boltRequestAnalytics, err
 	}
