@@ -135,7 +135,7 @@ func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytic
 }
 
 func orDefault(value interface{}, defaultValue interface{}) interface{} {
-	if value == nil {
+	if value == nil || value == "" || value == 0 {
 		return defaultValue
 	}
 	return value
