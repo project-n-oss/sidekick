@@ -202,11 +202,11 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 
 	if initialRequestTarget == "bolt" {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
-		// if nothing during br.doBoltRequest panics, the err is not of type ErrPanicDuringBoltRequest so failover was
+		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
 		// handled inside the function as needed and we can just return
 		// If the err is of type ErrPanicDuringBoltRequest then we need to failover to AWS manually since .doBoltRequest
 		// halted execution before it could failover
-		if err == ErrPanicDuringBoltRequest && br.config.Failover {
+		if err != nil && err == ErrPanicDuringBoltRequest && br.config.Failover {
 			logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
 			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
 		}
