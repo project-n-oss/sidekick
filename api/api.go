@@ -127,10 +127,10 @@ func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytic
 		zap.Any("InitialRequestTarget", orDefault(analytics.InitialRequestTarget, defaultValue)),
 		zap.Any("InitialRequestTargetReason", orDefault(analytics.InitialRequestTargetReason, defaultValue)),
 		zap.Any("BoltReplicaIp", orDefault(analytics.BoltRequestUrl, defaultValue)),
-		zap.Any("BoltRequestDuration", analytics.BoltRequestDuration),
-		zap.Any("BoltRequestResponseStatusCode", analytics.BoltRequestResponseStatusCode),
-		zap.Any("AwsRequestDuration", analytics.AwsRequestDuration),
-		zap.Any("AwsRequestResponseStatusCode", analytics.AwsRequestResponseStatusCode),
+		zap.Any("BoltRequestDuration", orDefault(analytics.BoltRequestDuration, defaultValue)),
+		zap.Any("BoltRequestResponseStatusCode", orDefault(analytics.BoltRequestResponseStatusCode, defaultValue)),
+		zap.Any("AwsRequestDuration", orDefault(analytics.AwsRequestDuration, defaultValue)),
+		zap.Any("AwsRequestResponseStatusCode", orDefault(analytics.AwsRequestResponseStatusCode, defaultValue)),
 		zap.Any("Error", orDefault(err, defaultValue)),
 	)
 }
