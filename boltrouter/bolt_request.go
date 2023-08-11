@@ -222,7 +222,6 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 	resp, err = br.boltHttpClient.Do(boltReq.Bolt)
 	duration := time.Since(beginTime)
 	analytics.BoltRequestDuration = duration
-	panic("triggering panic in doBoltRequest to test handling of panics")
 	if err != nil {
 		if resp != nil {
 			analytics.BoltRequestResponseStatusCode = resp.StatusCode
@@ -253,7 +252,6 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 	resp, err = http.DefaultClient.Do(boltReq.Aws)
 	duration := time.Since(beginTime)
 	analytics.AwsRequestDuration = duration
-	panic("triggering panic in doAwsRequest to test handling of panics")
 	if err != nil {
 		if resp != nil {
 			analytics.AwsRequestResponseStatusCode = resp.StatusCode
