@@ -80,9 +80,17 @@ func TestBoltRequestPanic(t *testing.T) {
 			func(req *http.Request) (*http.Response, error) {
 				panic("Simulated panic during request")
 			})
+		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/bolt/test.projectn.co", endpoint),
+			func(req *http.Request) (*http.Response, error) {
+				panic("Simulated panic during request")
+			})
 	}
 
 	httpmock.RegisterResponder("GET", "https://s3.us-west-2.amazonaws.com/test.projectn.co",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "OK"), nil
+		})
+	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.projectn.co",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(200, "OK"), nil
 		})
