@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"go.opentelemetry.io/otel"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -56,6 +57,8 @@ func (a *Api) CreateHandler() http.Handler {
 func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	sess := CtxSession(req.Context())
 	ctx := req.Context()
+	ctx, span := otel.Tracer("").Start(ctx, "routeBase")
+	defer span.End()
 
 	boltReq, err := sess.br.NewBoltRequest(ctx, sess.Logger(), req.Clone(ctx))
 	if err != nil {

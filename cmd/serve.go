@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/project-n-oss/sidekick/common/tracing"
 	"net/http"
 	"strconv"
 
@@ -20,12 +21,18 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
+const (
+	defaultJaegerAddr = "simple-jaeger-collector.default:14268"
+)
+
 func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
 	cmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
 	cmd.Flags().String("bolt-endpoint-override", "", "Specify the local bolt endpoint to override in local mode.")
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
 	cmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
+	cmd.Flags().BoolVar(&tracing.Enabled, "tracingEnabled", false, "set to enable tracing (experimental)")
+	cmd.Flags().StringVar(&tracing.Endpoint, "tracingEndpoint", defaultJaegerAddr, "set tracing endpoint (experimental). Set 'stdout' to log to stdout")
 }
 
 var serveCmd = &cobra.Command{
@@ -43,7 +50,7 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
+		_ = tracing.InitTracer("sidekick")
 		handler := api.CreateHandler()
 		port, _ := cmd.Flags().GetInt("port")
 		server := &http.Server{

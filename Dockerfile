@@ -2,7 +2,7 @@ FROM golang:1.20-alpine
 
 WORKDIR /go/src/github.com/project-n-oss/sidekick
 COPY . .
-
+RUN go mod tidy
 RUN go generate ./...
 RUN go build .
 
