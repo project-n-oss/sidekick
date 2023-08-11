@@ -67,7 +67,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		dumpRequest(sess.Logger(), boltReq)
 	}
 
-	resp, failover, analytics, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
+	resp, failover, analytics, err := sess.br.DoRequest(sess.Logger(), boltReq)
 
 	if sess.Logger().Level() == zap.DebugLevel {
 		dumpAnalytics(sess.Logger(), analytics, err)
