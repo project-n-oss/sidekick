@@ -67,7 +67,12 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		dumpRequest(sess.Logger(), boltReq)
 	}
 
-	resp, failover, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
+	resp, failover, analytics, err := sess.br.DoBoltRequest(sess.Logger(), boltReq)
+
+	if sess.Logger().Level() == zap.DebugLevel {
+		dumpAnalytics(sess.Logger(), analytics, err)
+	}
+
 	if err != nil {
 		a.InternalError(sess.Logger(), w, err)
 		return
@@ -110,4 +115,29 @@ func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 	}
 
 	logger.Debug("BoltRequest dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
+}
+
+func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytics, err error) {
+	defaultValue := "N/A"
+
+	logger.Debug("BoltRequestAnalytics dump",
+		zap.Any("ObjectKey", orDefault(analytics.ObjectKey, defaultValue)),
+		zap.Any("RequestBodySize", orDefault(analytics.RequestBodySize, defaultValue)),
+		zap.Any("Method", orDefault(analytics.Method, defaultValue)),
+		zap.Any("InitialRequestTarget", orDefault(analytics.InitialRequestTarget, defaultValue)),
+		zap.Any("InitialRequestTargetReason", orDefault(analytics.InitialRequestTargetReason, defaultValue)),
+		zap.Any("BoltReplicaIp", orDefault(analytics.BoltRequestUrl, defaultValue)),
+		zap.Any("BoltRequestDuration", orDefault(analytics.BoltRequestDuration, defaultValue)),
+		zap.Any("BoltRequestResponseStatusCode", orDefault(analytics.BoltRequestResponseStatusCode, defaultValue)),
+		zap.Any("AwsRequestDuration", orDefault(analytics.AwsRequestDuration, defaultValue)),
+		zap.Any("AwsRequestResponseStatusCode", orDefault(analytics.AwsRequestResponseStatusCode, defaultValue)),
+		zap.Any("Error", orDefault(err, defaultValue)),
+	)
+}
+
+func orDefault(value interface{}, defaultValue interface{}) interface{} {
+	if value == nil || value == "" || value == 0 {
+		return defaultValue
+	}
+	return value
 }
