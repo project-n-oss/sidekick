@@ -18,6 +18,7 @@ type BoltRequest struct {
 }
 
 type BoltRequestAnalytics struct {
+	ObjectKey                     string
 	RequestBodySize               int
 	Method                        string
 	InitialRequestTarget          string
@@ -175,11 +176,12 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 	initialRequestTarget, reason, err := br.SelectInitialRequestTarget()
 
 	boltRequestAnalytics := &BoltRequestAnalytics{
+		ObjectKey:                     boltReq.Bolt.URL.Path,
 		RequestBodySize:               int(boltReq.Bolt.ContentLength),
 		Method:                        boltReq.Bolt.Method,
 		InitialRequestTarget:          initialRequestTarget,
 		InitialRequestTargetReason:    reason,
-		BoltRequestUrl:                boltReq.Bolt.URL.String(),
+		BoltRequestUrl:                boltReq.Bolt.URL.Hostname(),
 		BoltRequestDuration:           time.Duration(0),
 		BoltRequestResponseStatusCode: -1,
 		AwsRequestDuration:            -1,
