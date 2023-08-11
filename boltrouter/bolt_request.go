@@ -22,6 +22,7 @@ type BoltRequestAnalytics struct {
 	Method                        string
 	InitialRequestTarget          string
 	InitialRequestTargetReason    string
+	BoltRequestUrl                string
 	BoltRequestDuration           time.Duration
 	BoltRequestResponseStatusCode int
 	AwsRequestDuration            time.Duration
@@ -178,6 +179,7 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		Method:                        boltReq.Bolt.Method,
 		InitialRequestTarget:          initialRequestTarget,
 		InitialRequestTargetReason:    reason,
+		BoltRequestUrl:                boltReq.Bolt.URL.String(),
 		BoltRequestDuration:           time.Duration(0),
 		BoltRequestResponseStatusCode: -1,
 		AwsRequestDuration:            -1,
