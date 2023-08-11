@@ -200,12 +200,8 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		duration := time.Since(beginTime)
 		boltRequestAnalytics.BoltRequestDuration = duration
 		if err != nil {
-			// if resp is not nil, we can get the status code
-			// if resp is nil, we can't get the status code so we set it to 0
 			if resp != nil {
 				boltRequestAnalytics.BoltRequestResponseStatusCode = resp.StatusCode
-			} else {
-				boltRequestAnalytics.BoltRequestResponseStatusCode = 0
 			}
 			return resp, false, boltRequestAnalytics, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover {
@@ -217,12 +213,8 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 			duration := time.Since(beginTime)
 			boltRequestAnalytics.AwsRequestDuration = duration
 			if err != nil {
-				// if resp is not nil, we can get the status code
-				// if resp is nil, we can't get the status code so we set it to 0
 				if resp != nil {
 					boltRequestAnalytics.AwsRequestResponseStatusCode = resp.StatusCode
-				} else {
-					boltRequestAnalytics.AwsRequestResponseStatusCode = 0
 				}
 			}
 			return resp, true, boltRequestAnalytics, err
@@ -235,12 +227,8 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 		duration := time.Since(beginTime)
 		boltRequestAnalytics.AwsRequestDuration = duration
 		if err != nil {
-			// if resp is not nil, we can get the status code
-			// if resp is nil, we can't get the status code so we set it to 0
 			if resp != nil {
 				boltRequestAnalytics.AwsRequestResponseStatusCode = resp.StatusCode
-			} else {
-				boltRequestAnalytics.AwsRequestResponseStatusCode = 0
 			}
 			return resp, false, boltRequestAnalytics, err
 		} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 {
@@ -251,12 +239,8 @@ func (br *BoltRouter) DoBoltRequest(logger *zap.Logger, boltReq *BoltRequest) (*
 			duration := time.Since(beginTime)
 			boltRequestAnalytics.BoltRequestDuration = duration
 			if err != nil {
-				// if resp is not nil, we can get the status code
-				// if resp is nil, we can't get the status code so we set it to 0
 				if resp != nil {
 					boltRequestAnalytics.BoltRequestResponseStatusCode = resp.StatusCode
-				} else {
-					boltRequestAnalytics.BoltRequestResponseStatusCode = 0
 				}
 			}
 			return resp, true, boltRequestAnalytics, err
