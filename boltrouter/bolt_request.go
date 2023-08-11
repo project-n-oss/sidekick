@@ -201,18 +201,25 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 	logger.Debug("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
 
 	if initialRequestTarget == "bolt" {
-		return br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
+		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
+		// if nothing during br.doBoltRequest panics, the err is not of type ErrPanicDuringBoltRequest so failover was
+		// handled inside the function as needed and we can just return
+		// If the err is of type ErrPanicDuringBoltRequest then we need to failover to AWS manually since .doBoltRequest
+		// halted execution before it could failover
+		if err == ErrPanicDuringBoltRequest && br.config.Failover {
+			logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
+			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
+		}
+		return resp, isFailoverRequest, boltRequestAnalytics, err
 	} else {
-		return br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
+		resp, isFailoverRequest, err := br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
+		return resp, isFailoverRequest, boltRequestAnalytics, err
 	}
 }
 
-func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, isFailoverRequest bool, analytics *BoltRequestAnalytics) (*http.Response, bool, *BoltRequestAnalytics, error) {
-	var resp *http.Response
-	var err error
+func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("panic occurred during Bolt request", zap.Any("panic", r))
 			resp = nil
 			err = ErrPanicDuringBoltRequest
 		}
@@ -226,8 +233,7 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		if resp != nil {
 			analytics.BoltRequestResponseStatusCode = resp.StatusCode
 		}
-		// TODO: failver to S3 if br.config.Failover is true and not a failover request?
-		return resp, isFailoverRequest, analytics, err
+		return resp, isFailoverRequest, err
 	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover && !isFailoverRequest {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
@@ -235,12 +241,10 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		return br.doAwsRequest(logger, boltReq, true, analytics)
 	}
 	analytics.BoltRequestResponseStatusCode = resp.StatusCode
-	return resp, isFailoverRequest, analytics, nil
+	return resp, isFailoverRequest, nil
 }
 
-func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isFailoverRequest bool, analytics *BoltRequestAnalytics) (*http.Response, bool, *BoltRequestAnalytics, error) {
-	var resp *http.Response
-	var err error
+func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Error("panic occurred during AWS request", zap.Any("panic", r))
@@ -257,14 +261,14 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 		if resp != nil {
 			analytics.AwsRequestResponseStatusCode = resp.StatusCode
 		}
-		return resp, isFailoverRequest, analytics, err
+		return resp, isFailoverRequest, err
 	} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 && !isFailoverRequest {
 		// failover to bolt
 		logger.Error("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
 		return br.doBoltRequest(logger, boltReq, true, analytics)
 	}
 	analytics.AwsRequestResponseStatusCode = resp.StatusCode
-	return resp, isFailoverRequest, analytics, nil
+	return resp, isFailoverRequest, nil
 }
 
 func StatusCodeIs2xx(statusCode int) bool {
