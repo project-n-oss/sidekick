@@ -226,6 +226,7 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		if resp != nil {
 			analytics.BoltRequestResponseStatusCode = resp.StatusCode
 		}
+		// TODO: failver to S3 if br.config.Failover is true and not a failover request?
 		return resp, isFailoverRequest, analytics, err
 	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover && !isFailoverRequest {
 		b, _ := io.ReadAll(resp.Body)
