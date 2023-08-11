@@ -176,6 +176,7 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 
 // DoRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
 // DoRequest will failover to AWS if the Bolt request fails and the config.Failover is set to true.
+// DoRequest will failover to AWS if the Bolt request panics for any reason
 // DoboltRequest will return a bool indicating if the request was a failover.
 // DoRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
@@ -217,6 +218,11 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 	}
 }
 
+// doBoltRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
+// doBoltRequest will failover to AWS if the Bolt request fails, config.Failover is set to true, and the request itself is not a failover request.
+// doBoltRequest will return a bool indicating if the request was a failover.
+// doBoltRequest will return a BoltRequestAnalytics struct with analytics about the request.
+// doBoltRequest will catch any panics and return with error ErrPanicDuringBoltRequest
 func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -244,6 +250,11 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 	return resp, isFailoverRequest, nil
 }
 
+// doAwsRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
+// doAwsRequest will failover to Bolt if the AWS request fails, response status code is not 404, and the request itself is not a failover request.
+// doAwsRequest will return a bool indicating if the request was a failover.
+// doAwsRequest will return a BoltRequestAnalytics struct with analytics about the request.
+// doAwsRequest will catch any panics and return with error ErrPanicDuringAwsRequest
 func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
