@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.31](https://github.com/project-n-oss/sidekick/compare/v0.1.30...v0.1.31) (2023-08-14)
+
+
+### Features
+
+* catch panics + additional AWS failover behavior ([#70](https://github.com/project-n-oss/sidekick/issues/70)) ([1d8c26e](https://github.com/project-n-oss/sidekick/commit/1d8c26e7834e8aa822160343a2ca3248740696d5))
+
 ## [0.1.30](https://github.com/project-n-oss/sidekick/compare/v0.1.29...v0.1.30) (2023-08-11)
 
 
