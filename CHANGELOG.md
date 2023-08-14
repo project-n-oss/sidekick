@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.30](https://github.com/project-n-oss/sidekick/compare/v0.1.29...v0.1.30) (2023-08-11)
+
+
+### Features
+
+* always log bolt request analytics in debug mode ([#68](https://github.com/project-n-oss/sidekick/issues/68)) ([f8d8ed0](https://github.com/project-n-oss/sidekick/commit/f8d8ed06da2d6b29dea35627af6d8f6fb4ff4a7d))
+
 ## [0.1.29](https://github.com/project-n-oss/sidekick/compare/v0.1.28...v0.1.29) (2023-08-09)
 
 
