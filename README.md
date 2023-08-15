@@ -120,7 +120,7 @@ Sidekick binaries are hosted and released from Github. Please check our [release
 To download any release of our linux amd64 binary run:
 
 ```bash
-wget https://github.com/project-n-oss/sidekick/releases/{release}/download/sidekick-linux-amd64.tar.gz
+wget https://github.com/project-n-oss/sidekick/releases/${release}/download/sidekick-linux-amd64.tar.gz
 ```
 
 ## Contributing
