@@ -22,7 +22,7 @@ var (
 )
 
 // GetBoltVars acts as a singleton method wrapper around BoltVars.
-// It garantees that only one instance of BoltVars exists.
+// It guarantees that only one instance of BoltVars exists.
 // This method is thread safe.
 func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	once.Do(func() {

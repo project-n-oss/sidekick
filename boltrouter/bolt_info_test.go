@@ -56,7 +56,8 @@ func TestSelectBoltEndpoint(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			br, err := NewBoltRouter(ctx, logger, tt.cfg)
-			br.RefreshBoltInfo(ctx)
+			require.NoError(t, err)
+			err = br.RefreshBoltInfo(ctx)
 			require.NoError(t, err)
 
 			endpoint, err := br.SelectBoltEndpoint(ctx, tt.httpMethod)
@@ -89,7 +90,8 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			SetupQuickSilverMock(t, ctx, tt.clusterHealthy, tt.clientBehaviorParams, tt.intelligentQS, logger)
 			br, err := NewBoltRouter(ctx, logger, tt.cfg)
-			br.RefreshBoltInfo(ctx)
+			require.NoError(t, err)
+			err = br.RefreshBoltInfo(ctx)
 			require.NoError(t, err)
 
 			target, reason, err := br.SelectInitialRequestTarget()

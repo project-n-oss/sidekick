@@ -29,7 +29,7 @@ type SourceBucket struct {
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
 // This method will "n-auth-dummy" if nothing is found
 func extractSourceBucket(ctx context.Context, logger *zap.Logger, req *http.Request, defaultRegionFallback string) (SourceBucket, error) {
-	region, err := getRegionForBucket(ctx, req.Header.Get("Authorization"))
+	region, err := getRegionForBucket(req.Header.Get("Authorization"))
 	if err != nil {
 		return SourceBucket{}, fmt.Errorf("could not get region for bucket: %w", err)
 	}
@@ -70,7 +70,7 @@ func extractSourceBucket(ctx context.Context, logger *zap.Logger, req *http.Requ
 
 var credentialRegexp = regexp.MustCompile(`Credential=([^,]*)`)
 
-func getRegionForBucket(ctx context.Context, authHeader string) (string, error) {
+func getRegionForBucket(authHeader string) (string, error) {
 	if authHeader == "" {
 		return "", fmt.Errorf("no auth header in request, cannot extract region")
 	}

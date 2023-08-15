@@ -26,10 +26,10 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	mainWriteEndpoints     []interface{} = []interface{}{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
-	failoverWriteEndpoints []interface{} = []interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
-	mainReadEndpoints      []interface{} = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
-	failoverReadEndpoints  []interface{} = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
+	mainWriteEndpoints     = []interface{}{"0.0.0.1", "0.0.0.2", "0.0.0.3"}
+	failoverWriteEndpoints = []interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
+	mainReadEndpoints      = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
+	failoverReadEndpoints  = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
 	defaultClientBehaviorParams = map[string]interface{}{
 		"cleaner_on":             true,
@@ -61,7 +61,8 @@ func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams 
 		sc := http.StatusOK
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(sc)
-		json.NewEncoder(w).Encode(quicksilverResponse)
+		err := json.NewEncoder(w).Encode(quicksilverResponse)
+		require.NoError(t, err)
 	}))
 
 	return server

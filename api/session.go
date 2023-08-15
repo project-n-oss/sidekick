@@ -83,8 +83,8 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 			}
 		}()
 
-		newctx := context.WithValue(r.Context(), sessionContextKey, session)
-		r = r.WithContext(newctx)
+		newCtx := context.WithValue(r.Context(), sessionContextKey, session)
+		r = r.WithContext(newCtx)
 
 		handler.ServeHTTP(w, r)
 	})

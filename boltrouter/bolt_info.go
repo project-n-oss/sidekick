@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -55,8 +56,8 @@ func (br *BoltRouter) getPreferredEndpointOrder(reqMethod string) []string {
 		}
 	}
 
-	writeOrderEnpoints := br.boltVars.WriteOrderEndpoints.Get()
-	return writeOrderEnpoints
+	writeOrderEndpoints := br.boltVars.WriteOrderEndpoints.Get()
+	return writeOrderEndpoints
 }
 
 // RefreshBoltInfoPeriodically starts a goroutine that calls RefreshBoltInfo every BoltInfoRefreshInterval seconds
@@ -66,7 +67,10 @@ func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
 		for {
 			select {
 			case <-ticker.C:
-				br.RefreshBoltInfo(ctx)
+				err := br.RefreshBoltInfo(ctx)
+				if err != nil {
+					logrus.Errorf(err.Error())
+				}
 			case <-ctx.Done():
 				ticker.Stop()
 				return
@@ -170,7 +174,7 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		rnd := r.Intn(totalWeight)
 
-		if rnd < (int(crunchTrafficPercentInt) * totalWeight / 100) {
+		if rnd < (crunchTrafficPercentInt * totalWeight / 100) {
 			return "bolt", "traffic splitting", nil
 		} else {
 			return "s3", "traffic splitting", nil

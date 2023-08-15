@@ -30,6 +30,7 @@ func TestExtractSourceBucket(t *testing.T) {
 			bucketName := randomdata.SillyName()
 
 			testS3Client := NewTestS3Client(t, ctx, tc.requestStyle, tc.region)
+			// This populates testS3Client.req
 			testS3Client.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 				Bucket: aws.String(bucketName),
 			})
@@ -47,6 +48,7 @@ func TestExtractSourceBucket(t *testing.T) {
 		bucketName := randomdata.SillyName()
 
 		testS3Client := NewTestS3Client(t, ctx, pathStyle, "")
+		// This populates testS3Client.req
 		testS3Client.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 			Bucket: aws.String(bucketName),
 		})
