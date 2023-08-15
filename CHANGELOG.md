@@ -1,5 +1,68 @@
 # Changelog
 
+## [0.1.0](https://github.com/project-n-oss/sidekick/compare/v0.1.31...v0.1.0) (2023-08-15)
+
+
+### Features
+
+* add CyberDuck integration docs ([#29](https://github.com/project-n-oss/sidekick/issues/29)) ([1f09f9f](https://github.com/project-n-oss/sidekick/commit/1f09f9f31b4efda9005cc9e94d28caa1963a99f4))
+* added ci-cd for docker version tags ([#22](https://github.com/project-n-oss/sidekick/issues/22)) ([b231ae7](https://github.com/project-n-oss/sidekick/commit/b231ae78b9bc7ec88fb80347fb67f76fa475a8bc))
+* added docker image CICD ([#18](https://github.com/project-n-oss/sidekick/issues/18)) ([df827f0](https://github.com/project-n-oss/sidekick/commit/df827f0a5937695473208ee480d0541e204d6ea2))
+* added health check ([8f3b4da](https://github.com/project-n-oss/sidekick/commit/8f3b4da23d8a5fa9b081b0029354a5129edfd00a))
+* added load tests ([#11](https://github.com/project-n-oss/sidekick/issues/11)) ([557531e](https://github.com/project-n-oss/sidekick/commit/557531e05214fc1c32782da41d8e3807d0e5a209))
+* added version output when running ([9cff822](https://github.com/project-n-oss/sidekick/commit/9cff822385d6ab8b44e639bd2bdf166b55cf06d1))
+* allow boltrouter config to be set from env ([#36](https://github.com/project-n-oss/sidekick/issues/36)) ([17aa433](https://github.com/project-n-oss/sidekick/commit/17aa433229efd7f367d7250fdb5018d1dd586132))
+* always log bolt request analytics in debug mode ([#68](https://github.com/project-n-oss/sidekick/issues/68)) ([f8d8ed0](https://github.com/project-n-oss/sidekick/commit/f8d8ed06da2d6b29dea35627af6d8f6fb4ff4a7d))
+* catch panics + additional AWS failover behavior ([#70](https://github.com/project-n-oss/sidekick/issues/70)) ([1d8c26e](https://github.com/project-n-oss/sidekick/commit/1d8c26e7834e8aa822160343a2ca3248740696d5))
+* changed BOLT_CUSTOM_DOMAIN to GRANICA_CUSTOM_DOMAIN ([6575e0b](https://github.com/project-n-oss/sidekick/commit/6575e0b22be9cafb3a9aee36529e22165b4cff50))
+* changed BOLT_CUSTOM_DOMAIN to GRANICA_CUSTOM_DOMAIN ([#37](https://github.com/project-n-oss/sidekick/issues/37)) ([c19ff28](https://github.com/project-n-oss/sidekick/commit/c19ff28c674325238fd2e3bb5a7bbfa8782ae43b))
+* cleaned up bolt_vars for non ec2 use ([#27](https://github.com/project-n-oss/sidekick/issues/27)) ([97829ed](https://github.com/project-n-oss/sidekick/commit/97829edce7fe041b3d3ab1f78c196c56338b2aba))
+* default back to aws region ([#44](https://github.com/project-n-oss/sidekick/issues/44)) ([61096f1](https://github.com/project-n-oss/sidekick/commit/61096f121a821e5fd6ea9b77770f32aaf22af551))
+* docker registry build ([e1d7342](https://github.com/project-n-oss/sidekick/commit/e1d73420477f096e59d2d04e677bf14c6631215a))
+* failover tests and non path-style requests ([#8](https://github.com/project-n-oss/sidekick/issues/8)) ([48910dd](https://github.com/project-n-oss/sidekick/commit/48910dd06d29e0b9aa9ca1121516c2672e8afcf2))
+* **KRY-624:** A more intelligent SideKick ([#47](https://github.com/project-n-oss/sidekick/issues/47)) ([0735c85](https://github.com/project-n-oss/sidekick/commit/0735c85e243d61abd7700e89cdaffef58ada9f72))
+* **KRY-627:** set X-Bolt-Availability-Zone header in Bolt requests ([#46](https://github.com/project-n-oss/sidekick/issues/46)) ([951623b](https://github.com/project-n-oss/sidekick/commit/951623b7e0bb02cdee535ed897556629382de95c))
+* **KRY-634:** Add sidekick local run to support local bolt endpoint ([#49](https://github.com/project-n-oss/sidekick/issues/49)) ([7bf67c7](https://github.com/project-n-oss/sidekick/commit/7bf67c7568e28de2d2f400bc66c38e8deb172c6e))
+* **KRY-636:** Add support for multiple logging levels and clean up logging ([#56](https://github.com/project-n-oss/sidekick/issues/56)) ([28737ad](https://github.com/project-n-oss/sidekick/commit/28737ad5a1660208dde4d74adf58b4496fc9f9b5))
+* log analytics in debug mode for each request made by Sidekick ([#66](https://github.com/project-n-oss/sidekick/issues/66)) ([2bfc2fa](https://github.com/project-n-oss/sidekick/commit/2bfc2fa6972ced37cee6f2eeb37cc69721f324d1))
+* log warning for non 2xx aws response ([9593881](https://github.com/project-n-oss/sidekick/commit/95938819a760b083354c89fd1c75e55021a26f21))
+* Multi region support ([#30](https://github.com/project-n-oss/sidekick/issues/30)) ([bb62e1e](https://github.com/project-n-oss/sidekick/commit/bb62e1ecae7b95d93bd59fe532975b8fca12c876))
+* put object tests and better logging ([#38](https://github.com/project-n-oss/sidekick/issues/38)) ([43e84ab](https://github.com/project-n-oss/sidekick/commit/43e84ab091188c9b3fb7d3f4c8b77e22430edce8))
+* refresh AWS credentials periodically ([#31](https://github.com/project-n-oss/sidekick/issues/31)) ([ffbba32](https://github.com/project-n-oss/sidekick/commit/ffbba32d3086404cede424acd76b757b68619495))
+* return proper error if boltInfo is empty ([#63](https://github.com/project-n-oss/sidekick/issues/63)) ([83a35cb](https://github.com/project-n-oss/sidekick/commit/83a35cb4352014747d13306e4440f08089944f56))
+* S3 GUI client integration instructions ([#35](https://github.com/project-n-oss/sidekick/issues/35)) ([c3fc76f](https://github.com/project-n-oss/sidekick/commit/c3fc76f9535d9f443525d0670ad5369c10260957))
+* updated documentation and sidekick_service_init for databricks ([#6](https://github.com/project-n-oss/sidekick/issues/6)) ([83f8595](https://github.com/project-n-oss/sidekick/commit/83f8595aa633a9864c572c02380abee3345ea049))
+* version cmd ([fa8b663](https://github.com/project-n-oss/sidekick/commit/fa8b6635746cd75ae129cab1604280f29ab5720e))
+
+
+### Bug Fixes
+
+* add instrucitons when using temp credentials ([#34](https://github.com/project-n-oss/sidekick/issues/34)) ([c30ec05](https://github.com/project-n-oss/sidekick/commit/c30ec05d369449235e5587266c32dad191cc400d))
+* Add prebuilt binary info ([#54](https://github.com/project-n-oss/sidekick/issues/54)) ([1397abc](https://github.com/project-n-oss/sidekick/commit/1397abcf87cc89074738e4a89eaf2540740c33a5))
+* added standard http client for quicksilver ([612110b](https://github.com/project-n-oss/sidekick/commit/612110be01608f8a8e60dd73eee7536b4033160e))
+* complete Docker instructions,  aware of different credential scenarios ([#33](https://github.com/project-n-oss/sidekick/issues/33)) ([3402935](https://github.com/project-n-oss/sidekick/commit/3402935dc83f9a218f9bb63676edcc42d3bf000f))
+* fix 2 typos in readme ([#52](https://github.com/project-n-oss/sidekick/issues/52)) ([82eea5c](https://github.com/project-n-oss/sidekick/commit/82eea5c1b2d2451ead3b1c10dcb02286bfe042ed))
+* fix default failover value ([#41](https://github.com/project-n-oss/sidekick/issues/41)) ([d23fa41](https://github.com/project-n-oss/sidekick/commit/d23fa4148c0c9a2cba34cf83b81bfe32aaa3bacc))
+* fix docker tag versions ([4905807](https://github.com/project-n-oss/sidekick/commit/4905807c934105f48a41a5bf600153e8d723dc2c))
+* fix github action for docker registry ([079df58](https://github.com/project-n-oss/sidekick/commit/079df58b6f7af7e6b9ecfc176049d1c208e3d14b))
+* fix non 2xx warn logging ([601ad53](https://github.com/project-n-oss/sidekick/commit/601ad532fa1e363925842d6bbf83844c28402065))
+* fix release.yml ([ad02307](https://github.com/project-n-oss/sidekick/commit/ad0230765ae4c0b0b4609329115a0cfd3bc5d8d1))
+* fix status code failover check ([040eb76](https://github.com/project-n-oss/sidekick/commit/040eb768f46fa2763fbee00571e74f123563e798))
+* fix terminal logger for windows ([9336da4](https://github.com/project-n-oss/sidekick/commit/9336da40895efbee6befabc3e218a9b4182724e3))
+* Fix unicode awsfailover path error ([7d61971](https://github.com/project-n-oss/sidekick/commit/7d6197102187793835ebcb535132177269e79e22))
+* letter casing ([#59](https://github.com/project-n-oss/sidekick/issues/59)) ([e45caa7](https://github.com/project-n-oss/sidekick/commit/e45caa7f4f1c3322b562f43e4a50a110f7de09a0))
+* new release ([b4cf490](https://github.com/project-n-oss/sidekick/commit/b4cf490c98c86513eaf69ba2caf2e5d3568839d5))
+* overwrite bin in release ([97e28cd](https://github.com/project-n-oss/sidekick/commit/97e28cdd22a8606fe1b0822bae72855f34232e37))
+* revert "feat(KRY-634): Add sidekick local run to support local bolt endpoint" ([#60](https://github.com/project-n-oss/sidekick/issues/60)) ([9e8e919](https://github.com/project-n-oss/sidekick/commit/9e8e91918f7db86b87e6cb11d20f1691b921a395))
+* rollback to stylepath ([4398f44](https://github.com/project-n-oss/sidekick/commit/4398f447ece0230f53a20f77d281b71a2838f579))
+* trigger releases ([c0107cb](https://github.com/project-n-oss/sidekick/commit/c0107cbfc78be09526d52fa4cb0e5bb0624e56ad))
+* Trying to release again ([#74](https://github.com/project-n-oss/sidekick/issues/74)) ([bf8e1cd](https://github.com/project-n-oss/sidekick/commit/bf8e1cdc43e5336d98ca27c6c20940ed0346b7e3))
+
+
+### Miscellaneous Chores
+
+* release 0.1.0 ([5c4fad4](https://github.com/project-n-oss/sidekick/commit/5c4fad4f81fc62f48080c515dc84441026527540))
+
 ## [0.1.31](https://github.com/project-n-oss/sidekick/compare/v0.1.30...v0.1.31) (2023-08-14)
 
 
