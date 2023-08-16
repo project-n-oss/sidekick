@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.32](https://github.com/project-n-oss/sidekick/compare/v0.1.31...v0.1.32) (2023-08-16)
+
+
+### Bug Fixes
+
+* Fix failover typo ([435a71b](https://github.com/project-n-oss/sidekick/commit/435a71b685bf1a005824f9a79c6ab2bdf8f07e85))
+* Trying to release again ([#74](https://github.com/project-n-oss/sidekick/issues/74)) ([bf8e1cd](https://github.com/project-n-oss/sidekick/commit/bf8e1cdc43e5336d98ca27c6c20940ed0346b7e3))
+
 ## [0.1.31](https://github.com/project-n-oss/sidekick/compare/v0.1.30...v0.1.31) (2023-08-14)
 
 
