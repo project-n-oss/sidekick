@@ -25,6 +25,6 @@ func (v *AtomicVar[T]) Get() T {
 // Set uses sync.Lock to write to the variable
 func (v *AtomicVar[T]) Set(x T) {
 	v.Lock()
-	defer v.Unlock()
 	v.value = x
+	v.Unlock()
 }

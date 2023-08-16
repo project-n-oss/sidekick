@@ -226,6 +226,7 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
+			logger.Error("panic occurred during Bolt request", zap.Any("panic", r))
 			resp = nil
 			err = ErrPanicDuringBoltRequest
 		}
@@ -239,15 +240,15 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		if resp != nil {
 			analytics.BoltRequestResponseStatusCode = resp.StatusCode
 		}
-		return resp, isFailoverRequest, err
-	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover && !isFailoverRequest {
+		return resp, isFailover, err
+	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover && !isFailover {
 		b, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		logger.Error("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
 		return br.doAwsRequest(logger, boltReq, true, analytics)
 	}
 	analytics.BoltRequestResponseStatusCode = resp.StatusCode
-	return resp, isFailoverRequest, nil
+	return resp, isFailover, nil
 }
 
 // doAwsRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
@@ -272,14 +273,14 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 		if resp != nil {
 			analytics.AwsRequestResponseStatusCode = resp.StatusCode
 		}
-		return resp, isFailoverRequest, err
-	} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 && !isFailoverRequest {
+		return resp, isFailover, err
+	} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 && !isFailover {
 		// failover to bolt
 		logger.Error("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
 		return br.doBoltRequest(logger, boltReq, true, analytics)
 	}
 	analytics.AwsRequestResponseStatusCode = resp.StatusCode
-	return resp, isFailoverRequest, nil
+	return resp, isFailover, nil
 }
 
 func StatusCodeIs2xx(statusCode int) bool {

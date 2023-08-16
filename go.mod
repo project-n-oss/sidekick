@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.2
 	github.com/jarcoal/httpmock v1.3.0
 	github.com/joho/godotenv v1.5.1
-	github.com/project-n-oss/sidekick v0.1.32
+	github.com/project-n-oss/sidekick v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
@@ -42,7 +42,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
@@ -52,3 +51,5 @@ require (
 	golang.org/x/tools v0.4.1-0.20221208213631-3f74d914ae6d // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/project-n-oss/sidekick => ./
