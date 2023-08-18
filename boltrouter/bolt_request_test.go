@@ -178,3 +178,66 @@ func overrideCrunchTrafficPct(br *BoltRouter, pct string) {
 	m := br.boltVars.BoltInfo.Get()
 	m["client_behavior_params"].(map[string]interface{})["crunch_traffic_percent"] = pct
 }
+
+// function to test endpoint offline behavior in BoltRouter.DoRequest
+func TestBoltEndpoint(t *testing.T) {
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t)
+	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	allReadEndpoints := append(mainReadEndpoints, failoverReadEndpoints...)
+	// register panic responders for all read endpoints
+	for _, endpoint := range allReadEndpoints {
+		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/test.projectn.co", endpoint),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(500, "SERVER ERROR"), fmt.Errorf("s3 error")
+			})
+	}
+
+	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.projectn.co",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "OK"), nil
+		})
+
+	br, err := NewBoltRouter(ctx, logger, Config{Failover: false})
+	require.NoError(t, err)
+	require.NoError(t, br.RefreshBoltInfo(ctx))
+
+	overrideCrunchTrafficPct(br, "100")
+
+	doRequest := func() (*BoltRequestAnalytics, error) {
+		body := strings.NewReader(randomdata.Paragraph())
+		req, err := http.NewRequest(http.MethodGet, "test.projectn.co", body)
+		req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
+		require.NoError(t, err)
+
+		boltReq, err := br.NewBoltRequest(ctx, logger, req)
+		if err != nil {
+			return nil, err
+		}
+		require.NotNil(t, boltReq)
+
+		_, _, analytics, err := br.DoRequest(logger, boltReq)
+		require.Error(t, err)
+
+		return analytics, nil
+	}
+
+	for ii := 0; ii < 20; ii++ {
+		analytics, err := doRequest()
+		// Ensure on error, we have tried many endpoints already
+		if err != nil {
+			require.Greater(t, ii, 0)
+			break
+		}
+		logger.Info(fmt.Sprintf("resp %+v", analytics))
+	}
+	// On refresh, all endpoints will become live again
+	require.NoError(t, br.RefreshBoltInfo(ctx))
+	analytics, err := doRequest()
+	require.NoError(t, err)
+	logger.Info(fmt.Sprintf("resp %+v", analytics))
+}

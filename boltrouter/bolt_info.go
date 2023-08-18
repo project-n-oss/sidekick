@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -28,17 +29,26 @@ func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
 
 	for _, key := range preferredOrder {
 		availableEndpoints, ok := boltEndpoints[key]
-		availableEndpointsSlice, castOk := availableEndpoints.([]interface{})
-		if !castOk {
+		if !ok {
+			continue
+		}
+
+		availableEndpointsSlice, ok := availableEndpoints.([]interface{})
+		if !ok {
 			return nil, fmt.Errorf("could not cast availableEndpoints to []string")
 		}
-		availableEndpointsStr := make([]string, len(availableEndpointsSlice))
-		for i, v := range availableEndpointsSlice {
-			availableEndpointsStr[i] = v.(string)
+		liveEndpoints := make([]string, 0, len(availableEndpointsSlice))
+		for _, v := range availableEndpointsSlice {
+			endpoint := v.(string)
+
+			if !br.IsOffline(endpoint) {
+				liveEndpoints = append(liveEndpoints, endpoint)
+			}
 		}
-		if ok && len(availableEndpointsStr) > 0 {
-			randomIndex := rand.Intn(len(availableEndpointsStr))
-			selectedEndpoint := availableEndpointsStr[randomIndex]
+
+		if len(liveEndpoints) > 0 {
+			randomIndex := rand.Intn(len(liveEndpoints))
+			selectedEndpoint := liveEndpoints[randomIndex]
 			return url.Parse(fmt.Sprintf("https://%s", selectedEndpoint))
 		}
 	}
@@ -87,6 +97,7 @@ func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
 		return fmt.Errorf("could not refresh bolt info: %w", err)
 	}
 	br.boltVars.BoltInfo.Set(info)
+	br.updateEndpointLiveness()
 	return nil
 }
 
@@ -119,7 +130,7 @@ func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 	if err != nil {
 		return BoltInfo{}, nil
 	}
-
+	br.logger.Debug("QS resp", zap.Any("info", info))
 	return info, nil
 }
 
