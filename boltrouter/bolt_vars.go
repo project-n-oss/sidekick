@@ -47,13 +47,15 @@ func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 //	}
 type BoltInfo map[string]interface{}
 
-// BoltVars is a singleton struct keeping track of Bolt variables accross threads.
+// BoltVars is a singleton struct keeping track of Bolt variables across threads.
 // This is used in BoltRouter to route requests appropriately.
 // You should only access BoltVars with GetBoltVars().
 type BoltVars struct {
 	ReadOrderEndpoints  AtomicVar[[]string]
 	WriteOrderEndpoints AtomicVar[[]string]
 	HttpReadMethodTypes AtomicVar[[]string]
+	offlineEndpoints    map[string]bool
+	livenessLock        sync.RWMutex
 
 	Region           AtomicVar[string]
 	ZoneId           AtomicVar[string]
@@ -80,7 +82,9 @@ func (bv *BoltVars) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 
 func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	logger.Debug("initializing BoltVars...")
-	ret := &BoltVars{}
+	ret := &BoltVars{
+		offlineEndpoints: make(map[string]bool),
+	}
 
 	ret.ReadOrderEndpoints.Set([]string{"main_read_endpoints", "main_write_endpoints", "failover_read_endpoints", "failover_write_endpoints"})
 	ret.WriteOrderEndpoints.Set([]string{"main_write_endpoints", "failover_write_endpoints"})
@@ -134,7 +138,10 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 
 	ret.BoltInfo.Set(BoltInfo{})
 
-	logger.Debug("done!", zap.Object("BoltVars", ret))
+	if logger.Level() == zap.DebugLevel {
+		logger.Debug(fmt.Sprintf("done! BoltVars %v", ret))
+	}
+
 	return ret, nil
 }
 

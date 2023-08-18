@@ -17,6 +17,8 @@ type BoltRouter struct {
 	boltHttpClient     *http.Client
 	standardHttpClient *http.Client
 	boltVars           *BoltVars
+
+	logger *zap.Logger
 }
 
 // NewBoltRouter creates a new BoltRouter.
@@ -46,6 +48,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 	logger.Debug("config", zap.Any("config", cfg))
 	br := &BoltRouter{
 		config: cfg,
+		logger: logger,
 
 		boltHttpClient:     &boltHttpClient,
 		standardHttpClient: &standardHttpClient,

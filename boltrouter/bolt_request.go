@@ -50,7 +50,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		return nil, fmt.Errorf("could not get aws credentials: %w", err)
 	}
 
-	failoverRequest, err := newFailoverAwsRequest(ctx, req, awsCred, sourceBucket)
+	awsRequest, err := newFailoverAwsRequest(ctx, req, awsCred, sourceBucket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make failover request: %w", err)
 	}
@@ -107,7 +107,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 
 	return &BoltRequest{
 		Bolt: req.Clone(ctx),
-		Aws:  failoverRequest.Clone(ctx),
+		Aws:  awsRequest.Clone(ctx),
 	}, nil
 }
 
@@ -241,6 +241,10 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		zap.Bool("failover", br.config.Failover),
 		zap.Bool("isFailover", isFailover),
 		zap.Error(err))
+
+	if err != nil {
+		br.MaybeMarkOffline(boltReq.Bolt.URL, err)
+	}
 
 	// Attempt to failover on error or based on response status code
 	if br.config.Failover && !isFailover &&

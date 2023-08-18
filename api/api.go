@@ -36,8 +36,8 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 	br.RefreshAWSCredentialsPeriodically(ctx, logger)
 
 	return &Api{
-		logger: logger,
 		br:     br,
+		logger: logger,
 	}, nil
 }
 
