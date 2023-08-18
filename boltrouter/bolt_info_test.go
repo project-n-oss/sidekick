@@ -2,7 +2,9 @@ package boltrouter
 
 import (
 	"context"
+	"github.com/Pallinder/go-randomdata"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -72,6 +74,7 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 
 	testCases := []struct {
+		URL                  string
 		name                 string
 		cfg                  Config
 		clusterHealthy       bool
@@ -80,10 +83,19 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 		reason               string
 		intelligentQS        bool
 	}{
-		{name: "ClusterUnhealthy", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: "s3", reason: "cluster unhealthy", intelligentQS: true},
-		{name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
-		{name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
-		{name: "BackwardsCompat", cfg: Config{Local: false}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: "bolt", reason: "backwards compatibility", intelligentQS: false},
+		// Check with CrunchTrafficSplitByObjectKeyHash
+		{URL: "pqr.txt", name: "ClusterUnhealthy", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: "s3", reason: "cluster unhealthy", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "BackwardsCompat", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: "bolt", reason: "backwards compatibility", intelligentQS: false},
+		{URL: "xyz123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
+		{URL: "abc123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
+		{URL: "abc/abc123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
+		// Check with CrunchTrafficSplitByRandomRequest
+		{URL: "pqr.txt", name: "ClusterUnhealthy", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: "s3", reason: "cluster unhealthy", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: "s3", reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: "bolt", reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "BackwardsCompat", cfg: Config{Local: false, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: "bolt", reason: "backwards compatibility", intelligentQS: false},
 	}
 
 	for _, tt := range testCases {
@@ -93,8 +105,11 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 			require.NoError(t, err)
 			err = br.RefreshBoltInfo(ctx)
 			require.NoError(t, err)
-
-			target, reason, err := br.SelectInitialRequestTarget()
+			body := strings.NewReader(randomdata.Paragraph())
+			req, err := http.NewRequest(http.MethodGet, tt.URL, body)
+			req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
+			boltReq, err := br.NewBoltRequest(ctx, logger, req)
+			target, reason, err := br.SelectInitialRequestTarget(boltReq)
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, target)
 			require.Equal(t, tt.reason, reason)

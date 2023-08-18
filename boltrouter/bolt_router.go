@@ -17,8 +17,7 @@ type BoltRouter struct {
 	boltHttpClient     *http.Client
 	standardHttpClient *http.Client
 	boltVars           *BoltVars
-
-	logger *zap.Logger
+	logger             *zap.Logger
 }
 
 // NewBoltRouter creates a new BoltRouter.

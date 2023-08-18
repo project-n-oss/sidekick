@@ -156,8 +156,8 @@ func (br *BoltRouter) GetCleanerStatus() (bool, error) {
 	return cleanerOnBool, nil
 }
 
-// SelectInitialRequestTarget based on cluster_health_metrics and client_behavior_params
-func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string, err error) {
+// select initial request destination based on cluster_health_metrics and client_behavior_params
+func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target string, reason string, err error) {
 	boltInfo := br.boltVars.BoltInfo.Get()
 
 	clusterHealthy := boltInfo["cluster_healthy"]
@@ -195,9 +195,16 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 		return "", "", fmt.Errorf("could not parse crunchTrafficPercent to int. %v", err)
 	}
 
-	// Randomly select bolt with crunchTrafficPercentInt % probability.
-	if rand.Intn(100) < crunchTrafficPercentInt {
-		return "bolt", "traffic splitting", nil
+	if br.config.CrunchTrafficSplit == CrunchTrafficSplitByObjectKeyHash {
+		// Take a mod of hashValue and check if it is less than crunchTrafficPercentInt
+		if int(boltReq.crcHash)%100 < crunchTrafficPercentInt {
+			return "bolt", "traffic splitting", nil
+		}
+	} else {
+		// Randomly select bolt with crunchTrafficPercentInt % probability.
+		if rand.Intn(100) < crunchTrafficPercentInt {
+			return "bolt", "traffic splitting", nil
+		}
 	}
 
 	return "s3", "traffic splitting", nil

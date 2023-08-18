@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,13 +16,14 @@ import (
 )
 
 type BoltRequest struct {
-	Bolt *http.Request
-	Aws  *http.Request
+	Bolt    *http.Request
+	Aws     *http.Request
+	crcHash uint32
 }
 
 type BoltRequestAnalytics struct {
 	ObjectKey                     string
-	RequestBodySize               int
+	RequestBodySize               uint32
 	Method                        string
 	InitialRequestTarget          string
 	InitialRequestTargetReason    string
@@ -60,8 +63,17 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 	if err != nil {
 		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
 	}
+	bucketAndObjPath := ""
+	if sourceBucket.Bucket == "n-auth-dummy" {
+		// Special Case to handle dummy bucket
+		bucketAndObjPath, _ = url.JoinPath(sourceBucket.Bucket, req.URL.Path)
+	} else {
+		bucketAndObjPath = req.URL.Path
+	}
 
+	crcHash := crc32.ChecksumIEEE([]byte(bucketAndObjPath))
 	BoltURL, err := br.SelectBoltEndpoint(req.Method)
+
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +121,9 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 	}
 
 	return &BoltRequest{
-		Bolt: req.Clone(ctx),
-		Aws:  awsRequest.Clone(ctx),
+		Bolt:    req.Clone(ctx),
+		Aws:     awsRequest.Clone(ctx),
+		crcHash: crcHash,
 	}, nil
 }
 
@@ -183,11 +196,11 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoboltRequest will return a bool indicating if the request was a failover.
 // DoRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
-	initialRequestTarget, reason, err := br.SelectInitialRequestTarget()
+	initialRequestTarget, reason, err := br.SelectInitialRequestTarget(boltReq)
 
 	boltRequestAnalytics := &BoltRequestAnalytics{
 		ObjectKey:                     boltReq.Bolt.URL.Path,
-		RequestBodySize:               int(boltReq.Bolt.ContentLength),
+		RequestBodySize:               uint32(boltReq.Bolt.ContentLength),
 		Method:                        boltReq.Bolt.Method,
 		InitialRequestTarget:          initialRequestTarget,
 		InitialRequestTargetReason:    reason,

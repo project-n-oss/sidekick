@@ -27,6 +27,7 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().String("bolt-endpoint-override", "", "Specify the local bolt endpoint with port to override in local mode. e.g: <local-bolt-ip>:9000")
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
 	cmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
+	cmd.Flags().String("crunch-traffic-split", "objectkeyhash", "Specify the crunch traffic split strategy: random or objectkeyhash")
 }
 
 var serveCmd = &cobra.Command{
@@ -85,6 +86,10 @@ func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
 	}
 	if cmd.Flags().Lookup("failover").Changed {
 		boltRouterConfig.Failover, _ = cmd.Flags().GetBool("failover")
+	}
+	if cmd.Flags().Lookup("crunch-traffic-split").Changed {
+		crunchTrafficSplitStr, _ := cmd.Flags().GetString("crunch-traffic-split")
+		boltRouterConfig.CrunchTrafficSplit = boltrouter.CrunchTrafficSplitType(crunchTrafficSplitStr)
 	}
 	return boltRouterConfig
 }
