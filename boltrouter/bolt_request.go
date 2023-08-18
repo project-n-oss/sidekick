@@ -236,19 +236,31 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 	resp, err = br.boltHttpClient.Do(boltReq.Bolt)
 	duration := time.Since(beginTime)
 	analytics.BoltRequestDuration = duration
-	if err != nil {
+	logger.Debug("bolt resp",
+		zap.Any("resp", resp),
+		zap.Bool("failover", br.config.Failover),
+		zap.Bool("isFailover", isFailover),
+		zap.Error(err))
+
+	// Attempt to failover on error or based on response status code
+	if br.config.Failover && !isFailover &&
+		(err != nil || !StatusCodeIs2xx(resp.StatusCode)) {
+
 		if resp != nil {
-			analytics.BoltRequestResponseStatusCode = resp.StatusCode
+			b, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			logger.Error("bolt request failed", zap.Int("code", resp.StatusCode), zap.String("body", string(b)))
+		} else {
+			logger.Error("bolt request failed", zap.Error(err))
 		}
-		return resp, isFailover, err
-	} else if !StatusCodeIs2xx(resp.StatusCode) && br.config.Failover && !isFailover {
-		b, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		logger.Error("bolt request failed", zap.Int("statusCode", resp.StatusCode), zap.String("body", string(b)))
+
 		return br.doAwsRequest(logger, boltReq, true, analytics)
 	}
-	analytics.BoltRequestResponseStatusCode = resp.StatusCode
-	return resp, isFailover, nil
+
+	if resp != nil {
+		analytics.BoltRequestResponseStatusCode = resp.StatusCode
+	}
+	return resp, isFailover, err
 }
 
 // doAwsRequest sends an HTTP Bolt request and returns an HTTP response, following policy (such as redirects, cookies, auth) as configured on the client.
@@ -269,18 +281,30 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 	resp, err = http.DefaultClient.Do(boltReq.Aws)
 	duration := time.Since(beginTime)
 	analytics.AwsRequestDuration = duration
-	if err != nil {
+
+	logger.Debug("aws resp",
+		zap.Any("resp", resp),
+		zap.Bool("failover", br.config.Failover),
+		zap.Bool("isFailover", isFailover),
+		zap.Error(err))
+
+	// Attempt to failover on error or based on response status code being 404 (NotFound)
+	if br.config.Failover && !isFailover &&
+		(err != nil || resp.StatusCode == 404) {
+
 		if resp != nil {
-			analytics.AwsRequestResponseStatusCode = resp.StatusCode
+			logger.Error("aws request failed, falling back to bolt", zap.Int("code", resp.StatusCode))
+		} else {
+			logger.Error("aws request failed, falling back to bolt", zap.Error(err))
 		}
-		return resp, isFailover, err
-	} else if !StatusCodeIs2xx(resp.StatusCode) && resp.StatusCode == 404 && !isFailover {
-		// failover to bolt
-		logger.Error("aws request failed, falling back to bolt", zap.Int("statusCode", resp.StatusCode))
+
 		return br.doBoltRequest(logger, boltReq, true, analytics)
 	}
-	analytics.AwsRequestResponseStatusCode = resp.StatusCode
-	return resp, isFailover, nil
+
+	if resp != nil {
+		analytics.AwsRequestResponseStatusCode = resp.StatusCode
+	}
+	return resp, isFailover, err
 }
 
 func StatusCodeIs2xx(statusCode int) bool {

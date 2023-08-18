@@ -68,6 +68,75 @@ func TestBoltRequest(t *testing.T) {
 	}
 }
 
+// function to test failover handling behavior in BoltRouter.DoRequest
+func TestBoltRequestFailover(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	allReadEndpoints := append(mainReadEndpoints, failoverReadEndpoints...)
+	// register error responders for all read endpoints
+	for _, endpoint := range allReadEndpoints {
+		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/test.projectn.co", endpoint),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(500, "SERVER ERROR"), fmt.Errorf("s3 error")
+			})
+		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/bolt/test.projectn.co", endpoint),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(500, "SERVER ERROR"), fmt.Errorf("bolt error")
+			})
+	}
+
+	httpmock.RegisterResponder("GET", "https://s3.us-west-2.amazonaws.com/test.projectn.co",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "OK"), nil
+		})
+	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.projectn.co",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "OK"), nil
+		})
+
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t)
+	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
+
+	boltVars, err := GetBoltVars(ctx, logger)
+	require.NoError(t, err)
+	br := &BoltRouter{
+		config: Config{
+			Failover: false,
+		},
+		boltHttpClient:     &http.Client{},
+		standardHttpClient: &http.Client{},
+		boltVars:           boltVars,
+	}
+	br.RefreshBoltInfo(ctx)
+
+	body := strings.NewReader(randomdata.Paragraph())
+	req, err := http.NewRequest(http.MethodGet, "test.projectn.co", body)
+	req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
+	require.NoError(t, err)
+
+	boltReq, err := br.NewBoltRequest(ctx, logger, req)
+	require.NoError(t, err)
+	require.NotNil(t, boltReq)
+
+	_, failover, _, err := br.DoRequest(logger, boltReq)
+	require.Error(t, err, failover)
+	require.False(t, failover, err)
+
+	br.config.Failover = true
+	br.RefreshBoltInfo(ctx)
+	boltReq, err = br.NewBoltRequest(ctx, logger, req)
+	require.NoError(t, err)
+	require.NotNil(t, boltReq)
+
+	_, failover, analytics, err := br.DoRequest(logger, boltReq)
+	// failover is enabled so we should get a successful response by failing over to s3
+	require.NoError(t, err)
+	require.True(t, failover, err)
+	require.NotZero(t, analytics.AwsRequestResponseStatusCode)
+}
+
 // function to test panic handling behavior in BoltRouter.DoRequest
 func TestBoltRequestPanic(t *testing.T) {
 	httpmock.Activate()
@@ -125,14 +194,7 @@ func TestBoltRequestPanic(t *testing.T) {
 	// no failover in config so we should get an error
 	require.Contains(t, err.Error(), "panic occurred during Bolt request")
 
-	br = &BoltRouter{
-		config: Config{
-			Failover: true,
-		},
-		boltHttpClient:     &http.Client{},
-		standardHttpClient: &http.Client{},
-		boltVars:           boltVars,
-	}
+	br.config.Failover = true
 	br.RefreshBoltInfo(ctx)
 	boltReq, err = br.NewBoltRequest(ctx, logger, req)
 	require.NoError(t, err)
