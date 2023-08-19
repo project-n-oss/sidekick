@@ -32,11 +32,11 @@ var (
 	failoverReadEndpoints  = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
 
 	defaultClientBehaviorParams = map[string]interface{}{
-		"cleaner_on":             true,
-		"crunch_traffic_percent": 20.0,
+		"cleaner_on":             "true",
+		"crunch_traffic_percent": "20.0",
 	}
 
-	quicksilverResponse map[string]interface{} = map[string]interface{}{
+	quicksilverResponse = map[string]interface{}{
 		"main_write_endpoints":     mainWriteEndpoints,
 		"failover_write_endpoints": failoverWriteEndpoints,
 		"main_read_endpoints":      mainReadEndpoints,

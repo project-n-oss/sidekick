@@ -160,12 +160,12 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 			return "", "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
 		}
 
-		crunchTrafficPercent := clientBehaviorParams["crunch_traffic_percent"]
-		if crunchTrafficPercent == nil {
-			return "", "", fmt.Errorf("could not get crunch_traffic_percent from clientBehaviorParams")
+		crunchTrafficPercent, ok := clientBehaviorParams["crunch_traffic_percent"].(string)
+		if !ok {
+			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to string")
 		}
 
-		crunchTrafficPercentInt, err := strconv.Atoi(crunchTrafficPercent.(string))
+		crunchTrafficPercentInt, err := strconv.Atoi(crunchTrafficPercent)
 		if err != nil {
 			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to int")
 		}
