@@ -15,6 +15,7 @@ func OnShutdown(f func()) {
 func WithPreShutdown(f func()) {
 	preShutDown = f
 }
+
 func Shutdown() {
 	Terminating.Store(true)
 	preShutDown()

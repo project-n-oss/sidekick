@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 	"os"
@@ -89,7 +88,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		if err := UnmarshalConfigFromEnv(context.Background(), &rootConfig); err != nil {
+		if err := UnmarshalConfigFromEnv(&rootConfig); err != nil {
 			return err
 		}
 

@@ -36,7 +36,7 @@ func TestExtractSourceBucket(t *testing.T) {
 			})
 
 			req := testS3Client.GetRequest(t, ctx)
-			sourceBucket, err := extractSourceBucket(ctx, logger, req, "foo")
+			sourceBucket, err := extractSourceBucket(logger, req, "foo")
 			assert.NoError(t, err)
 			assert.Equal(t, bucketName, sourceBucket.Bucket)
 			assert.Equal(t, tc.requestStyle, sourceBucket.Style)
@@ -54,7 +54,7 @@ func TestExtractSourceBucket(t *testing.T) {
 		})
 
 		req := testS3Client.GetRequest(t, ctx)
-		sourceBucket, err := extractSourceBucket(ctx, logger, req, "foo")
+		sourceBucket, err := extractSourceBucket(logger, req, "foo")
 		assert.NoError(t, err)
 		assert.Equal(t, bucketName, sourceBucket.Bucket)
 		assert.Equal(t, pathStyle, sourceBucket.Style)

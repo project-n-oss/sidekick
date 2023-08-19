@@ -23,7 +23,7 @@ func GetSidekickS3Client(t *testing.T, ctx context.Context, region string) *s3.C
 				SigningRegion: signRegion,
 			}, nil
 		}
-		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		// returning EndpointNotFoundError will allow the service to fallback to its default resolution
 		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
 	})
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithEndpointResolverWithOptions(customResolver))
@@ -45,7 +45,7 @@ func GetSidekickS3Client(t *testing.T, ctx context.Context, region string) *s3.C
 	return s3c
 }
 
-// GetS3Client returns a default aws S3 client
+// GetAwsS3Client returns a default aws S3 client
 func GetAwsS3Client(t *testing.T, ctx context.Context, region string) *s3.Client {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	require.NoError(t, err)

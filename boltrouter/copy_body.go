@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// copyReq copies the request body into a destination request.
+// CopyReqBody copies the request body into a destination request.
 // this allows reading a request body multiple times without "closing" it
 func CopyReqBody(src *http.Request, dest *http.Request) {
 	var b bytes.Buffer
@@ -15,7 +15,7 @@ func CopyReqBody(src *http.Request, dest *http.Request) {
 	dest.Body = io.NopCloser(bytes.NewReader(b.Bytes()))
 }
 
-// copyResp copies the response body and returns a new response with the copied body.
+// CopyRespBody copies the response body and returns a new response with the copied body.
 // this allows reading a response body multiple times without "closing" it.
 func CopyRespBody(resp *http.Response) io.ReadCloser {
 	var b bytes.Buffer

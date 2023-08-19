@@ -76,9 +76,9 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 		},
 	}
 
-	api, err := api.New(ctx, logger, cfg)
+	apiSrv, err := api.New(ctx, logger, cfg)
 	require.NoError(t, err)
-	handler := api.CreateHandler()
+	handler := apiSrv.CreateHandler()
 
 	listenCfg := net.ListenConfig{}
 	addr := ":" + strconv.Itoa(*port)

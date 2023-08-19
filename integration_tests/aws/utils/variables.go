@@ -10,11 +10,13 @@ import (
 
 var (
 	// Input params
+
 	Bucket                   string
 	FailoverBucket           string
 	FailoverBucketDiffRegion string
 
 	// Global state
+
 	SidekickS3c *s3.Client
 	AwsS3c      *s3.Client
 	SidekickURL string

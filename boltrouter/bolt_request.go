@@ -40,7 +40,7 @@ var (
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
 func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
-	sourceBucket, err := extractSourceBucket(ctx, logger, req, br.boltVars.Region.Get())
+	sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
 	}
@@ -204,10 +204,10 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 	if initialRequestTarget == "bolt" {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
 		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
-		// handled inside the function as needed and we can just return
+		// handled inside the function as needed, and we can just return
 		// If the err is of type ErrPanicDuringBoltRequest then we need to failover to AWS manually since .doBoltRequest
 		// halted execution before it could failover
-		if err != nil && err == ErrPanicDuringBoltRequest && br.config.Failover {
+		if err != nil && errors.Is(err, ErrPanicDuringBoltRequest) && br.config.Failover {
 			logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
 			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
 		}

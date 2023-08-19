@@ -1,7 +1,7 @@
 # AWS SDK
 
 In order to use sidekick with your aws sdk, you need to update the S3 Client hostname to point to the sidekick url (ex: `localhost:7075`).
-Currently you also need to set your s3 client to use `pathStyle` to work.
+Currently, you also need to set your s3 client to use `pathStyle` to work.
 
 Here are some examples of how to use various aws sdks to work with sidekick:
 
@@ -89,7 +89,7 @@ func main() {
 
 ## Java
 
-Currently the Java sdk by default uses the [streamin signature](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html) when uploading objects. Sidekick does not currenlty support this and you need to disable the chunk encoding when creating the client as shown below.
+Currently, the Java sdk by default uses the [streaming signature](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html) when uploading objects. Sidekick does not currently support this, and you need to disable the chunk encoding when creating the client as shown below.
 
 ```java
 import com.amazonaws.AmazonServiceException;

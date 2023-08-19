@@ -16,7 +16,7 @@ const (
 	BoltInfoRefreshInterval = 10 * time.Second
 )
 
-// SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in requMethod.
+// SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in reqMethod.
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
 	preferredOrder := br.getPreferredEndpointOrder(reqMethod)
@@ -91,7 +91,7 @@ func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
 }
 
 // getBoltInfo queries quicksilver and returns a BoltInfo.
-// It will always return an empty mapif running in local mode.
+// It will always return an empty map if running in local mode.
 func (br *BoltRouter) getBoltInfo(ctx context.Context) (BoltInfo, error) {
 	// If running locally, we can't connect to quicksilver.
 	if br.config.Local {

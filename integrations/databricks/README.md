@@ -1,6 +1,6 @@
 # Databricks integration
 
-You can intergrate sidekick with databricks by adding the [sidekick_service_init.sh](./sidekick_service_init.sh) as a [init script](https://docs.databricks.com/clusters/init-scripts.html) in your clusters/workspace. Both Global and Cluster based init scripts work.
+You can integrate sidekick with databricks by adding the [sidekick_service_init.sh](./sidekick_service_init.sh) as an [init script](https://docs.databricks.com/clusters/init-scripts.html) in your clusters/workspace. Both Global and Cluster based init scripts work.
 
 ## VPC Peering
 

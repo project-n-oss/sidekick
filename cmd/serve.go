@@ -12,7 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=104
+// DEFAULT_PORT
+// From Unassigned https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=104
 const DEFAULT_PORT = 7075
 
 func init() {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -28,7 +27,7 @@ const configPrefix = "SIDEKICK"
 // environment variables read are formed by joining the config struct's field names with underscores
 // and adding a "SIDEKICK" prefix. For example, if you want to set the Redis address, you would use
 // SIDEKICK_BOLTROUTER_FAILOVER=true
-func UnmarshalConfigFromEnv(ctx context.Context, config *Config) error {
+func UnmarshalConfigFromEnv(config *Config) error {
 	_, err := unmarshalConfig(configPrefix, reflect.ValueOf(config), func(key string) (*string, error) {
 		v, ok := os.LookupEnv(key)
 		if !ok {
@@ -96,12 +95,12 @@ func unmarshalConfig(prefix string, v reflect.Value, lookup func(string) (*strin
 			return unmarshalConfig(prefix, v.Elem(), lookup)
 		}
 
-		new := reflect.New(v.Type().Elem())
-		didUnmarshal, err := unmarshalConfig(prefix, new, lookup)
+		val := reflect.New(v.Type().Elem())
+		didUnmarshal, err := unmarshalConfig(prefix, val, lookup)
 		if err != nil {
 			return false, err
 		} else if didUnmarshal {
-			v.Set(new)
+			v.Set(val)
 		}
 		return didUnmarshal, nil
 	}

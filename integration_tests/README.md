@@ -6,7 +6,7 @@ This directory contains a suite of integration tests for sidekick and bolt.
 
 ### Login into aws account
 
-Choose a aws account to create a test cluster, bucket and run the tests.
+Choose a AWS account to create a test cluster, bucket and run the tests.
 
 :warning: DO NOT use the "root" aws account. Please use a sandbox account or "data-plane". Preferred option is sandbox
 
@@ -26,7 +26,7 @@ You need to create two buckets for the tests:
 
 - A bucket that will be crunched by bolt
 - A "failover" bucket that will not be touched by bolt, this will force sidekick to failover back to aws calls.
-- A "failover" bucket in a different region, this is usefull to make sure aws failover works in different regions.
+- A "failover" bucket in a different region, this is useful to make sure aws failover works in different regions.
 
 :warning: Make sure you select the same region as the one your cluster is running in.
 

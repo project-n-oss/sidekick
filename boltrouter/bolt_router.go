@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// BoltRouter is used to find bolt endpoints and route a aws call to the right endpoint.
+// BoltRouter is used to find bolt endpoints and route a AWS call to the right endpoint.
 type BoltRouter struct {
 	config Config
 

@@ -22,7 +22,7 @@ func (s *AwsSuite) TestPutObject() {
 }
 
 //go:embed put_data.txt
-var put_data string
+var putData string
 
 func (s *AwsSuite) putObject() {
 	ctx := s.ctx
@@ -32,10 +32,10 @@ func (s *AwsSuite) putObject() {
 	region := utils.GetRegionForBucket(t, ctx, utils.Bucket)
 	s3cSidekick := utils.GetSidekickS3Client(t, ctx, region)
 
-	md5Hash := md5.Sum([]byte(put_data))
+	md5Hash := md5.Sum([]byte(putData))
 	md5HashStr := base64.StdEncoding.EncodeToString(md5Hash[:])
 
-	reader := strings.NewReader(put_data)
+	reader := strings.NewReader(putData)
 	input := &s3.PutObjectInput{
 		Bucket:      awsBucket,
 		Key:         awsKey,
@@ -74,7 +74,7 @@ func (s *AwsSuite) putObject() {
 
 			retData, err := io.ReadAll(getObjResp.Body)
 			require.NoError(t, err)
-			assert.Equal(t, put_data, string(retData))
+			assert.Equal(t, putData, string(retData))
 		})
 	}
 }
@@ -87,10 +87,10 @@ func (s *AwsSuite) putObjectWrongMD5() {
 	region := utils.GetRegionForBucket(t, ctx, utils.Bucket)
 	s3cSidekick := utils.GetSidekickS3Client(t, ctx, region)
 
-	md5Hash := md5.Sum([]byte(put_data + "wrong"))
+	md5Hash := md5.Sum([]byte(putData + "wrong"))
 	md5HashStr := base64.StdEncoding.EncodeToString(md5Hash[:])
 
-	reader := strings.NewReader(put_data)
+	reader := strings.NewReader(putData)
 	input := &s3.PutObjectInput{
 		Bucket:      awsBucket,
 		Key:         awsKey,

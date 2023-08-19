@@ -47,7 +47,7 @@ func CtxSession(ctx context.Context) *Session {
 }
 
 func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		beginTime := time.Now()
 		session := a.NewSession()
 
@@ -87,5 +87,5 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 		r = r.WithContext(newCtx)
 
 		handler.ServeHTTP(w, r)
-	})
+	}
 }
