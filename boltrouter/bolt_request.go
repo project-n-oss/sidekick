@@ -61,7 +61,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
 	}
 
-	BoltURL, err := br.SelectBoltEndpoint(ctx, req.Method)
+	BoltURL, err := br.SelectBoltEndpoint(req.Method)
 	if err != nil {
 		return nil, err
 	}

@@ -26,14 +26,17 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		return nil, fmt.Errorf("could not get BoltVars: %w", err)
 	}
 
-	// custom transport is needed to allow certificate validation from bolt hostname
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{
-		ServerName: boltVars.BoltHostname.Get(),
-	}
 	boltHttpClient := http.Client{
-		Timeout:   time.Duration(90) * time.Second,
-		Transport: customTransport,
+		Timeout: time.Duration(90) * time.Second,
+	}
+
+	// custom transport is needed to allow certificate validation from bolt hostname
+	if tp, ok := http.DefaultTransport.(*http.Transport); ok {
+		customTransport := tp.Clone()
+		customTransport.TLSClientConfig = &tls.Config{
+			ServerName: boltVars.BoltHostname.Get(),
+		}
+		boltHttpClient.Transport = customTransport
 	}
 
 	standardHttpClient := http.Client{

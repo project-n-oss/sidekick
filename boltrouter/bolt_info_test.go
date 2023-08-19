@@ -12,7 +12,7 @@ import (
 func TestGetBoltInfo(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": "50.0"}, true, logger)
+	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": "50"}, true, logger)
 
 	testCases := []struct {
 		name     string
@@ -38,7 +38,7 @@ func TestGetBoltInfo(t *testing.T) {
 func TestSelectBoltEndpoint(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": "60.0"}, true, logger)
+	SetupQuickSilverMock(t, ctx, true, map[string]interface{}{"crunch_traffic_percent": "60"}, true, logger)
 
 	testCases := []struct {
 		name       string
@@ -60,7 +60,7 @@ func TestSelectBoltEndpoint(t *testing.T) {
 			err = br.RefreshBoltInfo(ctx)
 			require.NoError(t, err)
 
-			endpoint, err := br.SelectBoltEndpoint(ctx, tt.httpMethod)
+			endpoint, err := br.SelectBoltEndpoint(tt.httpMethod)
 			require.NoError(t, err)
 			require.Contains(t, tt.expected, endpoint.Hostname())
 		})

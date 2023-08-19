@@ -1,8 +1,10 @@
 package boltrouter
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/jarcoal/httpmock"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -33,7 +35,7 @@ var (
 
 	defaultClientBehaviorParams = map[string]interface{}{
 		"cleaner_on":             "true",
-		"crunch_traffic_percent": "20.0",
+		"crunch_traffic_percent": "20",
 	}
 
 	quicksilverResponse = map[string]interface{}{
@@ -44,7 +46,10 @@ var (
 	}
 )
 
-func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool) *httptest.Server {
+func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool) string {
+	httpmock.Activate()
+	t.Cleanup(httpmock.DeactivateAndReset)
+
 	// Reset quicksilverResponse to default
 	delete(quicksilverResponse, "client_behavior_params")
 	delete(quicksilverResponse, "cluster_healthy")
@@ -57,22 +62,28 @@ func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams 
 		}
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sc := http.StatusOK
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(sc)
-		err := json.NewEncoder(w).Encode(quicksilverResponse)
-		require.NoError(t, err)
-	}))
+	// This URL will where sidekick will call to get the quicksilver response
+	url := "https://quicksilver.us-west-2.com/services/bolt/"
+	httpmock.RegisterResponder("GET", url,
+		func(req *http.Request) (*http.Response, error) {
+			var buf bytes.Buffer
+			err := json.NewEncoder(&buf).Encode(quicksilverResponse)
+			require.NoError(t, err)
 
-	return server
+			resp := httpmock.NewStringResponse(http.StatusOK, buf.String())
+			resp.Header.Set("Content-Type", "application/json")
+
+			return resp, nil
+		})
+
+	return url
 }
 
 func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool, logger *zap.Logger) {
-	quicksilver := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
+	quicksilverURL := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
 	boltVars, err := GetBoltVars(ctx, logger)
 	require.NoError(t, err)
-	boltVars.QuicksilverURL.Set(quicksilver.URL)
+	boltVars.QuicksilverURL.Set(quicksilverURL)
 }
 
 type TestS3Client struct {

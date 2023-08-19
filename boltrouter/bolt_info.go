@@ -18,7 +18,7 @@ const (
 
 // SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in requMethod.
 // This method will err if not endpoints were selected.
-func (br *BoltRouter) SelectBoltEndpoint(ctx context.Context, reqMethod string) (*url.URL, error) {
+func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
 	preferredOrder := br.getPreferredEndpointOrder(reqMethod)
 	boltEndpoints := br.boltVars.BoltInfo.Get()
 
@@ -134,7 +134,7 @@ func (br *BoltRouter) GetCleanerStatus() (bool, error) {
 	return cleanerOnBool, nil
 }
 
-// select initial request destination based on cluster_health_metrics and client_behavior_params
+// SelectInitialRequestTarget based on cluster_health_metrics and client_behavior_params
 func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string, err error) {
 	boltInfo := br.boltVars.BoltInfo.Get()
 
@@ -154,32 +154,29 @@ func (br *BoltRouter) SelectInitialRequestTarget() (target string, reason string
 		return "", "", fmt.Errorf("could not cast boltHealthy to bool")
 	}
 
-	if clusterHealthyBool {
-		clientBehaviorParams, ok := clientBehaviorParams.(map[string]interface{})
-		if !ok {
-			return "", "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
-		}
-
-		crunchTrafficPercent, ok := clientBehaviorParams["crunch_traffic_percent"].(string)
-		if !ok {
-			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to string")
-		}
-
-		crunchTrafficPercentInt, err := strconv.Atoi(crunchTrafficPercent)
-		if err != nil {
-			return "", "", fmt.Errorf("could not cast crunchTrafficPercent to int")
-		}
-
-		totalWeight := 1000
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		rnd := r.Intn(totalWeight)
-
-		if rnd < (crunchTrafficPercentInt * totalWeight / 100) {
-			return "bolt", "traffic splitting", nil
-		} else {
-			return "s3", "traffic splitting", nil
-		}
-	} else {
+	if !clusterHealthyBool {
 		return "s3", "cluster unhealthy", nil
 	}
+
+	params, ok := clientBehaviorParams.(map[string]interface{})
+	if !ok {
+		return "", "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
+	}
+
+	crunchTrafficPercent, ok := params["crunch_traffic_percent"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("could not cast crunchTrafficPercent to string")
+	}
+
+	crunchTrafficPercentInt, err := strconv.Atoi(crunchTrafficPercent)
+	if err != nil {
+		return "", "", fmt.Errorf("could not parse crunchTrafficPercent to int. %v", err)
+	}
+
+	// Randomly select bolt with crunchTrafficPercentInt % probability.
+	if rand.Intn(100) < crunchTrafficPercentInt {
+		return "bolt", "traffic splitting", nil
+	}
+
+	return "s3", "traffic splitting", nil
 }
