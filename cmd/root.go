@@ -3,13 +3,13 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -22,7 +22,7 @@ var asciiArt string
 //go:embed version.md
 var versionFile string
 
-func getVersion() string {
+func version() string {
 	return strings.Split(versionFile, " ")[1]
 }
 
@@ -32,33 +32,19 @@ func init() {
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
 }
 
-var rootLogger *zap.Logger
-var rootConfig = NewConfig()
+var (
+	rootLogger *zap.Logger
+	rootConfig = DefaultConfig
+)
 
 var rootCmd = &cobra.Command{
 	Use:           "sidekick",
-	Version:       getVersion(),
+	Version:       version(),
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		logLevel, _ := cmd.Flags().GetString("log-level")
-		var zapLogLevel zapcore.Level
-		switch logLevel {
-		case "debug":
-			zapLogLevel = zapcore.DebugLevel
-		case "info":
-			zapLogLevel = zapcore.InfoLevel
-		case "warn":
-			zapLogLevel = zapcore.WarnLevel
-		case "error":
-			zapLogLevel = zapcore.ErrorLevel
-		case "fatal":
-			zapLogLevel = zapcore.FatalLevel
-		case "panic":
-			zapLogLevel = zapcore.PanicLevel
-		default:
-			zapLogLevel = zapcore.InfoLevel
-		}
+		zapLogLevel, _ := zapcore.ParseLevel(logLevel)
 		rootLogger = NewLogger(zapLogLevel)
 
 		OnShutdown(func() {
@@ -68,7 +54,7 @@ var rootCmd = &cobra.Command{
 		if _, err := os.Stat(".env"); err == nil {
 			err := godotenv.Load()
 			if err != nil {
-				return fmt.Errorf("could not load .env file")
+				return fmt.Errorf("could not load .env file. %v", err)
 			}
 		}
 
@@ -88,17 +74,17 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		if err := UnmarshalConfigFromEnv(&rootConfig); err != nil {
+		if err := unmarshalConfigFromEnv(&rootConfig); err != nil {
 			return err
 		}
 
 		// wait forever for sig signal
 		go func() {
-			WaitForTermSignal()
+			waitForTermSignal()
 		}()
 
 		fmt.Println(asciiArt)
-		fmt.Printf("Version: %s\n", getVersion())
+		fmt.Printf("Version: %s\n", version())
 
 		return nil
 	},
@@ -109,7 +95,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func WaitForTermSignal() {
+func waitForTermSignal() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 

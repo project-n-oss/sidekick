@@ -13,7 +13,6 @@ import (
 
 type Api struct {
 	logger *zap.Logger
-	config Config
 
 	br *boltrouter.BoltRouter
 }
@@ -38,9 +37,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*Api, error) {
 
 	return &Api{
 		logger: logger,
-		config: cfg,
-
-		br: br,
+		br:     br,
 	}, nil
 }
 

@@ -7,5 +7,5 @@ import (
 )
 
 func TestGetVersion(t *testing.T) {
-	require.NotEmpty(t, getVersion())
+	require.NotEmpty(t, version())
 }

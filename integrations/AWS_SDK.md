@@ -22,7 +22,7 @@ aws s3api get-object --bucket <YOUR_BUCKET> --key <YOUR_OBJECT_KEY>  delete_me.c
 
 ## Go
 
-```Go
+```go
 package main
 
 import (

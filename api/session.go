@@ -29,6 +29,7 @@ func (s *Session) WithLogger(logger *zap.Logger) *Session {
 	s.logger = logger
 	return s
 }
+
 func (s *Session) Logger() *zap.Logger {
 	return s.logger
 }

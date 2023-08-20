@@ -11,23 +11,22 @@ import (
 	"github.com/project-n-oss/sidekick/boltrouter"
 )
 
+// Config file layout (yaml)
 type Config struct {
 	BoltRouter boltrouter.Config `yaml:"BoltRouter"`
 }
 
-func NewConfig() Config {
-	return Config{
-		BoltRouter: boltrouter.NewConfig(),
-	}
+var DefaultConfig = Config{
+	BoltRouter: boltrouter.DefaultConfig,
 }
 
 const configPrefix = "SIDEKICK"
 
-// UnmarshalConfigFromEnv populates config with values from environment variables. The names of the
+// unmarshalConfigFromEnv populates config with values from environment variables. The names of the
 // environment variables read are formed by joining the config struct's field names with underscores
 // and adding a "SIDEKICK" prefix. For example, if you want to set the Redis address, you would use
 // SIDEKICK_BOLTROUTER_FAILOVER=true
-func UnmarshalConfigFromEnv(config *Config) error {
+func unmarshalConfigFromEnv(config *Config) error {
 	_, err := unmarshalConfig(configPrefix, reflect.ValueOf(config), func(key string) (*string, error) {
 		v, ok := os.LookupEnv(key)
 		if !ok {

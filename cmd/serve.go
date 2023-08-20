@@ -37,14 +37,18 @@ var serveCmd = &cobra.Command{
 
 		boltRouterConfig := getBoltRouterConfig(cmd)
 
-		cfg := api.Config{BoltRouter: boltRouterConfig}
+		cfg := api.Config{
+			BoltRouter: boltRouterConfig,
+		}
 
+		// Create api service to handle HTTP requests
 		api, err := api.New(ctx, rootLogger, cfg)
 		if err != nil {
 			return err
 		}
-
 		handler := api.CreateHandler()
+
+		// Start HTTP server and listen on the HTTP requests
 		port, _ := cmd.Flags().GetInt("port")
 		server := &http.Server{
 			Addr:    ":" + strconv.Itoa(port),
