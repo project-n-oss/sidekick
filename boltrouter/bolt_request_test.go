@@ -76,13 +76,14 @@ func TestBoltRequestFailover(t *testing.T) {
 	allReadEndpoints := append(mainReadEndpoints, failoverReadEndpoints...)
 	// register error responders for all read endpoints
 	for _, endpoint := range allReadEndpoints {
-		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/test.projectn.co", endpoint),
+		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/test.granica.ai123456", endpoint),
 			func(req *http.Request) (*http.Response, error) {
 				return httpmock.NewStringResponse(500, "SERVER ERROR"), fmt.Errorf("s3 error")
 			})
 	}
 
-	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.projectn.co",
+	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.granica.ai123456",
+
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(200, "OK"), nil
 		})
@@ -97,15 +98,15 @@ func TestBoltRequestFailover(t *testing.T) {
 	overrideCrunchTrafficPct(br, "100")
 
 	body := strings.NewReader(randomdata.Paragraph())
-	req, err := http.NewRequest(http.MethodGet, "test.projectn.co", body)
+	req, err := http.NewRequest(http.MethodGet, "test.granica.ai123456", body)
 	req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
 	require.NoError(t, err)
 
 	boltReq, err := br.NewBoltRequest(ctx, logger, req)
 	require.NoError(t, err)
 	require.NotNil(t, boltReq)
-
 	_, failover, _, err := br.DoRequest(logger, boltReq)
+
 	require.Error(t, err, failover)
 	require.False(t, failover, err)
 
@@ -129,13 +130,14 @@ func TestBoltRequestPanic(t *testing.T) {
 	allReadEndpoints := append(mainReadEndpoints, failoverReadEndpoints...)
 	// register panic responders for all read endpoints
 	for _, endpoint := range allReadEndpoints {
-		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/test.projectn.co", endpoint),
+		httpmock.RegisterResponder("GET", fmt.Sprintf("https://%s/test.granica.ai123456", endpoint),
 			func(req *http.Request) (*http.Response, error) {
 				panic("Simulated panic during request")
 			})
 	}
+	
+	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.granica.ai123456",
 
-	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.projectn.co",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(200, "OK"), nil
 		})
@@ -151,10 +153,9 @@ func TestBoltRequestPanic(t *testing.T) {
 	overrideCrunchTrafficPct(br, "100")
 
 	body := strings.NewReader(randomdata.Paragraph())
-	req, err := http.NewRequest(http.MethodGet, "test.projectn.co", body)
+	req, err := http.NewRequest(http.MethodGet, "test.granica.ai123456", body)
 	req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
 	require.NoError(t, err)
-
 	boltReq, err := br.NewBoltRequest(ctx, logger, req)
 	require.NoError(t, err)
 	require.NotNil(t, boltReq)
