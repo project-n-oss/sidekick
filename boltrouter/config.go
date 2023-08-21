@@ -5,6 +5,9 @@ type Config struct {
 	// For example, it will not query quicksilver to get endpoints.
 	Local bool `yaml:"Local"`
 
+	// Set the BoltEndpointOverride while running from local mode.
+	BoltEndpointOverride string `yaml:"BoltEndpointOverride"`
+
 	// Enable pass through in Bolt.
 	Passthrough bool `yaml:"Passthrough"`
 
@@ -13,7 +16,8 @@ type Config struct {
 }
 
 var DefaultConfig = Config{
-	Local:       false,
-	Passthrough: false,
-	Failover:    true,
+	Local:                false,
+	Passthrough:          false,
+	Failover:             true,
+	BoltEndpointOverride: "",
 }

@@ -80,8 +80,11 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 	BoltURL.Path = "/" + BoltURL.Path
 	BoltURL.RawQuery = req.URL.RawQuery
 	req.URL = BoltURL
-	req.URL.Scheme = "https"
-
+	if br.config.Local {
+		req.URL.Scheme = "http"
+	} else {
+		req.URL.Scheme = "https"
+	}
 	if v := headReq.Header.Get("X-Amz-Security-Token"); v != "" {
 		req.Header.Set("X-Amz-Security-Token", v)
 	}
