@@ -266,7 +266,7 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		failover := false
 
 		// Fallback on 404 errors
-		if !br.config.NoFailover404 && resp != nil && resp.StatusCode == 404 {
+		if !br.config.NoFallback404 && resp != nil && resp.StatusCode == 404 {
 			failover = true
 		} else if br.config.Failover &&
 			(err != nil || !StatusCodeIs2xx(resp.StatusCode)) {
@@ -322,7 +322,7 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 
 		// Fallback on 404 errors
 		// For other AWS errors, we will return that error back to client to retry as necessary.
-		if !br.config.NoFailover404 && resp != nil && resp.StatusCode == 404 {
+		if !br.config.NoFallback404 && resp != nil && resp.StatusCode == 404 {
 			logger.Info("aws request failed, falling back to bolt on 404")
 
 			return br.doBoltRequest(logger, boltReq, true, analytics)
