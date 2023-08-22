@@ -21,6 +21,9 @@ type Config struct {
 	// Enable failover to a AWS request if the Bolt request fails or vice-versa.
 	Failover bool `yaml:"Failover"`
 
+	// Enable NoFailover404 to disable failover on 404 response from AWS request if the Bolt request fails or vice-versa.
+	NoFailover404 bool `yaml:"NoFailover404"`
+
 	// There are two ways to split the traffic between bolt and object store
 	// 1. Random Crunch Traffic Split
 	// 2. Hash Based Crunch Traffic Split
@@ -32,6 +35,7 @@ var DefaultConfig = Config{
 	Local:                false,
 	Passthrough:          false,
 	Failover:             true,
+	NoFailover404:        false,
 	BoltEndpointOverride: "",
 	CrunchTrafficSplit:   CrunchTrafficSplitByObjectKeyHash,
 }

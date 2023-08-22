@@ -262,19 +262,29 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		br.MaybeMarkOffline(boltReq.Bolt.URL, err)
 	}
 
-	// Attempt to failover on error or based on response status code
-	if br.config.Failover && !isFailover &&
-		(err != nil || !StatusCodeIs2xx(resp.StatusCode)) {
+	if !isFailover {
+		failover := false
 
-		if resp != nil {
-			b, _ := io.ReadAll(resp.Body)
-			resp.Body.Close()
-			logger.Error("bolt request failed", zap.Int("code", resp.StatusCode), zap.String("body", string(b)))
-		} else {
-			logger.Error("bolt request failed", zap.Error(err))
+		// Fallback on 404 errors
+		if !br.config.NoFailover404 && resp != nil && resp.StatusCode == 404 {
+			failover = true
+		} else if br.config.Failover &&
+			(err != nil || !StatusCodeIs2xx(resp.StatusCode)) {
+			// Attempt to failover on error or based on response status code
+			failover = true
 		}
 
-		return br.doAwsRequest(logger, boltReq, true, analytics)
+		if failover {
+			if resp != nil {
+				b, _ := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				logger.Error("bolt request failed", zap.Int("code", resp.StatusCode), zap.String("body", string(b)))
+			} else {
+				logger.Error("bolt request failed", zap.Error(err))
+			}
+
+			return br.doAwsRequest(logger, boltReq, true, analytics)
+		}
 	}
 
 	if resp != nil {
@@ -308,17 +318,15 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 		zap.Bool("isFailover", isFailover),
 		zap.Error(err))
 
-	// Attempt to failover on error or based on response status code being 404 (NotFound)
-	if br.config.Failover && !isFailover &&
-		(err != nil || resp.StatusCode == 404) {
+	if !isFailover {
 
-		if resp != nil {
-			logger.Error("aws request failed, falling back to bolt", zap.Int("code", resp.StatusCode))
-		} else {
-			logger.Error("aws request failed, falling back to bolt", zap.Error(err))
+		// Fallback on 404 errors
+		// For other AWS errors, we will return that error back to client to retry as necessary.
+		if !br.config.NoFailover404 && resp != nil && resp.StatusCode == 404 {
+			logger.Info("aws request failed, falling back to bolt on 404")
+
+			return br.doBoltRequest(logger, boltReq, true, analytics)
 		}
-
-		return br.doBoltRequest(logger, boltReq, true, analytics)
 	}
 
 	if resp != nil {
