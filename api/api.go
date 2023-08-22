@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 
 	"github.com/project-n-oss/sidekick/boltrouter"
 
@@ -77,9 +78,15 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 
 	sess.WithLogger(sess.Logger().With(zap.Int("statusCode", resp.StatusCode)).With(zap.Bool("failover", failover)))
 
+	// Convert the response headers to lower case, as Python etc libraries expect lower case.
 	for k, values := range resp.Header {
-		for _, v := range values {
-			w.Header().Add(k, v)
+		lowK := strings.ToLower(k)
+		if strings.HasPrefix(lowK, "x-amz-meta") {
+			w.Header()[lowK] = values
+		} else {
+			for _, v := range values {
+				w.Header().Add(k, v)
+			}
 		}
 	}
 
