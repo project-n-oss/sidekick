@@ -76,7 +76,14 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sess.WithLogger(sess.Logger().With(zap.Int("statusCode", resp.StatusCode)).With(zap.Bool("failover", failover)))
+	sess.WithLogger(sess.Logger().
+		With(zap.Int("statusCode", resp.StatusCode)).
+		With(zap.Bool("failover", failover)))
+	if analytics.AwsRequestResponseStatusCode > 0 {
+		sess.WithLogger(sess.Logger().With(zap.String("endpt", "aws")))
+	} else if analytics.BoltRequestResponseStatusCode > 0 {
+		sess.WithLogger(sess.Logger().With(zap.String("endpt", analytics.BoltRequestUrl)))
+	}
 
 	// Convert the response headers to lower case, as Python etc libraries expect lower case.
 	for k, values := range resp.Header {
