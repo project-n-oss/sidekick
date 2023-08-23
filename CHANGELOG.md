@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.34](https://github.com/project-n-oss/sidekick/compare/v0.1.33...v0.1.34) (2023-08-23)
+
+
+### Features
+
+* Added a separate config flag to control 404 failover ([16e02b6](https://github.com/project-n-oss/sidekick/commit/16e02b603f4814f058a9bfc43fcb839c1677b1c2))
+* Enhance Initial Request Target Selection ([#78](https://github.com/project-n-oss/sidekick/issues/78)) ([dbbe3c4](https://github.com/project-n-oss/sidekick/commit/dbbe3c41e6640db2dd482101995fe9d2ada269d9))
+* set failover to default false. Update readme ([#82](https://github.com/project-n-oss/sidekick/issues/82)) ([c582e88](https://github.com/project-n-oss/sidekick/commit/c582e8807a3e15fc6e5c9a444d065096cd1ed31b))
+
+
+### Bug Fixes
+
+* Avoid dumping resp in logger.Debug calls ([b9956b9](https://github.com/project-n-oss/sidekick/commit/b9956b958b67c7526903bd5bf23a16841b812d50))
+* Convert metadata headers starting with "x-amz-meta" to lower case ([160a49a](https://github.com/project-n-oss/sidekick/commit/160a49a45e26a7c6d7eab186371f647ea493f731))
+* Dump endpoint used for the request on completion ([e2c26e0](https://github.com/project-n-oss/sidekick/commit/e2c26e0d1f5d16523f743314c99862635b1ca363))
+* Fix tests which were passing crunch_traffic_percent as integer instead of string ([512c877](https://github.com/project-n-oss/sidekick/commit/512c87741880b0f04c6fd5de464a957edbd9b6e0))
+* Fix the regression caused by local sidekick logic ([#62](https://github.com/project-n-oss/sidekick/issues/62)) ([9d67bbb](https://github.com/project-n-oss/sidekick/commit/9d67bbb1130d2b3ba11841d014d5b2d3ee25755a))
+* misc. code and documentation cleanup ([04c4f4c](https://github.com/project-n-oss/sidekick/commit/04c4f4c6e8a29239b77d7661d563450f6c52dc02))
+* Prevent routing to offline bolt endpoints ([f7894eb](https://github.com/project-n-oss/sidekick/commit/f7894ebefaad5bd384e7e25c67e1f1f4fae0edf8))
+* Switch Quicksilver mock in tests to use httpmock responder ([79333b2](https://github.com/project-n-oss/sidekick/commit/79333b20ba35a3a3c47c7116c2f8efb50f8c70eb))
+
 ## [0.1.32](https://github.com/project-n-oss/sidekick/compare/v0.1.31...v0.1.32) (2023-08-16)
 
 
