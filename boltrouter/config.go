@@ -18,7 +18,7 @@ type Config struct {
 	// Enable pass through in Bolt.
 	Passthrough bool `yaml:"Passthrough"`
 
-	// Enable failover to a AWS request if the Bolt request fails or vice-versa.
+	// Enable failover to a AWS request if the Bolt request fails
 	Failover bool `yaml:"Failover"`
 
 	// Enable NoFallback404 to disable fallback on 404 response code from AWS request to Bolt or vice-versa.
@@ -35,7 +35,7 @@ type Config struct {
 var DefaultConfig = Config{
 	Local:                false,
 	Passthrough:          false,
-	Failover:             true,
+	Failover:             false,
 	NoFallback404:        false,
 	BoltEndpointOverride: "",
 	CrunchTrafficSplit:   CrunchTrafficSplitByObjectKeyHash,
