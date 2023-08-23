@@ -26,7 +26,7 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
 	cmd.Flags().String("bolt-endpoint-override", "", "Specify the local bolt endpoint with port to override in local mode. e.g: <local-bolt-ip>:9000")
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
-	cmd.Flags().BoolP("failover", "f", true, "Enables aws request failover if bolt request fails.")
+	cmd.Flags().BoolP("failover", "f", false, "Enables aws request failover if bolt request fails.")
 	cmd.Flags().String("crunch-traffic-split", "objectkeyhash", "Specify the crunch traffic split strategy: random or objectkeyhash")
 }
 
