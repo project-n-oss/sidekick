@@ -7,7 +7,9 @@ import (
 	"hash/crc32"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,9 +17,12 @@ import (
 	"go.uber.org/zap"
 )
 
+type ErrUnknownCloudPlatform error
+
 type BoltRequest struct {
 	Bolt    *http.Request
 	Aws     *http.Request
+	Gcp     *http.Request
 	crcHash uint32
 }
 
@@ -43,88 +48,136 @@ var (
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
 func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
-	sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
-	if err != nil {
-		return nil, fmt.Errorf("could not extract source bucket: %w", err)
-	}
+	var boltRequest *BoltRequest
 
-	awsCred, err := getAwsCredentialsFromRegion(ctx, sourceBucket.Region)
-	if err != nil {
-		return nil, fmt.Errorf("could not get aws credentials: %w", err)
-	}
+	if br.config.CloudPlatform == "aws" {
+		if !strings.Contains(req.UserAgent(), "aws") {
+			return nil, fmt.Errorf("request is not from aws sdk")
+		}
+		sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
+		if err != nil {
+			return nil, fmt.Errorf("could not extract source bucket: %w", err)
+		}
 
-	awsRequest, err := newFailoverAwsRequest(ctx, req, awsCred, sourceBucket)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make failover request: %w", err)
-	}
+		awsCred, err := getAwsCredentialsFromRegion(ctx, sourceBucket.Region)
+		if err != nil {
+			return nil, fmt.Errorf("could not get aws credentials: %w", err)
+		}
 
-	authPrefix := randString(4)
-	headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
-	if err != nil {
-		return nil, fmt.Errorf("could not make signed aws head request: %w", err)
-	}
-	bucketAndObjPath := ""
-	if sourceBucket.Bucket == "n-auth-dummy" {
-		// Special Case to handle dummy bucket
-		bucketAndObjPath, _ = url.JoinPath(sourceBucket.Bucket, req.URL.Path)
-	} else {
-		bucketAndObjPath = req.URL.Path
-	}
+		awsRequest, err := newFailoverAwsRequest(ctx, req, awsCred, sourceBucket)
+		if err != nil {
+			return nil, fmt.Errorf("failed to make failover request: %w", err)
+		}
 
-	crcHash := crc32.ChecksumIEEE([]byte(bucketAndObjPath))
-	BoltURL, err := br.SelectBoltEndpoint(req.Method)
+		authPrefix := randString(4)
+		headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
+		if err != nil {
+			return nil, fmt.Errorf("could not make signed aws head request: %w", err)
+		}
+		bucketAndObjPath := ""
+		if sourceBucket.Bucket == "n-auth-dummy" {
+			// Special Case to handle dummy bucket
+			bucketAndObjPath, _ = url.JoinPath(sourceBucket.Bucket, req.URL.Path)
+		} else {
+			bucketAndObjPath = req.URL.Path
+		}
 
-	if err != nil {
-		return nil, err
-	}
+		crcHash := crc32.ChecksumIEEE([]byte(bucketAndObjPath))
+		BoltURL, err := br.SelectBoltEndpoint(req.Method)
 
-	// RequestURI is the unmodified request-target of the Request-Line (RFC 7230, Section 3.1.1) as sent by the client to a server.
-	//  It is an error to set this field in an HTTP client request.
-	req.RequestURI = ""
-	if sourceBucket.Style == virtualHostedStyle {
-		BoltURL = BoltURL.JoinPath(sourceBucket.Bucket, req.URL.EscapedPath())
+		if err != nil {
+			return nil, err
+		}
 
-	} else {
+		// RequestURI is the unmodified request-target of the Request-Line (RFC 7230, Section 3.1.1) as sent by the client to a server.
+		//  It is an error to set this field in an HTTP client request.
+		req.RequestURI = ""
+		if sourceBucket.Style == virtualHostedStyle {
+			BoltURL = BoltURL.JoinPath(sourceBucket.Bucket, req.URL.EscapedPath())
+
+		} else {
+			BoltURL = BoltURL.JoinPath(req.URL.Path)
+		}
+		// Bolt will only accept query if path starts with "/".
+		// Bolt will return a 400 error otherwise
+		BoltURL.Path = "/" + BoltURL.Path
+		BoltURL.RawQuery = req.URL.RawQuery
+		req.URL = BoltURL
+		if br.config.Local {
+			req.URL.Scheme = "http"
+		} else {
+			req.URL.Scheme = "https"
+		}
+		if v := headReq.Header.Get("X-Amz-Security-Token"); v != "" {
+			req.Header.Set("X-Amz-Security-Token", v)
+		}
+		if v := headReq.Header.Get("X-Amz-Date"); v != "" {
+			req.Header.Set("X-Amz-Date", v)
+		}
+		if v := headReq.Header.Get("Authorization"); v != "" {
+			req.Header.Set("Authorization", v)
+		}
+		if v := headReq.Header.Get("X-Amz-Content-Sha256"); v != "" {
+			req.Header.Set("X-Amz-Content-Sha256", v)
+		}
+
+		req.Header.Set("Host", br.boltVars.BoltHostname.Get())
+		req.Host = br.boltVars.BoltHostname.Get()
+		req.Header.Set("X-Bolt-Auth-Prefix", authPrefix)
+		req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
+		req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
+
+		if !br.config.Passthrough {
+			req.Header.Set("X-Bolt-Passthrough-Read", "disable")
+		}
+
+		boltRequest = &BoltRequest{
+			Bolt:    req.Clone(ctx),
+			Aws:     awsRequest.Clone(ctx),
+			Gcp:     nil,
+			crcHash: crcHash,
+		}
+	} else if br.config.CloudPlatform == "gcp" {
+		if !strings.Contains(req.UserAgent(), "gcloud") {
+			return nil, fmt.Errorf("request is not from gcloud sdk")
+		}
+
+		logger.Debug("gcp request")
+
+		BoltURL, err := br.SelectBoltEndpoint(req.Method)
+		if err != nil {
+			return nil, err
+		}
+
+		req.RequestURI = ""
 		BoltURL = BoltURL.JoinPath(req.URL.Path)
-	}
-	// Bolt will only accept query if path starts with "/".
-	// Bolt will return a 400 error otherwise
-	BoltURL.Path = "/" + BoltURL.Path
-	BoltURL.RawQuery = req.URL.RawQuery
-	req.URL = BoltURL
-	if br.config.Local {
-		req.URL.Scheme = "http"
-	} else {
-		req.URL.Scheme = "https"
-	}
-	if v := headReq.Header.Get("X-Amz-Security-Token"); v != "" {
-		req.Header.Set("X-Amz-Security-Token", v)
-	}
-	if v := headReq.Header.Get("X-Amz-Date"); v != "" {
-		req.Header.Set("X-Amz-Date", v)
-	}
-	if v := headReq.Header.Get("Authorization"); v != "" {
-		req.Header.Set("Authorization", v)
-	}
-	if v := headReq.Header.Get("X-Amz-Content-Sha256"); v != "" {
-		req.Header.Set("X-Amz-Content-Sha256", v)
-	}
+		BoltURL.Path = "/" + BoltURL.Path
+		BoltURL.RawQuery = req.URL.RawQuery
+		req.URL = BoltURL
 
-	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
-	req.Host = br.boltVars.BoltHostname.Get()
-	req.Header.Set("X-Bolt-Auth-Prefix", authPrefix)
-	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
-	req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
+		dump, _ := httputil.DumpRequest(req, true)
+		logger.Debug("bolt request", zap.Any("boltRequest", string(dump)))
 
-	if !br.config.Passthrough {
-		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
+		gcpRequest := req.Clone(ctx)
+		gcsUrl, _ := url.Parse("https://storage.googleapis.com")
+		gcsUrl = gcsUrl.JoinPath(req.URL.Path)
+		gcsUrl.Path = "/" + gcsUrl.Path
+		gcsUrl.RawQuery = req.URL.RawQuery
+		gcpRequest.URL = gcsUrl
+		gcpRequest.Host = "storage.googleapis.com"
+
+		dump, _ = httputil.DumpRequest(gcpRequest, true)
+		logger.Debug("gcp request", zap.Any("gcpRequest", string(dump)))
+
+		boltRequest = &BoltRequest{
+			Bolt:    req.Clone(ctx),
+			Aws:     nil,
+			Gcp:     gcpRequest.Clone(ctx),
+			crcHash: 0,
+		}
 	}
-
-	return &BoltRequest{
-		Bolt:    req.Clone(ctx),
-		Aws:     awsRequest.Clone(ctx),
-		crcHash: crcHash,
-	}, nil
+	logger.Debug("returning new bolt request")
+	return boltRequest, nil
 }
 
 // SHA value for empty payload. As head object request is with empty payload
@@ -197,7 +250,9 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
 	initialRequestTarget, reason, err := br.SelectInitialRequestTarget(boltReq)
-
+	// initialRequestTarget := "bolt"
+	// reason := "traffic splitting"
+	// var err error
 	boltRequestAnalytics := &BoltRequestAnalytics{
 		ObjectKey:                     boltReq.Bolt.URL.Path,
 		RequestBodySize:               uint32(boltReq.Bolt.ContentLength),
@@ -289,7 +344,13 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 				logger.Error("bolt request failed", zap.Error(err))
 			}
 
-			return br.doAwsRequest(logger, boltReq, true, analytics)
+			if br.config.CloudPlatform == "aws" {
+				return br.doAwsRequest(logger, boltReq, true, analytics)
+			} else if br.config.CloudPlatform == "gcp" {
+				return br.doGcpRequest(logger, boltReq, true, analytics)
+			} else {
+				return nil, false, fmt.Errorf("unknown cloud platform")
+			}
 		}
 	}
 
@@ -337,6 +398,47 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 			logger.Info("aws request failed, falling back to bolt on 404")
 
 			return br.doBoltRequest(logger, boltReq, true, analytics)
+		}
+	}
+
+	if resp != nil {
+		analytics.AwsRequestResponseStatusCode = statusCode
+	}
+	return resp, isFailover, err
+}
+
+func (br *BoltRouter) doGcpRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("panic occurred during GCP request", zap.Any("panic", r))
+			resp = nil
+			err = ErrPanicDuringAwsRequest
+		}
+	}()
+
+	beginTime := time.Now()
+	resp, err = br.gcpHttpClient.Do(boltReq.Gcp)
+	duration := time.Since(beginTime)
+	analytics.AwsRequestDuration = duration
+
+	statusCode := -1
+	if resp != nil {
+		statusCode = resp.StatusCode
+	}
+
+	logger.Debug("gcp resp",
+		zap.Any("code", statusCode),
+		zap.Bool("failover", br.config.Failover),
+		zap.Bool("isFailover", isFailover),
+		zap.Error(err))
+
+	if !isFailover {
+		// Fallback on 404 errors
+		// For other AWS errors, we will return that error back to client to retry as necessary.
+		if !br.config.NoFallback404 && resp != nil && statusCode == 404 {
+			logger.Info("aws request failed, falling back to bolt on 404")
+
+			return br.doGcpRequest(logger, boltReq, true, analytics)
 		}
 	}
 

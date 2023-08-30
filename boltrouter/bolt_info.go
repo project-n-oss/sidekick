@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
 // SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in reqMethod.
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
+	return url.Parse("http://127.0.0.1:9090")
 	preferredOrder := br.getPreferredEndpointOrder(reqMethod)
 	boltEndpoints := br.boltVars.BoltInfo.Get()
 
