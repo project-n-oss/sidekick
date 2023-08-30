@@ -3,11 +3,12 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
