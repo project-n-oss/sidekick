@@ -28,6 +28,7 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
 	cmd.Flags().BoolP("failover", "f", false, "Enables aws request failover if bolt request fails.")
 	cmd.Flags().String("crunch-traffic-split", "objectkeyhash", "Specify the crunch traffic split strategy: random or objectkeyhash")
+	cmd.Flags().StringP("cloud-platform", "", "", "cloud platform to use. one of: aws, gcp")
 }
 
 var serveCmd = &cobra.Command{
@@ -77,6 +78,9 @@ func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
 	boltRouterConfig := rootConfig.BoltRouter
 	if cmd.Flags().Lookup("local").Changed {
 		boltRouterConfig.Local, _ = cmd.Flags().GetBool("local")
+	}
+	if cmd.Flags().Lookup("cloud-platform").Changed {
+		boltRouterConfig.CloudPlatform, _ = cmd.Flags().GetString("cloud-platform")
 	}
 	if cmd.Flags().Lookup("bolt-endpoint-override").Changed {
 		boltRouterConfig.BoltEndpointOverride, _ = cmd.Flags().GetString("bolt-endpoint-override")
