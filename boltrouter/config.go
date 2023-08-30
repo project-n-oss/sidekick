@@ -12,6 +12,9 @@ type Config struct {
 	// For example, it will not query quicksilver to get endpoints.
 	Local bool `yaml:"Local"`
 
+	// Set the cloud platform that Crunch is running in.
+	CloudPlatform string `yaml:"CloudPlatform"`
+
 	// Set the BoltEndpointOverride while running from local mode.
 	BoltEndpointOverride string `yaml:"BoltEndpointOverride"`
 
@@ -34,6 +37,7 @@ type Config struct {
 
 var DefaultConfig = Config{
 	Local:                false,
+	CloudPlatform:        "",
 	Passthrough:          false,
 	Failover:             false,
 	NoFallback404:        false,
