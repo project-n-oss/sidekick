@@ -119,13 +119,25 @@ func dumpRequest(logger *zap.Logger, boltReq *boltrouter.BoltRequest) {
 		return
 	}
 
-	awsDump, err := httputil.DumpRequest(boltReq.Aws, true)
-	if err != nil {
-		logger.Error("dumping aws request", zap.Error(err))
-		return
+	var awsDump []byte
+	if boltReq.Aws != nil {
+		awsDump, err = httputil.DumpRequest(boltReq.Aws, true)
+		if err != nil {
+			logger.Error("dumping aws request", zap.Error(err))
+			return
+		}
 	}
 
-	logger.Debug("BoltRequest dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)))
+	var gcpDump []byte
+	if boltReq.Gcp != nil {
+		gcpDump, err = httputil.DumpRequest(boltReq.Gcp, true)
+		if err != nil {
+			logger.Error("dumping gcp request", zap.Error(err))
+			return
+		}
+	}
+
+	logger.Debug("BoltRequest dump", zap.String("bolt", string(boltDump)), zap.String("aws", string(awsDump)), zap.String("gcp", string(gcpDump)))
 }
 
 func dumpAnalytics(logger *zap.Logger, analytics *boltrouter.BoltRequestAnalytics, err error) {
