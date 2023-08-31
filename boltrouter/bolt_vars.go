@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 
+	"cloud.google.com/go/compute/metadata"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"go.uber.org/zap"
@@ -24,9 +26,9 @@ var (
 // GetBoltVars acts as a singleton method wrapper around BoltVars.
 // It guarantees that only one instance of BoltVars exists.
 // This method is thread safe.
-func GetBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
+func GetBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) (*BoltVars, error) {
 	once.Do(func() {
-		instance, instanceErr = newBoltVars(ctx, logger)
+		instance, instanceErr = newBoltVars(ctx, logger, cloudPlatform)
 	})
 	return instance, instanceErr
 }
@@ -80,7 +82,7 @@ func (bv *BoltVars) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	return nil
 }
 
-func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
+func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) (*BoltVars, error) {
 	logger.Debug("initializing BoltVars...")
 	ret := &BoltVars{
 		offlineEndpoints: make(map[string]bool),
@@ -90,22 +92,41 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	ret.WriteOrderEndpoints.Set([]string{"main_write_endpoints", "failover_write_endpoints"})
 	ret.HttpReadMethodTypes.Set([]string{http.MethodGet, http.MethodHead}) // S3 operations get converted to one of the standard HTTP request methods https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html
 
-	isEc2, err := isEc2Instance(ctx, logger)
-	if err != nil {
-		return nil, err
-	}
+	if cloudPlatform == "aws" {
+		isEc2, err := isEc2Instance(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
 
-	awsRegion, err := getAwsRegion(ctx, logger, isEc2)
-	if err != nil {
-		return nil, err
-	}
-	ret.Region.Set(awsRegion)
+		awsRegion, err := getAwsRegion(ctx, logger, isEc2)
+		if err != nil {
+			return nil, err
+		}
+		ret.Region.Set(awsRegion)
 
-	awsZoneId, err := getAwsZoneID(ctx, logger, isEc2)
-	if err != nil {
-		return nil, err
+		awsZoneId, err := getAwsZoneID(ctx, logger, isEc2)
+		if err != nil {
+			return nil, err
+		}
+		ret.ZoneId.Set(awsZoneId)
+	} else if cloudPlatform == "gcp" {
+		isComputeEngine, err := isComputeEngineInstance(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		gcpRegion, err := getGcpRegion(ctx, logger, isComputeEngine)
+		if err != nil {
+			return nil, err
+		}
+		ret.Region.Set(gcpRegion)
+
+		gcpZoneId, err := getGcpZone(ctx, logger, isComputeEngine)
+		if err != nil {
+			return nil, err
+		}
+		ret.ZoneId.Set(gcpZoneId)
 	}
-	ret.ZoneId.Set(awsZoneId)
 
 	var boltCustomDomain string
 	boltCustomDomain, ok := os.LookupEnv("GRANICA_CUSTOM_DOMAIN")
@@ -143,6 +164,42 @@ func newBoltVars(ctx context.Context, logger *zap.Logger) (*BoltVars, error) {
 	}
 
 	return ret, nil
+}
+
+func getGcpRegion(ctx context.Context, logger *zap.Logger, isComputeEngine bool) (string, error) {
+	ret, ok := os.LookupEnv("GCP_REGION")
+	if ok {
+		return ret, nil
+	} else if !isComputeEngine {
+		return "", fmt.Errorf("GCP_REGION env variable is not set")
+	}
+
+	zone, err := getGcpZone(ctx, logger, isComputeEngine)
+	if err != nil {
+		return "", err
+	}
+	split := strings.Split(zone, "-")
+	if len(split) < 2 {
+		return "", fmt.Errorf("could not parse gcp region from zone %s", zone)
+	}
+	// concat all but last item in split into a string separated by dashes
+	retval := strings.Join(split[:len(split)-1], "-")
+	return retval, nil
+}
+
+func getGcpZone(ctx context.Context, logger *zap.Logger, isComputeEngine bool) (string, error) {
+	ret, ok := os.LookupEnv("GCP_ZONE")
+	if ok {
+		return ret, nil
+	} else if !isComputeEngine {
+		return "", fmt.Errorf("GCP_ZONE env variable is not set")
+	}
+
+	zone, err := metadata.Zone()
+	if err != nil {
+		return "", fmt.Errorf("could not get gcp zone from metadata service: %w", err)
+	}
+	return zone, nil
 }
 
 func getAwsRegion(ctx context.Context, logger *zap.Logger, isEc2 bool) (string, error) {
@@ -206,6 +263,16 @@ func isEc2Instance(ctx context.Context, logger *zap.Logger) (bool, error) {
 	_, err = client.GetMetadata(ctx, &imds.GetMetadataInput{})
 	if err != nil {
 		logger.Warn("not running on ec2 instance", zap.Error(err))
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func isComputeEngineInstance(ctx context.Context, logger *zap.Logger) (bool, error) {
+	_, err := metadata.ProjectID()
+	if err != nil {
+		logger.Warn("not running on compute engine instance", zap.Error(err))
 		return false, nil
 	}
 
