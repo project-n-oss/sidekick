@@ -2,19 +2,32 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
+	_ "embed"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/project-n-oss/sidekick/api"
 	"github.com/project-n-oss/sidekick/boltrouter"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/spf13/cobra"
 )
 
+//go:embed sidekick-local.granica.ai.pem
+var sslCertCrt string
+
+//go:embed sidekick-local.granica.ai-key.pem
+var sslCertKey string
+
 // DEFAULT_PORT
 // From Unassigned https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=104
 const DEFAULT_PORT = 7075
+
+// DEFAULT_HTTPS_PORT
+// From Unassigned https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?&page=104
+const DEFAULT_HTTPS_PORT = 7076
 
 func init() {
 	initServerFlags(serveCmd)
@@ -23,6 +36,7 @@ func init() {
 
 func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().IntP("port", "p", DEFAULT_PORT, "The port for sidekick to listen on.")
+	cmd.Flags().IntP("https-port", "", DEFAULT_HTTPS_PORT, "The port for sidekick to listen on for https.")
 	cmd.Flags().BoolP("local", "l", false, "Run sidekick in local (non cloud) mode. This is mostly use for testing locally.")
 	cmd.Flags().String("bolt-endpoint-override", "", "Specify the local bolt endpoint with port to override in local mode. e.g: <local-bolt-ip>:9000")
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
@@ -58,19 +72,41 @@ var serveCmd = &cobra.Command{
 			Handler: handler,
 		}
 
+		httpsPort, _ := cmd.Flags().GetInt("https-port")
+		cert, err := tls.X509KeyPair([]byte(sslCertCrt), []byte(sslCertKey))
+		if err != nil {
+			return err
+		}
+		httpsServer := &http.Server{
+			Addr:    ":" + strconv.Itoa(httpsPort),
+			Handler: handler,
+			TLSConfig: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+			},
+		}
+
 		go func() {
 			<-ctx.Done()
 			if err := server.Shutdown(context.Background()); err != nil {
+				rootLogger.Error("error shutting down server")
+				rootLogger.Error(err.Error())
+			}
+			if err := httpsServer.Shutdown(context.Background()); err != nil {
+				rootLogger.Error("error shutting down https server")
 				rootLogger.Error(err.Error())
 			}
 		}()
 
-		rootLogger.Info(fmt.Sprintf("listening at http://127.0.0.1:%v", port))
-		if err := server.ListenAndServe(); err != nil {
-			return err
-		}
-
-		return nil
+		errs, ctx := errgroup.WithContext(ctx)
+		errs.Go(func() error {
+			rootLogger.Info(fmt.Sprintf("listening at http://127.0.0.1:%v", port))
+			return server.ListenAndServe()
+		})
+		errs.Go(func() error {
+			rootLogger.Info(fmt.Sprintf("listening at http://127.0.0.1:%d", httpsPort))
+			return httpsServer.ListenAndServeTLS("", "")
+		})
+		return errs.Wait()
 	},
 }
 
