@@ -145,7 +145,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		BoltURL.Path = "/" + BoltURL.Path
 		BoltURL.RawQuery = req.URL.RawQuery
 		req.URL = BoltURL
-		req.Host = "bolt.us-central1.km-aug30-0.bolt.projectn.co" // TODO: remove hardcoded bolt url
+		req.Host = br.boltVars.BoltHostname.Get()
 
 		dump, _ := httputil.DumpRequest(req, true)
 		logger.Debug("bolt request", zap.Any("boltRequest", string(dump)))
