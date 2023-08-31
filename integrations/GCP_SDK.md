@@ -6,7 +6,7 @@ Here are some examples of how to use various gcp sdks to work with sidekick:
 
 1. [gsutil](#gsutil)
 
-<a name="aws-cli"></a>
+<a name="gsutil"></a>
 
 ## gsutil
 
