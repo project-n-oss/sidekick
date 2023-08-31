@@ -21,6 +21,11 @@ const (
 // SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in reqMethod.
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
+	// TODO: check that read replicas are not enabled somehow?
+	if br.config.CloudPlatform == "gcp" {
+		return url.Parse(fmt.Sprintf("https://%s", br.boltVars.BoltHostname.Get()))
+	}
+
 	preferredOrder := br.getPreferredEndpointOrder(reqMethod)
 	boltEndpoints := br.boltVars.BoltInfo.Get()
 

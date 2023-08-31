@@ -134,8 +134,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 			crcHash: crcHash,
 		}
 	} else if br.config.CloudPlatform == "gcp" {
-		// BoltURL, err := br.SelectBoltEndpoint(req.Method)
-		BoltURL, err := url.Parse("https://bolt.us-central1.km-aug30-0.bolt.projectn.co") // TODO: remove hardcoded bolt url
+		BoltURL, err := br.SelectBoltEndpoint(req.Method)
 		if err != nil {
 			return nil, err
 		}
