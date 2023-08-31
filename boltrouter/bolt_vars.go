@@ -167,11 +167,11 @@ func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) 
 }
 
 func getGcpRegion(ctx context.Context, logger *zap.Logger, isComputeEngine bool) (string, error) {
-	ret, ok := os.LookupEnv("GCP_REGION")
+	ret, ok := os.LookupEnv("GRANICA_REGION")
 	if ok {
 		return ret, nil
 	} else if !isComputeEngine {
-		return "", fmt.Errorf("GCP_REGION env variable is not set")
+		return "", fmt.Errorf("GRANICA_REGION env variable is not set")
 	}
 
 	zone, err := getGcpZone(ctx, logger, isComputeEngine)
@@ -192,7 +192,7 @@ func getGcpZone(ctx context.Context, logger *zap.Logger, isComputeEngine bool) (
 	if ok {
 		return ret, nil
 	} else if !isComputeEngine {
-		return "", fmt.Errorf("GCP_ZONE env variable is not set")
+		return "", nil
 	}
 
 	zone, err := metadata.Zone()
@@ -203,11 +203,11 @@ func getGcpZone(ctx context.Context, logger *zap.Logger, isComputeEngine bool) (
 }
 
 func getAwsRegion(ctx context.Context, logger *zap.Logger, isEc2 bool) (string, error) {
-	ret, ok := os.LookupEnv("AWS_REGION")
+	ret, ok := os.LookupEnv("GRANICA_REGION")
 	if ok {
 		return ret, nil
 	} else if !isEc2 {
-		return "", fmt.Errorf("AWS_REGION env variable is not set")
+		return "", fmt.Errorf("GRANICA_REGION env variable is not set")
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx)
