@@ -183,7 +183,7 @@ func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target s
 	}
 
 	if !clusterHealthyBool {
-		return "s3", "cluster unhealthy", nil
+		return "fback", "cluster unhealthy", nil
 	}
 
 	params, ok := clientBehaviorParams.(map[string]interface{})
@@ -213,5 +213,5 @@ func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target s
 		}
 	}
 
-	return "s3", "traffic splitting", nil
+	return "fback", "traffic splitting", nil
 }
