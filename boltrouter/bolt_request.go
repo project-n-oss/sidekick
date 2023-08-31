@@ -139,21 +139,35 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		}
 	} else if br.config.CloudPlatform == "gcp" {
 		if !strings.Contains(req.UserAgent(), "gcloud") {
-			return nil, fmt.Errorf("request is not from gcloud sdk")
+			return nil, fmt.Errorf("request is not from gcloud sdk, user-agent %s", req.UserAgent())
 		}
 
-		logger.Debug("gcp request")
+		// var bodyBytes []byte
+		// var err error
+		// logger.Debug("gcp request")
+		// if req.Body != nil {
+		// 	bodyBytes, err = ioutil.ReadAll(req.Body)
+		// 	if err != nil {
+		// 		return nil, fmt.Errorf("failed to read request body: %w", err)
+		// 	}
+		// 	defer req.Body.Close()
+		// }
+		// logger.Debug("gcp request", zap.Any("body", string(bodyBytes)))
 
-		BoltURL, err := br.SelectBoltEndpoint(req.Method)
+		// BoltURL, err := br.SelectBoltEndpoint(req.Method)
+		BoltURL, err := url.Parse("https://bolt.us-central1.km-aug30-0.bolt.projectn.co") // TODO: remove hardcoded bolt url
 		if err != nil {
 			return nil, err
 		}
+
+		logger.Debug("gcp request", zap.Any("boltURL", BoltURL))
 
 		req.RequestURI = ""
 		BoltURL = BoltURL.JoinPath(req.URL.Path)
 		BoltURL.Path = "/" + BoltURL.Path
 		BoltURL.RawQuery = req.URL.RawQuery
 		req.URL = BoltURL
+		req.Host = "bolt.us-central1.km-aug30-0.bolt.projectn.co" // TODO: remove hardcoded bolt url
 
 		dump, _ := httputil.DumpRequest(req, true)
 		logger.Debug("bolt request", zap.Any("boltRequest", string(dump)))
