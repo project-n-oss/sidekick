@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/jarcoal/httpmock"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -81,7 +82,7 @@ func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams 
 
 func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool, logger *zap.Logger) {
 	quicksilverURL := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
-	boltVars, err := GetBoltVars(ctx, logger)
+	boltVars, err := GetBoltVars(ctx, logger, "aws")
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilverURL)
 }
