@@ -18,6 +18,18 @@ const (
 	BoltInfoRefreshInterval = 10 * time.Second
 )
 
+const (
+	InitialRequestTargetUndefined int = -1
+	InitialRequestTargetBolt      int = 0
+	InitialRequestTargetFallback  int = 1
+)
+
+var InitialRequestTargetMap = map[int]string{
+	InitialRequestTargetUndefined: "undefined",
+	InitialRequestTargetBolt:      "bolt",
+	InitialRequestTargetFallback:  "fallback",
+}
+
 // SelectBoltEndpoint selects a bolt endpoint from BoltVars.BoltEndpoints from the passed in reqMethod.
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
@@ -163,7 +175,7 @@ func (br *BoltRouter) GetCleanerStatus() (bool, error) {
 }
 
 // select initial request destination based on cluster_health_metrics and client_behavior_params
-func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target string, reason string, err error) {
+func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target int, reason string, err error) {
 	boltInfo := br.boltVars.BoltInfo.Get()
 
 	clusterHealthy := boltInfo["cluster_healthy"]
@@ -174,44 +186,44 @@ func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target s
 		// an older version of quicksilver), we default to bolt (which is the current behavior) as an initial endpoint.
 		// This is to avoid a potential regression.
 		// Fallback to S3 will happen based on the failover logic.
-		return "bolt", "backwards compatibility", nil
+		return InitialRequestTargetBolt, "backwards compatibility", nil
 	}
 
 	clusterHealthyBool, ok := clusterHealthy.(bool)
 	if !ok {
-		return "", "", fmt.Errorf("could not cast boltHealthy to bool")
+		return InitialRequestTargetUndefined, "", fmt.Errorf("could not cast boltHealthy to bool")
 	}
 
 	if !clusterHealthyBool {
-		return "fback", "cluster unhealthy", nil
+		return InitialRequestTargetFallback, "cluster unhealthy", nil
 	}
 
 	params, ok := clientBehaviorParams.(map[string]interface{})
 	if !ok {
-		return "", "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
+		return InitialRequestTargetUndefined, "", fmt.Errorf("could not cast clientBehaviorParams to map[string]interface{}")
 	}
 
 	crunchTrafficPercent, ok := params["crunch_traffic_percent"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("could not cast crunchTrafficPercent to string")
+		return InitialRequestTargetUndefined, "", fmt.Errorf("could not cast crunchTrafficPercent to string")
 	}
 
 	crunchTrafficPercentInt, err := strconv.Atoi(crunchTrafficPercent)
 	if err != nil {
-		return "", "", fmt.Errorf("could not parse crunchTrafficPercent to int. %v", err)
+		return InitialRequestTargetUndefined, "", fmt.Errorf("could not parse crunchTrafficPercent to int. %v", err)
 	}
 
 	if br.config.CrunchTrafficSplit == CrunchTrafficSplitByObjectKeyHash {
 		// Take a mod of hashValue and check if it is less than crunchTrafficPercentInt
 		if int(boltReq.crcHash)%100 < crunchTrafficPercentInt {
-			return "bolt", "traffic splitting", nil
+			return InitialRequestTargetBolt, "traffic splitting", nil
 		}
 	} else {
 		// Randomly select bolt with crunchTrafficPercentInt % probability.
 		if rand.Intn(100) < crunchTrafficPercentInt {
-			return "bolt", "traffic splitting", nil
+			return InitialRequestTargetBolt, "traffic splitting", nil
 		}
 	}
 
-	return "fback", "traffic splitting", nil
+	return InitialRequestTargetFallback, "traffic splitting", nil
 }
