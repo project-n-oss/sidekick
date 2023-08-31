@@ -239,9 +239,6 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
 	initialRequestTarget, reason, err := br.SelectInitialRequestTarget(boltReq)
-	// initialRequestTarget := "bolt"
-	// reason := "traffic splitting"
-	// var err error
 	boltRequestAnalytics := &BoltRequestAnalytics{
 		ObjectKey:                     boltReq.Bolt.URL.Path,
 		RequestBodySize:               uint32(boltReq.Bolt.ContentLength),
@@ -268,12 +265,24 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 		// If the err is of type ErrPanicDuringBoltRequest then we need to failover to AWS manually since .doBoltRequest
 		// halted execution before it could failover
 		if err != nil && errors.Is(err, ErrPanicDuringBoltRequest) && br.config.Failover {
-			logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
-			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
+			if br.config.CloudPlatform == "aws" {
+				logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
+				resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
+			} else if br.config.CloudPlatform == "gcp" {
+				logger.Error("panic occurred during Bolt request, failing over to GCP", zap.Error(err))
+				resp, isFailoverRequest, err = br.doGcpRequest(logger, boltReq, true, boltRequestAnalytics)
+			}
 		}
 		return resp, isFailoverRequest, boltRequestAnalytics, err
 	} else {
-		resp, isFailoverRequest, err := br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
+		var resp *http.Response
+		var isFailoverRequest bool
+		var err error
+		if br.config.CloudPlatform == "aws" {
+			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
+		} else if br.config.CloudPlatform == "gcp" {
+			resp, isFailoverRequest, err = br.doGcpRequest(logger, boltReq, false, boltRequestAnalytics)
+		}
 		return resp, isFailoverRequest, boltRequestAnalytics, err
 	}
 }
