@@ -52,6 +52,12 @@ var serveCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		OnShutdown(cancel)
 
+		// validate cloud-platform is one of aws or gcp
+		cloudPlatform, _ := cmd.Flags().GetString("cloud-platform")
+		if cloudPlatform != "aws" && cloudPlatform != "gcp" {
+			return fmt.Errorf("cloud-platform must be one of: aws, gcp")
+		}
+
 		boltRouterConfig := getBoltRouterConfig(cmd)
 
 		cfg := api.Config{
