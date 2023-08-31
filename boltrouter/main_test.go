@@ -20,9 +20,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("AWS_REGION", "us-east-1")
 	os.Setenv("AWS_ZONE_ID", "use1-az1")
 	os.Setenv("GRANICA_CUSTOM_DOMAIN", "test.bolt.projectn.co")
+	os.Setenv("GRANICA_REGION", "us-east-1")
 
 	exitVal := m.Run()
 	os.Exit(exitVal)
