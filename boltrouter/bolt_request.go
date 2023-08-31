@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,9 +50,6 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 	var boltRequest *BoltRequest
 
 	if br.config.CloudPlatform == "aws" {
-		if !strings.Contains(req.UserAgent(), "aws") {
-			return nil, fmt.Errorf("request is not from aws sdk")
-		}
 		sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
 		if err != nil {
 			return nil, fmt.Errorf("could not extract source bucket: %w", err)
@@ -138,29 +134,11 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 			crcHash: crcHash,
 		}
 	} else if br.config.CloudPlatform == "gcp" {
-		if !strings.Contains(req.UserAgent(), "gcloud") {
-			return nil, fmt.Errorf("request is not from gcloud sdk, user-agent %s", req.UserAgent())
-		}
-
-		// var bodyBytes []byte
-		// var err error
-		// logger.Debug("gcp request")
-		// if req.Body != nil {
-		// 	bodyBytes, err = ioutil.ReadAll(req.Body)
-		// 	if err != nil {
-		// 		return nil, fmt.Errorf("failed to read request body: %w", err)
-		// 	}
-		// 	defer req.Body.Close()
-		// }
-		// logger.Debug("gcp request", zap.Any("body", string(bodyBytes)))
-
 		// BoltURL, err := br.SelectBoltEndpoint(req.Method)
 		BoltURL, err := url.Parse("https://bolt.us-central1.km-aug30-0.bolt.projectn.co") // TODO: remove hardcoded bolt url
 		if err != nil {
 			return nil, err
 		}
-
-		logger.Debug("gcp request", zap.Any("boltURL", BoltURL))
 
 		req.RequestURI = ""
 		BoltURL = BoltURL.JoinPath(req.URL.Path)
@@ -180,8 +158,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		gcpRequest.URL = gcsUrl
 		gcpRequest.Host = "storage.googleapis.com"
 
-		dump, _ = httputil.DumpRequest(gcpRequest, true)
-		logger.Debug("gcp request", zap.Any("gcpRequest", string(dump)))
+		CopyReqBody(req, gcpRequest)
 
 		boltRequest = &BoltRequest{
 			Bolt:    req.Clone(ctx),
@@ -190,7 +167,6 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 			crcHash: 0,
 		}
 	}
-	logger.Debug("returning new bolt request")
 	return boltRequest, nil
 }
 
