@@ -243,7 +243,7 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 		ObjectKey:                     boltReq.Bolt.URL.Path,
 		RequestBodySize:               uint32(boltReq.Bolt.ContentLength),
 		Method:                        boltReq.Bolt.Method,
-		InitialRequestTarget:          initialRequestTarget,
+		InitialRequestTarget:          InitialRequestTargetMap[initialRequestTarget],
 		InitialRequestTargetReason:    reason,
 		BoltRequestUrl:                boltReq.Bolt.URL.Hostname(),
 		BoltRequestDuration:           time.Duration(0),
@@ -256,9 +256,9 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 		return nil, false, boltRequestAnalytics, err
 	}
 
-	logger.Debug("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
+	logger.Debug("initial request target", zap.String("target", InitialRequestTargetMap[initialRequestTarget]), zap.String("reason", reason))
 
-	if initialRequestTarget == "bolt" {
+	if initialRequestTarget == InitialRequestTargetBolt {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
 		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
 		// handled inside the function as needed, and we can just return
