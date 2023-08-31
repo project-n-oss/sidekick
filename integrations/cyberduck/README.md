@@ -20,20 +20,20 @@ Right-click on the downloaded file in the File Explorer and click "Extract All".
 Before running the executable, make sure the following environment variables are set:
 
 - `GRANICA_CUSTOM_DOMAIN`: This is the custom domain you chose during setup.
-- `AWS_REGION`: This is the region of your Bolt deployment.
+- `GRANICA_REGION`: This is the region of your Bolt deployment.
 
 **macOS**
 
 ```bash
 export GRANICA_CUSTOM_DOMAIN="your-custom-domain.com"
-export AWS_REGION="your-bolt-region"
+export GRANICA_REGION="your-bolt-region"
 ```
 
 **Windows**
 
 ```bash
 set GRANICA_CUSTOM_DOMAIN=your-bolt-domain.com
-set AWS_REGION=your-bolt-region
+set GRANICA_REGION=your-bolt-region
 ```
 
 ## CyberDuck configuration
@@ -44,8 +44,8 @@ First, you'll need to enable the "S3 (HTTP)" profile.
 
 1. Navigate to Settings:
 
-    Windows: Click "Edit" and then "Preferences"
-    macOS: Click "CyberDuck" in the top left corner and then "Settings"
+   Windows: Click "Edit" and then "Preferences"
+   macOS: Click "CyberDuck" in the top left corner and then "Settings"
 
 2. Then navigate to "Profiles" and search for "s3 http"
 
