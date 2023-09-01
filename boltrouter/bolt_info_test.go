@@ -80,7 +80,7 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 		cfg                  Config
 		clusterHealthy       bool
 		clientBehaviorParams map[string]interface{}
-		expected             int
+		expected             InitialRequestTargetType
 		reason               string
 		intelligentQS        bool
 	}{

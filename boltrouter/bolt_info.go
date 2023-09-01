@@ -18,13 +18,15 @@ const (
 	BoltInfoRefreshInterval = 10 * time.Second
 )
 
+type InitialRequestTargetType uint8
+
 const (
-	InitialRequestTargetUndefined int = -1
-	InitialRequestTargetBolt      int = 0
-	InitialRequestTargetFallback  int = 1
+	InitialRequestTargetUndefined InitialRequestTargetType = 0
+	InitialRequestTargetBolt      InitialRequestTargetType = 1
+	InitialRequestTargetFallback  InitialRequestTargetType = 2
 )
 
-var InitialRequestTargetMap = map[int]string{
+var InitialRequestTargetMap = map[InitialRequestTargetType]string{
 	InitialRequestTargetUndefined: "undefined",
 	InitialRequestTargetBolt:      "bolt",
 	InitialRequestTargetFallback:  "fallback",
@@ -175,7 +177,7 @@ func (br *BoltRouter) GetCleanerStatus() (bool, error) {
 }
 
 // select initial request destination based on cluster_health_metrics and client_behavior_params
-func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target int, reason string, err error) {
+func (br *BoltRouter) SelectInitialRequestTarget(boltReq *BoltRequest) (target InitialRequestTargetType, reason string, err error) {
 	boltInfo := br.boltVars.BoltInfo.Get()
 
 	clusterHealthy := boltInfo["cluster_healthy"]
