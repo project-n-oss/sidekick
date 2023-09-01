@@ -25,7 +25,8 @@ func TestServeCmdConfig(t *testing.T) {
 		err := rootCmd.Execute()
 		require.NoError(t, err)
 
-		cfg := getBoltRouterConfig(testServeCmd)
+		cfg, err := getBoltRouterConfig(testServeCmd)
+		require.NoError(t, err)
 		assert.Equal(t, false, cfg.Local)
 		assert.Equal(t, false, cfg.Passthrough)
 		assert.Equal(t, false, cfg.Failover)
@@ -40,7 +41,8 @@ func TestServeCmdConfig(t *testing.T) {
 		err := rootCmd.Execute()
 		require.NoError(t, err)
 
-		cfg := getBoltRouterConfig(testServeCmd)
+		cfg, err := getBoltRouterConfig(testServeCmd)
+		require.NoError(t, err)
 		assert.Equal(t, true, cfg.Local)
 		assert.Equal(t, true, cfg.Passthrough)
 		assert.Equal(t, true, cfg.Failover)
@@ -51,7 +53,8 @@ func TestServeCmdConfig(t *testing.T) {
 		err := rootCmd.Execute()
 		require.NoError(t, err)
 
-		cfg := getBoltRouterConfig(testServeCmd)
+		cfg, _ := getBoltRouterConfig(testServeCmd)
+		require.NoError(t, err)
 		assert.Equal(t, true, cfg.Local)
 		assert.Equal(t, true, cfg.Passthrough)
 		assert.Equal(t, true, cfg.Failover)
@@ -67,7 +70,8 @@ func TestServeCmdConfig(t *testing.T) {
 		err := rootCmd.Execute()
 		require.NoError(t, err)
 
-		cfg := getBoltRouterConfig(testServeCmd)
+		cfg, err := getBoltRouterConfig(testServeCmd)
+		require.NoError(t, err)
 		assert.Equal(t, false, cfg.Local)
 		assert.Equal(t, false, cfg.Passthrough)
 		assert.Equal(t, false, cfg.Failover)

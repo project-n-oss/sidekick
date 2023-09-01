@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/project-n-oss/sidekick/api"
 	"github.com/project-n-oss/sidekick/boltrouter"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/spf13/cobra"
@@ -54,11 +56,15 @@ var serveCmd = &cobra.Command{
 
 		// validate cloud-platform is one of aws or gcp
 		cloudPlatform, _ := cmd.Flags().GetString("cloud-platform")
+		rootLogger.Info("cloud-platform", zap.String("cloud-platform", cloudPlatform))
 		if cloudPlatform != "aws" && cloudPlatform != "gcp" {
 			return fmt.Errorf("cloud-platform must be one of: aws, gcp")
 		}
 
-		boltRouterConfig := getBoltRouterConfig(cmd)
+		boltRouterConfig, err := getBoltRouterConfig(cmd)
+		if err != nil {
+			return err
+		}
 
 		cfg := api.Config{
 			BoltRouter: boltRouterConfig,
@@ -116,13 +122,15 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
+func getBoltRouterConfig(cmd *cobra.Command) (boltrouter.Config, error) {
 	boltRouterConfig := rootConfig.BoltRouter
 	if cmd.Flags().Lookup("local").Changed {
 		boltRouterConfig.Local, _ = cmd.Flags().GetBool("local")
 	}
 	if cmd.Flags().Lookup("cloud-platform").Changed {
-		boltRouterConfig.CloudPlatform, _ = cmd.Flags().GetString("cloud-platform")
+		cp, _ := cmd.Flags().GetString("cloud-platform")
+		cp = strings.ToLower(cp)
+		boltRouterConfig.CloudPlatform = boltrouter.CloudPlatformType(boltrouter.CloudPlatformMap[cp])
 	}
 	if cmd.Flags().Lookup("bolt-endpoint-override").Changed {
 		boltRouterConfig.BoltEndpointOverride, _ = cmd.Flags().GetString("bolt-endpoint-override")
@@ -137,5 +145,5 @@ func getBoltRouterConfig(cmd *cobra.Command) boltrouter.Config {
 		crunchTrafficSplitStr, _ := cmd.Flags().GetString("crunch-traffic-split")
 		boltRouterConfig.CrunchTrafficSplit = boltrouter.CrunchTrafficSplitType(crunchTrafficSplitStr)
 	}
-	return boltRouterConfig
+	return boltRouterConfig, nil
 }

@@ -49,7 +49,7 @@ var (
 func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
 	var boltRequest *BoltRequest
 
-	if br.config.CloudPlatform == "aws" {
+	if br.config.CloudPlatform == AwsCloudPlatform {
 		sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
 		if err != nil {
 			return nil, fmt.Errorf("could not extract source bucket: %w", err)
@@ -133,7 +133,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 			Gcp:     nil,
 			crcHash: crcHash,
 		}
-	} else if br.config.CloudPlatform == "gcp" {
+	} else if br.config.CloudPlatform == GcpCloudPlatform {
 		BoltURL, err := br.SelectBoltEndpoint(req.Method)
 		if err != nil {
 			return nil, err
@@ -265,10 +265,10 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 		// If the err is of type ErrPanicDuringBoltRequest then we need to failover to AWS manually since .doBoltRequest
 		// halted execution before it could failover
 		if err != nil && errors.Is(err, ErrPanicDuringBoltRequest) && br.config.Failover {
-			if br.config.CloudPlatform == "aws" {
+			if br.config.CloudPlatform == AwsCloudPlatform {
 				logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
 				resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
-			} else if br.config.CloudPlatform == "gcp" {
+			} else if br.config.CloudPlatform == GcpCloudPlatform {
 				logger.Error("panic occurred during Bolt request, failing over to GCP", zap.Error(err))
 				resp, isFailoverRequest, err = br.doGcpRequest(logger, boltReq, true, boltRequestAnalytics)
 			}
@@ -278,9 +278,9 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 		var resp *http.Response
 		var isFailoverRequest bool
 		var err error
-		if br.config.CloudPlatform == "aws" {
+		if br.config.CloudPlatform == AwsCloudPlatform {
 			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
-		} else if br.config.CloudPlatform == "gcp" {
+		} else if br.config.CloudPlatform == GcpCloudPlatform {
 			resp, isFailoverRequest, err = br.doGcpRequest(logger, boltReq, false, boltRequestAnalytics)
 		}
 		return resp, isFailoverRequest, boltRequestAnalytics, err
@@ -342,9 +342,9 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 				logger.Error("bolt request failed", zap.Error(err))
 			}
 
-			if br.config.CloudPlatform == "aws" {
+			if br.config.CloudPlatform == AwsCloudPlatform {
 				return br.doAwsRequest(logger, boltReq, true, analytics)
-			} else if br.config.CloudPlatform == "gcp" {
+			} else if br.config.CloudPlatform == GcpCloudPlatform {
 				return br.doGcpRequest(logger, boltReq, true, analytics)
 			} else {
 				return nil, false, fmt.Errorf("unknown cloud platform")

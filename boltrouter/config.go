@@ -2,9 +2,20 @@ package boltrouter
 
 type CrunchTrafficSplitType string
 
+type CloudPlatformType int
+
 const (
 	CrunchTrafficSplitByObjectKeyHash CrunchTrafficSplitType = "objectkeyhash"
 	CrunchTrafficSplitByRandomRequest CrunchTrafficSplitType = "random"
+	AwsCloudPlatform                  CloudPlatformType      = 0
+	GcpCloudPlatform                  CloudPlatformType      = 1
+)
+
+var (
+	CloudPlatformMap map[string]CloudPlatformType = map[string]CloudPlatformType{
+		"aws": AwsCloudPlatform,
+		"gcp": GcpCloudPlatform,
+	}
 )
 
 type Config struct {
@@ -13,7 +24,7 @@ type Config struct {
 	Local bool `yaml:"Local"`
 
 	// Set the cloud platform that Crunch is running in.
-	CloudPlatform string `yaml:"CloudPlatform"`
+	CloudPlatform CloudPlatformType `yaml:"CloudPlatform"`
 
 	// Set the BoltEndpointOverride while running from local mode.
 	BoltEndpointOverride string `yaml:"BoltEndpointOverride"`
@@ -37,7 +48,7 @@ type Config struct {
 
 var DefaultConfig = Config{
 	Local:                false,
-	CloudPlatform:        "",
+	CloudPlatform:        -1,
 	Passthrough:          false,
 	Failover:             false,
 	NoFallback404:        false,

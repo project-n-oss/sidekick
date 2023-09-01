@@ -23,11 +23,11 @@ func TestBoltRequest(t *testing.T) {
 		cfg        Config
 		httpMethod string
 	}{
-		{name: "Get", cfg: Config{CloudPlatform: "aws"}, httpMethod: http.MethodGet},
-		{name: "Put", cfg: Config{CloudPlatform: "aws"}, httpMethod: http.MethodPut},
-		{name: "Post", cfg: Config{CloudPlatform: "aws"}, httpMethod: http.MethodPost},
-		{name: "Delete", cfg: Config{CloudPlatform: "aws"}, httpMethod: http.MethodDelete},
-		{name: "PassthroughGet", cfg: Config{CloudPlatform: "aws", Passthrough: true}, httpMethod: http.MethodGet},
+		{name: "Get", cfg: Config{CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodGet},
+		{name: "Put", cfg: Config{CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPut},
+		{name: "Post", cfg: Config{CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPost},
+		{name: "Delete", cfg: Config{CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodDelete},
+		{name: "PassthroughGet", cfg: Config{CloudPlatform: AwsCloudPlatform, Passthrough: true}, httpMethod: http.MethodGet},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -92,7 +92,7 @@ func TestBoltRequestFailover(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
 
-	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: "aws", Failover: false})
+	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: AwsCloudPlatform, Failover: false})
 	require.NoError(t, err)
 	require.NoError(t, br.RefreshBoltInfo(ctx))
 	overrideCrunchTrafficPct(br, "100")
@@ -146,7 +146,7 @@ func TestBoltRequestPanic(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
 
-	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: "aws", Failover: false})
+	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: AwsCloudPlatform, Failover: false})
 	require.NoError(t, err)
 	require.NoError(t, br.RefreshBoltInfo(ctx))
 
@@ -203,7 +203,7 @@ func TestBoltEndpoint(t *testing.T) {
 			return httpmock.NewStringResponse(200, "OK"), nil
 		})
 
-	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: "aws", Failover: false})
+	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: AwsCloudPlatform, Failover: false})
 	require.NoError(t, err)
 	require.NoError(t, br.RefreshBoltInfo(ctx))
 

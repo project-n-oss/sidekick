@@ -26,7 +26,7 @@ var (
 // GetBoltVars acts as a singleton method wrapper around BoltVars.
 // It guarantees that only one instance of BoltVars exists.
 // This method is thread safe.
-func GetBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) (*BoltVars, error) {
+func GetBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform CloudPlatformType) (*BoltVars, error) {
 	once.Do(func() {
 		instance, instanceErr = newBoltVars(ctx, logger, cloudPlatform)
 	})
@@ -82,7 +82,7 @@ func (bv *BoltVars) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	return nil
 }
 
-func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) (*BoltVars, error) {
+func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform CloudPlatformType) (*BoltVars, error) {
 	logger.Debug("initializing BoltVars...")
 	ret := &BoltVars{
 		offlineEndpoints: make(map[string]bool),
@@ -92,7 +92,7 @@ func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) 
 	ret.WriteOrderEndpoints.Set([]string{"main_write_endpoints", "failover_write_endpoints"})
 	ret.HttpReadMethodTypes.Set([]string{http.MethodGet, http.MethodHead}) // S3 operations get converted to one of the standard HTTP request methods https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html
 
-	if cloudPlatform == "aws" {
+	if cloudPlatform == AwsCloudPlatform {
 		isEc2, err := isEc2Instance(ctx, logger)
 		if err != nil {
 			return nil, err
@@ -109,7 +109,7 @@ func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform string) 
 			return nil, err
 		}
 		ret.ZoneId.Set(awsZoneId)
-	} else if cloudPlatform == "gcp" {
+	} else if cloudPlatform == GcpCloudPlatform {
 		isComputeEngine, err := isComputeEngineInstance(ctx, logger)
 		if err != nil {
 			return nil, err

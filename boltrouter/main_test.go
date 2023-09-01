@@ -82,7 +82,7 @@ func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams 
 
 func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool, logger *zap.Logger) {
 	quicksilverURL := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
-	boltVars, err := GetBoltVars(ctx, logger, "aws")
+	boltVars, err := GetBoltVars(ctx, logger, AwsCloudPlatform)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilverURL)
 }

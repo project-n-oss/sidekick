@@ -22,8 +22,8 @@ func TestGetBoltInfo(t *testing.T) {
 		cfg      Config
 		expected map[string]interface{}
 	}{
-		{name: "NonLocal", cfg: Config{Local: false, CloudPlatform: "aws"}, expected: quicksilverResponse},
-		{name: "Local", cfg: Config{Local: true, CloudPlatform: "aws"}, expected: map[string]interface{}{}},
+		{name: "NonLocal", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, expected: quicksilverResponse},
+		{name: "Local", cfg: Config{Local: true, CloudPlatform: AwsCloudPlatform}, expected: map[string]interface{}{}},
 	}
 
 	for _, tt := range testCases {
@@ -49,12 +49,12 @@ func TestSelectBoltEndpoint(t *testing.T) {
 		httpMethod string
 		expected   []interface{}
 	}{
-		{name: "NonLocalGet", cfg: Config{Local: false, CloudPlatform: "aws"}, httpMethod: http.MethodGet, expected: mainReadEndpoints},
-		{name: "NonLocalHead", cfg: Config{Local: false, CloudPlatform: "aws"}, httpMethod: http.MethodHead, expected: mainReadEndpoints},
+		{name: "NonLocalGet", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodGet, expected: mainReadEndpoints},
+		{name: "NonLocalHead", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodHead, expected: mainReadEndpoints},
 
-		{name: "NonLocalPut", cfg: Config{Local: false, CloudPlatform: "aws"}, httpMethod: http.MethodPut, expected: mainWriteEndpoints},
-		{name: "NonLocalPost", cfg: Config{Local: false, CloudPlatform: "aws"}, httpMethod: http.MethodPost, expected: mainWriteEndpoints},
-		{name: "NonLocalDelete", cfg: Config{Local: false, CloudPlatform: "aws"}, httpMethod: http.MethodDelete, expected: mainWriteEndpoints},
+		{name: "NonLocalPut", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPut, expected: mainWriteEndpoints},
+		{name: "NonLocalPost", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPost, expected: mainWriteEndpoints},
+		{name: "NonLocalDelete", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodDelete, expected: mainWriteEndpoints},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -85,18 +85,18 @@ func TestSelectInitialRequestTarget(t *testing.T) {
 		intelligentQS        bool
 	}{
 		// Check with CrunchTrafficSplitByObjectKeyHash
-		{URL: "pqr.txt", name: "ClusterUnhealthy", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: InitialRequestTargetFallback, reason: "cluster unhealthy", intelligentQS: true},
-		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
-		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: InitialRequestTargetBolt, reason: "traffic splitting", intelligentQS: true},
-		{URL: "pqr.txt", name: "BackwardsCompat", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: InitialRequestTargetBolt, reason: "backwards compatibility", intelligentQS: false},
-		{URL: "xyz123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
-		{URL: "abc123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: InitialRequestTargetBolt, reason: "traffic splitting", intelligentQS: true},
-		{URL: "abc/abc123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterUnhealthy", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: InitialRequestTargetFallback, reason: "cluster unhealthy", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: InitialRequestTargetBolt, reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "BackwardsCompat", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: InitialRequestTargetBolt, reason: "backwards compatibility", intelligentQS: false},
+		{URL: "xyz123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
+		{URL: "abc123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: InitialRequestTargetBolt, reason: "traffic splitting", intelligentQS: true},
+		{URL: "abc/abc123.txt", name: "ClusterHealthyCrunchTrafficFiftyPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByObjectKeyHash}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "50"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
 		// Check with CrunchTrafficSplitByRandomRequest
-		{URL: "pqr.txt", name: "ClusterUnhealthy", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: InitialRequestTargetFallback, reason: "cluster unhealthy", intelligentQS: true},
-		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
-		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: InitialRequestTargetBolt, reason: "traffic splitting", intelligentQS: true},
-		{URL: "pqr.txt", name: "BackwardsCompat", cfg: Config{Local: false, CloudPlatform: "aws", CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: InitialRequestTargetBolt, reason: "backwards compatibility", intelligentQS: false},
+		{URL: "pqr.txt", name: "ClusterUnhealthy", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "70"}, expected: InitialRequestTargetFallback, reason: "cluster unhealthy", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficZeroPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "0"}, expected: InitialRequestTargetFallback, reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "ClusterHealthyCrunchTrafficHundredPercent", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: true, clientBehaviorParams: map[string]interface{}{"crunch_traffic_percent": "100"}, expected: InitialRequestTargetBolt, reason: "traffic splitting", intelligentQS: true},
+		{URL: "pqr.txt", name: "BackwardsCompat", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform, CrunchTrafficSplit: CrunchTrafficSplitByRandomRequest}, clusterHealthy: false, clientBehaviorParams: map[string]interface{}{}, expected: InitialRequestTargetBolt, reason: "backwards compatibility", intelligentQS: false},
 	}
 
 	for _, tt := range testCases {
