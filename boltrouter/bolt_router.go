@@ -79,7 +79,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		}
 
 	} else {
-		return nil, fmt.Errorf("invalid cloud platform: %s", cfg.CloudPlatform)
+		return nil, fmt.Errorf("invalid cloud platform: %s", CloudPlatformTypeToStrMap[cfg.CloudPlatform])
 	}
 
 	logger.Debug("config", zap.Any("config", cfg))

@@ -13,9 +13,14 @@ const (
 )
 
 var (
-	CloudPlatformMap map[string]CloudPlatformType = map[string]CloudPlatformType{
+	CloudPlatformStrToTypeMap map[string]CloudPlatformType = map[string]CloudPlatformType{
 		"aws": AwsCloudPlatform,
 		"gcp": GcpCloudPlatform,
+	}
+	CloudPlatformTypeToStrMap map[CloudPlatformType]string = map[CloudPlatformType]string{
+		UndefinedCloudPlatform: "undefined",
+		AwsCloudPlatform:       "aws",
+		GcpCloudPlatform:       "gcp",
 	}
 )
 

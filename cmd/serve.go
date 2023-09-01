@@ -130,7 +130,7 @@ func getBoltRouterConfig(cmd *cobra.Command) (boltrouter.Config, error) {
 	if cmd.Flags().Lookup("cloud-platform").Changed {
 		cp, _ := cmd.Flags().GetString("cloud-platform")
 		cp = strings.ToLower(cp)
-		boltRouterConfig.CloudPlatform = boltrouter.CloudPlatformType(boltrouter.CloudPlatformMap[cp])
+		boltRouterConfig.CloudPlatform = boltrouter.CloudPlatformType(boltrouter.CloudPlatformStrToTypeMap[cp])
 	}
 	if cmd.Flags().Lookup("bolt-endpoint-override").Changed {
 		boltRouterConfig.BoltEndpointOverride, _ = cmd.Flags().GetString("bolt-endpoint-override")
