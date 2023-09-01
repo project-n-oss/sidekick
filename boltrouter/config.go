@@ -2,13 +2,14 @@ package boltrouter
 
 type CrunchTrafficSplitType string
 
-type CloudPlatformType int
+type CloudPlatformType uint8
 
 const (
 	CrunchTrafficSplitByObjectKeyHash CrunchTrafficSplitType = "objectkeyhash"
 	CrunchTrafficSplitByRandomRequest CrunchTrafficSplitType = "random"
-	AwsCloudPlatform                  CloudPlatformType      = 0
-	GcpCloudPlatform                  CloudPlatformType      = 1
+	UndefinedCloudPlatform            CloudPlatformType      = 0
+	AwsCloudPlatform                  CloudPlatformType      = 1
+	GcpCloudPlatform                  CloudPlatformType      = 2
 )
 
 var (
@@ -48,7 +49,7 @@ type Config struct {
 
 var DefaultConfig = Config{
 	Local:                false,
-	CloudPlatform:        -1,
+	CloudPlatform:        UndefinedCloudPlatform,
 	Passthrough:          false,
 	Failover:             false,
 	NoFallback404:        false,
