@@ -63,4 +63,5 @@ var DefaultConfig = Config{
 	NoFallback404:        false,
 	BoltEndpointOverride: "",
 	CrunchTrafficSplit:   CrunchTrafficSplitByObjectKeyHash,
+	GcpReplicasEnabled:   false,
 }
