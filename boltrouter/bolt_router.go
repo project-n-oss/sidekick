@@ -67,7 +67,8 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		if tp, ok := http.DefaultTransport.(*http.Transport); ok {
 			customTransport := tp.Clone()
 			customTransport.TLSClientConfig = &tls.Config{
-				ServerName: boltVars.BoltHostname.Get(),
+				ServerName:         boltVars.BoltHostname.Get(),
+				InsecureSkipVerify: true,
 			}
 			boltHttpClient = http.Client{
 				Timeout: time.Duration(90) * time.Second,
