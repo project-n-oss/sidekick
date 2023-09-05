@@ -36,6 +36,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 	standardHttpClient := http.Client{
 		Timeout: time.Duration(90) * time.Second,
 	}
+	// TODO (kote): figure out why we need to skip verification here. This is used for Quicksilver
 	if tp, ok := http.DefaultTransport.(*http.Transport); ok {
 		customTransport := tp.Clone()
 		customTransport.TLSClientConfig = &tls.Config{
@@ -68,7 +69,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 			customTransport := tp.Clone()
 			customTransport.TLSClientConfig = &tls.Config{
 				ServerName:         boltVars.BoltHostname.Get(),
-				InsecureSkipVerify: true,
+				InsecureSkipVerify: true, // TODO (kote): remove this so that ServerName is used in boltHttpClient
 			}
 			boltHttpClient = http.Client{
 				Timeout: time.Duration(90) * time.Second,
