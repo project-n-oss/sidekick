@@ -50,6 +50,9 @@ type Config struct {
 	// 2. Hash Based Crunch Traffic Split
 	// Random approach could cause data inconsistency if the requests are mix of GET and PUT.
 	CrunchTrafficSplit CrunchTrafficSplitType `yaml:"CrunchTrafficSplit"`
+
+	// Whether a GCP deployment is single endpoint or we have replicas to take advantage of.
+	GcpReplicasEnabled bool `yaml:"GcpReplicasEnabled"`
 }
 
 var DefaultConfig = Config{

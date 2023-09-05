@@ -44,7 +44,8 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("passthrough", false, "Set passthrough flag to bolt requests.")
 	cmd.Flags().BoolP("failover", "f", false, "Enables aws request failover if bolt request fails.")
 	cmd.Flags().String("crunch-traffic-split", "objectkeyhash", "Specify the crunch traffic split strategy: random or objectkeyhash")
-	cmd.Flags().StringP("cloud-platform", "", "", "cloud platform to use. one of: aws, gcp")
+	cmd.Flags().StringP("cloud-platform", "", "", "Cloud platform to use. one of: aws, gcp")
+	cmd.Flags().BoolP("gcp-replicas", "", false, "Whether to query Quicksilver for replica IPs in GCP mode")
 }
 
 var serveCmd = &cobra.Command{
@@ -56,9 +57,14 @@ var serveCmd = &cobra.Command{
 
 		// validate cloud-platform is one of aws or gcp
 		cloudPlatform, _ := cmd.Flags().GetString("cloud-platform")
-		rootLogger.Info("cloud-platform", zap.String("cloud-platform", cloudPlatform))
+		rootLogger.Info("cloud platform", zap.String("cloud-platform", cloudPlatform))
 		if cloudPlatform != "aws" && cloudPlatform != "gcp" {
 			return fmt.Errorf("cloud-platform must be one of: aws, gcp")
+		}
+
+		if cloudPlatform == "gcp" {
+			gcpReplicas, _ := cmd.Flags().GetBool("gcp-replicas")
+			rootLogger.Info("gcp replicas enabled", zap.Bool("gcp-replicas", gcpReplicas))
 		}
 
 		boltRouterConfig, err := getBoltRouterConfig(cmd)
@@ -144,6 +150,9 @@ func getBoltRouterConfig(cmd *cobra.Command) (boltrouter.Config, error) {
 	if cmd.Flags().Lookup("crunch-traffic-split").Changed {
 		crunchTrafficSplitStr, _ := cmd.Flags().GetString("crunch-traffic-split")
 		boltRouterConfig.CrunchTrafficSplit = boltrouter.CrunchTrafficSplitType(crunchTrafficSplitStr)
+	}
+	if cmd.Flags().Lookup("gcp-replicas").Changed {
+		boltRouterConfig.GcpReplicasEnabled, _ = cmd.Flags().GetBool("gcp-replicas")
 	}
 	return boltRouterConfig, nil
 }

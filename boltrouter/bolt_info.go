@@ -36,7 +36,7 @@ var InitialRequestTargetMap = map[InitialRequestTargetType]string{
 // This method will err if not endpoints were selected.
 func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
 	// TODO: check that read replicas are not enabled somehow?
-	if br.config.CloudPlatform == GcpCloudPlatform {
+	if br.config.CloudPlatform == GcpCloudPlatform && !br.config.GcpReplicasEnabled {
 		return url.Parse(fmt.Sprintf("https://%s", br.boltVars.BoltHostname.Get()))
 	}
 
