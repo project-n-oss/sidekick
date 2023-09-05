@@ -1,6 +1,6 @@
 ![release](https://img.shields.io/github/v/release/project-n-oss/sidekick)
 
-![projectn-sidekick.png](granica-sidekick.png | width=200)
+![projectn-sidekick.png](granica-sidekick.png)
 
 # Sidekick
 
