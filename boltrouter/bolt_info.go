@@ -71,6 +71,9 @@ func (br *BoltRouter) SelectBoltEndpoint(reqMethod string) (*url.URL, error) {
 			if br.config.Local {
 				return url.Parse(fmt.Sprintf("http://%s", selectedEndpoint))
 			}
+			if br.config.CloudPlatform == GcpCloudPlatform {
+				return url.Parse(fmt.Sprintf("https://%s:8443", selectedEndpoint))
+			}
 			return url.Parse(fmt.Sprintf("https://%s", selectedEndpoint))
 		}
 	}
