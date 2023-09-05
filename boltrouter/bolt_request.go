@@ -139,6 +139,8 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 			return nil, err
 		}
 
+		logger.Debug("gcp: selected bolt endpoint", zap.String("boltEndpoint", BoltURL.String()), zap.String("method", req.Method), zap.String("path", req.URL.Path))
+
 		req.RequestURI = ""
 		BoltURL = BoltURL.JoinPath(req.URL.Path)
 		BoltURL.Path = "/" + BoltURL.Path
