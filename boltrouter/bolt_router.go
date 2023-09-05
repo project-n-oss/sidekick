@@ -36,6 +36,14 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 	standardHttpClient := http.Client{
 		Timeout: time.Duration(90) * time.Second,
 	}
+	if tp, ok := http.DefaultTransport.(*http.Transport); ok {
+		customTransport := tp.Clone()
+		customTransport.TLSClientConfig = &tls.Config{
+			ServerName:         boltVars.BoltHostname.Get(),
+			InsecureSkipVerify: true,
+		}
+		standardHttpClient.Transport = customTransport
+	}
 
 	if cfg.CloudPlatform == AwsCloudPlatform {
 		boltHttpClient = http.Client{
