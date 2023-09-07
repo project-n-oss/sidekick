@@ -28,6 +28,11 @@ func TestBoltRequest(t *testing.T) {
 		{name: "Post", cfg: Config{CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPost},
 		{name: "Delete", cfg: Config{CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodDelete},
 		{name: "PassthroughGet", cfg: Config{CloudPlatform: AwsCloudPlatform, Passthrough: true}, httpMethod: http.MethodGet},
+		{name: "GetGcp", cfg: Config{CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: true}, httpMethod: http.MethodGet},
+		{name: "PutGcp", cfg: Config{CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: true}, httpMethod: http.MethodPut},
+		{name: "PostGcp", cfg: Config{CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: true}, httpMethod: http.MethodPost},
+		{name: "DeleteGcp", cfg: Config{CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: true}, httpMethod: http.MethodDelete},
+		{name: "PassthroughGetGcp", cfg: Config{CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: true, Passthrough: true}, httpMethod: http.MethodGet},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -38,8 +43,15 @@ func TestBoltRequest(t *testing.T) {
 			body := strings.NewReader(randomdata.Paragraph())
 
 			req, err := http.NewRequest(tt.httpMethod, "test.projectn.co", body)
-			req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
 			require.NoError(t, err)
+
+			if tt.cfg.CloudPlatform == AwsCloudPlatform {
+				req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
+
+			}
+			if tt.cfg.CloudPlatform == GcpCloudPlatform {
+				req.Header.Set("Authorization", "Bearer ya29.c.b0Aaekm1J-kvFPrZl9fpH2Yw")
+			}
 
 			boltReq, err := br.NewBoltRequest(ctx, logger, req)
 			require.NoError(t, err)
@@ -51,12 +63,19 @@ func TestBoltRequest(t *testing.T) {
 			endpoints := boltVars.BoltInfo.Get()[endpointOrder[0]]
 			require.Contains(t, endpoints, boltHttpRequest.URL.Hostname())
 
-			require.Equal(t, boltVars.BoltHostname.Get(), boltHttpRequest.Header.Get("Host"))
-			require.NotEmpty(t, boltHttpRequest.Header.Get("X-Amz-Date"))
-			require.NotEmpty(t, boltHttpRequest.Header.Get("Authorization"))
-			require.NotEmpty(t, boltHttpRequest.Header.Get("X-Bolt-Auth-Prefix"))
-			require.Len(t, boltHttpRequest.Header.Get("X-Bolt-Auth-Prefix"), 4)
-			require.Contains(t, boltHttpRequest.Header.Get("User-Agent"), boltVars.UserAgentPrefix.Get())
+			if tt.cfg.CloudPlatform == AwsCloudPlatform {
+				require.Equal(t, boltVars.BoltHostname.Get(), boltHttpRequest.Header.Get("Host"))
+				require.NotEmpty(t, boltHttpRequest.Header.Get("X-Amz-Date"))
+				require.NotEmpty(t, boltHttpRequest.Header.Get("Authorization"))
+				require.NotEmpty(t, boltHttpRequest.Header.Get("X-Bolt-Auth-Prefix"))
+				require.Len(t, boltHttpRequest.Header.Get("X-Bolt-Auth-Prefix"), 4)
+				require.Contains(t, boltHttpRequest.Header.Get("User-Agent"), boltVars.UserAgentPrefix.Get())
+			}
+
+			if tt.cfg.CloudPlatform == GcpCloudPlatform {
+				require.Equal(t, boltVars.BoltHostname.Get(), boltHttpRequest.Header.Get("Host"))
+				require.Contains(t, boltHttpRequest.Header.Get("User-Agent"), boltVars.UserAgentPrefix.Get())
+			}
 
 			passthrough := boltHttpRequest.Header.Get("X-Bolt-Passthrough-Read")
 			if !tt.cfg.Passthrough {
@@ -81,45 +100,66 @@ func TestBoltRequestFailover(t *testing.T) {
 				return httpmock.NewStringResponse(500, "SERVER ERROR"), fmt.Errorf("s3 error")
 			})
 	}
-
 	httpmock.RegisterResponder("GET", "https://bolt.s3.us-west-2.amazonaws.com/test.granica.ai123456",
-
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(200, "OK"), nil
 		})
+	httpmock.RegisterResponder("GET", "https://storage.googleapis.com/test.granica.ai123456",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "OK"), nil
+		})
+	httpmock.RegisterResponder("POST", "https://oauth2.googleapis.com/token",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(200, "{\"token_type\":\"bearer\",\"access_token\":\"AAAA%2FAAA%3DAAAAAAAAxxxxxx\"}"), nil
+		})
 
-	ctx := context.Background()
-	logger := zaptest.NewLogger(t)
-	SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
+	testCases := []struct {
+		name       string
+		cfg        Config
+		httpMethod string
+	}{
+		{name: "AwsFailover", cfg: Config{CloudPlatform: AwsCloudPlatform, Failover: false}, httpMethod: http.MethodGet},
+		{name: "GcpFailover", cfg: Config{CloudPlatform: GcpCloudPlatform, Failover: false}, httpMethod: http.MethodGet},
+	}
+	for _, tt := range testCases {
+		ctx := context.Background()
+		logger := zaptest.NewLogger(t)
+		SetupQuickSilverMock(t, ctx, true, make(map[string]interface{}), true, logger)
+		br, err := NewBoltRouter(ctx, logger, tt.cfg)
+		require.NoError(t, err)
+		require.NoError(t, br.RefreshBoltInfo(ctx))
+		overrideCrunchTrafficPct(br, "100")
 
-	br, err := NewBoltRouter(ctx, logger, Config{CloudPlatform: AwsCloudPlatform, Failover: false})
-	require.NoError(t, err)
-	require.NoError(t, br.RefreshBoltInfo(ctx))
-	overrideCrunchTrafficPct(br, "100")
+		body := strings.NewReader(randomdata.Paragraph())
+		req, err := http.NewRequest(http.MethodGet, "test.granica.ai123456", body)
+		require.NoError(t, err)
 
-	body := strings.NewReader(randomdata.Paragraph())
-	req, err := http.NewRequest(http.MethodGet, "test.granica.ai123456", body)
-	req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
-	require.NoError(t, err)
+		if tt.cfg.CloudPlatform == AwsCloudPlatform {
+			req.Header.Set("Authorization", "AWS4-HMAC-SHA256 Credential=AKIA3Y7DLM2EYWSYCN5P/20230511/us-west-2/s3/aws4_request, SignedHeaders=accept-encoding;amz-sdk-invocation-id;amz-sdk-request;host;x-amz-content-sha256;x-amz-date, Signature=6447287d46d333a010e224191d64c31b9738cc37886aadb7753a0a579a30edc6")
+		}
+		if tt.cfg.CloudPlatform == GcpCloudPlatform {
+			req.Header.Set("Authorization", "Bearer ya29.c.b0Aaekm1J-kvFPrZl9fpH2Yw")
+		}
 
-	boltReq, err := br.NewBoltRequest(ctx, logger, req)
-	require.NoError(t, err)
-	require.NotNil(t, boltReq)
-	_, failover, _, err := br.DoRequest(logger, boltReq)
+		boltReq, err := br.NewBoltRequest(ctx, logger, req)
+		require.NoError(t, err)
+		require.NotNil(t, boltReq)
+		_, failover, _, err := br.DoRequest(logger, boltReq)
 
-	require.Error(t, err, failover)
-	require.False(t, failover, err)
+		require.Error(t, err, failover)
+		require.False(t, failover, err)
 
-	br.config.Failover = true
-	boltReq, err = br.NewBoltRequest(ctx, logger, req)
-	require.NoError(t, err)
-	require.NotNil(t, boltReq)
+		br.config.Failover = true
+		boltReq, err = br.NewBoltRequest(ctx, logger, req)
+		require.NoError(t, err)
+		require.NotNil(t, boltReq)
 
-	_, failover, analytics, err := br.DoRequest(logger, boltReq)
-	// failover is enabled, so we should get a successful response by failing over to s3
-	require.NoError(t, err)
-	require.True(t, failover, err)
-	require.NotZero(t, analytics.AwsRequestResponseStatusCode)
+		_, failover, analytics, err := br.DoRequest(logger, boltReq)
+		// failover is enabled, so we should get a successful response by failing over to s3
+		require.NoError(t, err)
+		require.True(t, failover, err)
+		require.NotZero(t, analytics.AwsRequestResponseStatusCode)
+	}
 }
 
 // function to test panic handling behavior in BoltRouter.DoRequest
