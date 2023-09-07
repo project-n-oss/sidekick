@@ -146,6 +146,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		BoltURL.Path = "/" + BoltURL.Path
 		BoltURL.RawQuery = req.URL.RawQuery
 		req.URL = BoltURL
+		req.Header.Set("Host", br.boltVars.BoltHostname.Get())
 		req.Host = br.boltVars.BoltHostname.Get()
 
 		req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
