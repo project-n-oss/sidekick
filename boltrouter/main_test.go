@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/mock-service-account.json")
 
 	// Mock Google Service Account data
-	data := map[string]interface{}{
+	mockGcpSaData := map[string]interface{}{
 		"type":                        "service_account",
 		"project_id":                  "mock-project-id",
 		"private_key_id":              "mock-private-key-id",
@@ -43,13 +43,13 @@ func TestMain(m *testing.M) {
 	}
 
 	// Convert the map to JSON
-	jsonData, err := json.MarshalIndent(data, "", "  ")
+	jsonMockGcpSaData, err := json.MarshalIndent(mockGcpSaData, "", "  ")
 	if err != nil {
 		fmt.Println("Error marshaling JSON:", err)
 		return
 	}
 	// Write the JSON data to a file
-	err = ioutil.WriteFile("/tmp/mock-service-account.json", jsonData, os.ModePerm)
+	err = ioutil.WriteFile("/tmp/mock-service-account.json", jsonMockGcpSaData, os.ModePerm)
 	if err != nil {
 		fmt.Println("Error writing to file:", err)
 		return
