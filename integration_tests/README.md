@@ -1,8 +1,13 @@
 # Integration Tests
 
-This directory contains a suite of integration tests for sidekick and bolt.
+This directory contains a suite of integration tests for sidekick and bolt. Integration tests can be run againt Sidekick running in AWS or GCP mode.
 
 ## Getting Started
+
+1. [AWS Setup Instructions](#aws)
+2. [GCP Setup Instructions](#gcp)
+
+<a name="aws"></a>
 
 ### Login into aws account
 
@@ -20,7 +25,7 @@ Follow the [tutorial](https://docs.google.com/document/d/1SK3gg7th5UbXQpzzhAgvms
 
 ssh into the instance and clone the [sidekick repository](https://github.com/project-n-oss/sidekick)
 
-### Create a test buckets
+### Create test buckets
 
 You need to create two buckets for the tests:
 
@@ -71,6 +76,40 @@ aws s3 cp ./test_data/ s3://{YOUR_FAILOVER_BUCKET}/ --recursive
 aws s3 cp ./test_data/ s3://{YOUR_FAILOVER_BUCKET_DIFF_REGION}/ --recursive
 ```
 
+<a name="gcp"></a>
+
+### Create a test cluster
+
+Follow the GCP [instructions](https://granica.ai/docs/installation-guide#start-pilot) to create a test GCP cluster. The GCP cluster must be private and have read replicas enabled.
+
+### Create a test Google Compute Engine instance
+
+Create a Google Compute Engine instance in the default VPC subnet matching the Crunch region or in a new peered VPC in the same region as Crunch.
+
+### Create an IAM role with full storage permissions
+
+Go to the Google Cloud IAM console and create an IAM role with `storage.*` permissions.
+
+### Create a Service Account and associated key
+
+Go to the Google Cloud IAM console and create a Service Account. Give this service account access to the IAM role created in the previous steps.
+
+Create a JSON key for this service account and download it to your machine.
+
+### Create test buckets
+
+You need to create two buckets for the tests:
+
+- A bucket that will be crunched by bolt
+- A "failover" bucket that will not be touched by bolt, this will force sidekick to failover back to aws calls.
+- A "failover" bucket in a different region, this is useful to make sure aws failover works in different regions.
+
+:warning: Make sure you select the same region as the one your cluster is running in.
+
+1. Go to the Google Cloud console in the same project as your cluster
+2. Create a bucket for the tests. The bucket name should be something like: `sidekick-tests-km` where `km` is your initials.
+3. Create anoter "failover" bucket for the tests. The bucket name should be something like: `sidekick-failover-tests-km` where rvh is your initials.
+
 ### Crunch Bucket
 
 ssh into your cluster's admin server and crunch your new bucket:
@@ -105,16 +144,17 @@ BUCKET=<YOUR_BUCKET>
 FAILOVER_BUCKET=<YOUR_FAILOVER_BUCKET>
 FAILOVER_BUCKET_DIFF_REGION=<YOUR_FAILOVER_BUCKET_DIFF_REGION>
 GRANICA_CUSTOM_DOMAIN=<YOUR_CLUSTER_DOMAIN>
+GRANICA_REGION=<YOUR_CRUNCH_CLUSTER_REGION>
 ```
 
 You can run test from this directory using the following command:
 
 ```bash
-go test -bi -v
+go test -bi -v --cloud-platform <aws|gcp>
 ```
 
 In order to specify a specifc test or series of tests you want to run, you can use the `-run=` arg like so:
 
 ```bash
-go test -bi -v -run=TestAws/TestGetObject
+go test -bi -v --cloud-platform <aws|gcp> -run=TestAws/TestGetObject
 ```
