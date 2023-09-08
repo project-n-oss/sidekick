@@ -45,7 +45,7 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolP("failover", "f", false, "Enables aws request failover if bolt request fails.")
 	cmd.Flags().String("crunch-traffic-split", "objectkeyhash", "Specify the crunch traffic split strategy: random or objectkeyhash")
 	cmd.Flags().StringP("cloud-platform", "", "", "Cloud platform to use. one of: aws, gcp")
-	cmd.Flags().BoolP("gcp-replicas", "", false, "Whether to query Quicksilver for replica IPs in GCP mode")
+	cmd.Flags().BoolP("gcp-replicas", "", false, "Whether to query Quicksilver for replica IPs in GCP mode or use the public Bolt endpoint.")
 }
 
 var serveCmd = &cobra.Command{
