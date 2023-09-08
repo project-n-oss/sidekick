@@ -51,10 +51,11 @@ func TestSelectBoltEndpoint(t *testing.T) {
 	}{
 		{name: "NonLocalGet", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodGet, expected: mainReadEndpoints},
 		{name: "NonLocalHead", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodHead, expected: mainReadEndpoints},
-
 		{name: "NonLocalPut", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPut, expected: mainWriteEndpoints},
 		{name: "NonLocalPost", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodPost, expected: mainWriteEndpoints},
 		{name: "NonLocalDelete", cfg: Config{Local: false, CloudPlatform: AwsCloudPlatform}, httpMethod: http.MethodDelete, expected: mainWriteEndpoints},
+		{name: "NonLocalGcpNoReplicas", cfg: Config{Local: false, CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: false}, httpMethod: http.MethodGet, expected: singleEndpoint},
+		{name: "NonLocalGcpReplicas", cfg: Config{Local: false, CloudPlatform: GcpCloudPlatform, GcpReplicasEnabled: true}, httpMethod: http.MethodGet, expected: mainReadEndpoints},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {

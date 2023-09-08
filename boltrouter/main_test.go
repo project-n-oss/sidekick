@@ -64,6 +64,7 @@ var (
 	failoverWriteEndpoints = []interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
 	mainReadEndpoints      = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
 	failoverReadEndpoints  = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
+	singleEndpoint         = []interface{}{"bolt.us-east-1.test.bolt.projectn.co"}
 
 	defaultClientBehaviorParams = map[string]interface{}{
 		"cleaner_on":             "true",
