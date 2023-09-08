@@ -6,6 +6,7 @@ This directory contains a suite of integration tests for sidekick and bolt. Inte
 
 1. [AWS Setup Instructions](#aws)
 2. [GCP Setup Instructions](#gcp)
+3. [Running Integration Tests](#testing)
 
 <a name="aws"></a>
 
@@ -113,6 +114,10 @@ You need to create two buckets for the tests:
 1. Go to the Google Cloud console in the same project as your cluster
 2. Create a bucket for the tests. The bucket name should be something like: `sidekick-tests-km` where `km` is your initials.
 3. Create anoter "failover" bucket for the tests. The bucket name should be something like: `sidekick-failover-tests-km` where rvh is your initials.
+
+<a name="testing"></a>
+
+## Running Integration Tests
 
 ### Crunch Bucket
 
