@@ -18,7 +18,9 @@ import (
 	"github.com/project-n-oss/sidekick/boltrouter"
 	"github.com/project-n-oss/sidekick/cmd"
 	"github.com/project-n-oss/sidekick/integration_tests/aws"
-	"github.com/project-n-oss/sidekick/integration_tests/aws/utils"
+	awsUtils "github.com/project-n-oss/sidekick/integration_tests/aws/utils"
+	"github.com/project-n-oss/sidekick/integration_tests/gcp"
+	gcpUtils "github.com/project-n-oss/sidekick/integration_tests/gcp/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
@@ -39,6 +41,8 @@ func TestMain(m *testing.M) {
 }
 
 var boltIntegration = flag.Bool("bi", false, "run bolt integration test suite")
+var cloudPlatform = flag.String("cloud-platform", "", "cloud platform to run integration tests against")
+var gcpReplicas = flag.Bool("gcp-replicas", false, "Whether to query Quicksilver for replica IPs in GCP mode or use the public Bolt endpoint.")
 var sidekickURL = flag.String("sidekick-url", "", "the url sidekick is listening on if ran seperately. If not set, sidekick will be started in a goroutine")
 var port = flag.Int("p", cmd.DEFAULT_PORT, "the port for sidekick to listen on")
 
@@ -47,14 +51,41 @@ func TestAws(t *testing.T) {
 		t.Skip("skipping bolt integration test suite")
 	}
 
-	ctx := context.Background()
-	if *sidekickURL == "" {
-		SetupSidekick(t, ctx)
-	} else {
-		utils.SidekickURL = *sidekickURL
+	if *cloudPlatform == "" {
+		t.Error("cloud-platform flag must be set to one of [aws, gcp]")
 	}
 
-	suite.Run(t, new(aws.AwsSuite))
+	if *cloudPlatform == "aws" {
+		ctx := context.Background()
+		if *sidekickURL == "" {
+			SetupSidekick(t, ctx)
+		} else {
+			awsUtils.SidekickURL = *sidekickURL
+		}
+
+		suite.Run(t, new(aws.AwsSuite))
+	}
+}
+
+func TestGcp(t *testing.T) {
+	if !*boltIntegration {
+		t.Skip("skipping bolt integration test suite")
+	}
+
+	if *cloudPlatform == "" {
+		t.Error("cloud-platform flag must be set to one of [aws, gcp]")
+	}
+
+	if *cloudPlatform == "gcp" {
+		ctx := context.Background()
+		if *sidekickURL == "" {
+			SetupSidekick(t, ctx)
+		} else {
+			gcpUtils.SidekickURL = *sidekickURL
+		}
+
+		suite.Run(t, new(gcp.GcpSuite))
+	}
 }
 
 func SetupSidekick(t *testing.T, ctx context.Context) {
@@ -71,8 +102,10 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 
 	cfg := api.Config{
 		BoltRouter: boltrouter.Config{
-			Passthrough: false,
-			Failover:    true,
+			Passthrough:        false,
+			Failover:           true,
+			CloudPlatform:      boltrouter.CloudPlatformStrToTypeMap[*cloudPlatform],
+			GcpReplicasEnabled: *gcpReplicas,
 		},
 	}
 
@@ -84,7 +117,8 @@ func SetupSidekick(t *testing.T, ctx context.Context) {
 	addr := ":" + strconv.Itoa(*port)
 	listener, err := listenCfg.Listen(ctx, "tcp", addr)
 	require.NoError(t, err)
-	utils.SidekickURL = "http://localhost" + addr
+	awsUtils.SidekickURL = "http://localhost" + addr
+	gcpUtils.SidekickURL = "http://localhost" + addr
 
 	go func() {
 		<-ctx.Done()
