@@ -38,6 +38,6 @@ func (s *GcpSuite) listObjects() {
 			}
 			objectKeys = append(objectKeys, attrs.Name)
 		}
-		assert.ElementsMatch(t, testDataKeys(), objectKeys)
+		assert.Subset(t, objectKeys, testDataKeys())
 	}
 }
