@@ -5,6 +5,8 @@ In order to use Sidekick with your gcp sdk, you need to update the GCS client en
 Here are some examples of how to use various gcp sdks to work with sidekick:
 
 1. [gsutil](#gsutil)
+2. [go](#go)
+3. [nodejs](#nodejs)
 
 <a name="gsutil"></a>
 
@@ -22,11 +24,9 @@ gsutil  -o Credentials:gs_json_host=127.0.0.1 -o "Credentials:gs_json_port=7076"
 gsutil  -o Credentials:gs_json_host=127.0.0.1 -o "Credentials:gs_json_port=7076" -o "Boto:https_validate_certificates=False" cp <LOCAL_FILE_NAME> gs://<YOUR_BUCKET>/<YOUR_OBJECT_KEY>
 ```
 
-2. [golang](#golang)
+<a name="go"></a>
 
-<a name="golang"></a>
-
-## golang
+## Go
 
 ```go
 package main
@@ -110,4 +110,12 @@ func putObject(ctx context.Context, client *storage.Client, bucket string, key s
 	return nil
 }
 
+```
+
+<a name="nodejs"></a>
+
+## Node.js
+
+```js
+TODO;
 ```
