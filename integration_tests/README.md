@@ -9,6 +9,8 @@ This directory contains a suite of integration tests for sidekick and bolt. Inte
 
 <a name="aws"></a>
 
+## AWS Setup Instructions
+
 ### Login into aws account
 
 Choose a AWS account to create a test cluster, bucket and run the tests.
@@ -77,6 +79,8 @@ aws s3 cp ./test_data/ s3://{YOUR_FAILOVER_BUCKET_DIFF_REGION}/ --recursive
 ```
 
 <a name="gcp"></a>
+
+## GCP Setup Instructions
 
 ### Create a test cluster
 
