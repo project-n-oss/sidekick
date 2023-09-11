@@ -118,7 +118,75 @@ func putObject(ctx context.Context, client *storage.Client, bucket string, key s
 ## Node.js
 
 ```js
-TODO;
+const { Storage } = require("@google-cloud/storage");
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+const bucketName = "<YOUR_BUCKET_NAME>";
+const filename = "<YOUR_FILE_NAME>";
+
+async function run() {
+  const client = new Storage({
+    apiEndpoint: "http://127.0.0.1:7075",
+    useAuthWithCustomEndpoint: true, // This flag needs to be set if @google-cloud/storage version is >= 5.15.0
+  });
+
+  await listBuckets(client);
+  await listObjects(client, bucketName);
+  await uploadFile(client, bucketName, filename);
+  await downloadFile(client, bucketName, filename);
+}
+
+async function listBuckets(client) {
+  const [buckets] = await client.getBuckets();
+
+  console.log("Buckets:");
+  buckets.forEach((bucket) => {
+    console.log(bucket.name);
+  });
+}
+
+async function listObjects(client, bucketName) {
+  const [objects] = await client.bucket(bucketName).getFiles();
+
+  console.log("Objects:");
+  objects.forEach((object) => {
+    console.log(object.name);
+  });
+}
+
+async function downloadFile(client, bucketName, filename) {
+  const options = {
+    destination: `/tmp/${filename}`,
+  };
+
+  try {
+    let res = await client.bucket(bucketName).file(filename).download(options);
+  } catch (err) {
+    console.error(`Error downloading file ${filename}: ${err}`);
+  }
+
+  console.log(`gs://${bucketName}/${filename} downloaded to /tmp/${filename}.`);
+}
+
+async function uploadFile(client, bucketName, filename) {
+  let r = (Math.random() + 1).toString(36).substring(7);
+  let destination_filename = filename + "-" + r;
+  const bucket = client.bucket(bucketName);
+  bucket.upload(
+    `<PATH_TO_YOUR_FILE_TO_UPLOAD>`,
+    {
+      destination: destination_filename,
+    },
+    function (err, file, apiResponse) {
+      console.log("apiResponse", apiResponse);
+      if (err) {
+        console.error(`Error uploading file ${destination_filename}: ${err}`);
+      } else {
+        console.log(`${filename} uploaded to ${bucketName}.`);
+      }
+    }
+  );
+}
 ```
 
 <a name="python"></a>
