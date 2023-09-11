@@ -7,6 +7,7 @@ Here are some examples of how to use various gcp sdks to work with sidekick:
 1. [gsutil](#gsutil)
 2. [go](#go)
 3. [nodejs](#nodejs)
+4. [python](#python)
 
 <a name="gsutil"></a>
 
@@ -118,4 +119,64 @@ func putObject(ctx context.Context, client *storage.Client, bucket string, key s
 
 ```js
 TODO;
+```
+
+<a name="python"></a>
+
+## Python
+
+```python
+import uuid
+from google.cloud import storage
+from google.api_core.client_options import ClientOptions
+
+BUCKET = "<YOUR_BUCKET_NAME>";
+
+def main():
+    options = ClientOptions(
+        api_endpoint="http://127.0.0.1:7075",
+    )
+    client = storage.Client(client_options=options)
+
+    list_buckets(client)
+    blobs = list_objects(client, BUCKET)
+
+    get_object(client, BUCKET, "<YOUR_OBJECT_NAME>")
+
+    uid = uuid.uuid4()
+    upload_object(client, BUCKET, f"{uid}.txt", f"Hello World {uid}")
+
+    list_objects(client, BUCKET)
+    get_object(client, BUCKET, f"{uid}.txt")
+
+def list_buckets(client):
+    buckets = client.list_buckets()
+    for bucket in buckets:
+        print(bucket.name)
+
+def list_objects(client, bucket_name):
+    blobs = client.list_blobs(bucket_name)
+    print(f"Blobs in {bucket_name}:")
+
+    retval = []
+    for blob in blobs:
+        print(blob.name)
+        retval.append(blob)
+    return retval
+
+def get_object(client, bucket_name, blob_name):
+    blob = client.bucket(bucket_name).blob(blob_name)
+    blob_string = blob.download_as_string()
+    print(f"{blob_name} downloaded from {bucket_name} with contents: {blob_string}")
+
+def upload_object(client, bucket, destination_blob_name, data):
+    blob = client.bucket(bucket).blob(destination_blob_name)
+    blob.upload_from_string(data)
+    print(
+        f"{destination_blob_name} with contents {data} uploaded to {bucket}."
+    )
+
+
+if __name__ == "__main__":
+    main()
 ```
