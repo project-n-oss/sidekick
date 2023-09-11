@@ -101,7 +101,7 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 		body := boltrouter.CopyRespBody(resp)
 		b, _ := io.ReadAll(body)
 		body.Close()
-		sess.Logger().Warn("Status code is not 2xx in s3 response", zap.String("body", string(b)))
+		sess.Logger().Debug("Status code is not 2xx in s3 response", zap.String("body", string(b)))
 	}
 
 	w.WriteHeader(resp.StatusCode)
