@@ -7,7 +7,6 @@ import (
 	"hash/crc32"
 	"io"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"time"
 
@@ -139,8 +138,6 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 			return nil, err
 		}
 
-		logger.Debug("gcp: selected bolt endpoint", zap.String("boltEndpoint", BoltURL.String()), zap.String("method", req.Method), zap.String("path", req.URL.Path))
-
 		req.RequestURI = ""
 		BoltURL = BoltURL.JoinPath(req.URL.Path)
 		BoltURL.Path = "/" + BoltURL.Path
@@ -154,9 +151,6 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		if !br.config.Passthrough {
 			req.Header.Set("X-Bolt-Passthrough-Read", "disable")
 		}
-
-		dump, _ := httputil.DumpRequest(req, true)
-		logger.Debug("bolt request", zap.Any("boltRequest", string(dump)))
 
 		gcpRequest := req.Clone(ctx)
 		gcsUrl, _ := url.Parse("https://storage.googleapis.com")
