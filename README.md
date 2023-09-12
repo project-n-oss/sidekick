@@ -87,24 +87,32 @@ docker build -t sidekick .
 
 or pull one from the [containers page](https://github.com/project-n-oss/sidekick/pkgs/container/sidekick)
 
-#### Running on an EC2 Instance using instance profile credentials
+#### Running on an AWS EC2 Instance using instance profile credentials / Google Compute Engine instance using attached IAM service account
 
 ```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve --cloud-platform <aws|gcp>
 ```
 
 #### Running on any machine using environment variable credentials
 
+##### AWS
+
 ```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve -v
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve --cloud-platform aws
 ```
 
 If using temporary credentials, add `--env AWS_SESSION_TOKEN=<YOUR_SESSION_TOKEN>` to the command above. However, this is not recommended since credentials will expire. Instead, consider using the credentials profiles file with role assumption directives.
 
-#### Running on any machine using the credential profiles file
+##### GCP
 
 ```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v <PATH_TO_SERVICE_ACCOUNT_KEY_FILE>:<PATH_TO_MOUNTED_SERVICE_ACCOUNT_KEY_FILE> --env GOOGLE_APPLICATION_CREDENTIALS=<PATH_TO_MOUNTED_SERVICE_ACCOUNT_KEY_FILE> <sidekick-image> serve --cloud-platform gcp
+```
+
+#### Running on any machine using the AWS credential profiles file
+
+```bash
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve --cloud-platform aws
 ```
 
 By default, the `default` profile from the credentials file will be used. If you want to use another profile from the credentials file add `--env AWS_DEFAULT_PROFILE=<YOUR_PROFILE>` to the command above.
