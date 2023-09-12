@@ -138,15 +138,15 @@ wget https://github.com/project-n-oss/sidekick/releases/${release}/download/side
 
 ## Resource Usage
 
-This section showcases the Sidekick resource usage relative to a steady request rate.
+This section showcases the Sidekick resource usage relative to a steady request rate from client applications.
 
 | Request Rate (reqs/second) | CPU usage | Memory usage |
 | -------------------------- | --------- | ------------ |
+| ?                          | ?         | ?            |
 | ?                          | ?         | ?MiB         |
-| ?                          | ?         | ?MiB         |
-| ?                          | ?         | ?MiB         |
+| 1000                       | 0.5       | 3031.04 MiB  |
 
-This benchmark was performed on a 4 vCPU, 16 GiB memory VM.
+This benchmark was performed on a 4 vCPU, 16 GiB memory Google Cloud Engine VM w/ Sidekick running as a native process.
 
 ## Contributing
 
