@@ -33,7 +33,8 @@ Description=Sidekick service file
 
 [Service]
 Environment=GRANICA_CUSTOM_DOMAIN=$GRANICA_CUSTOM_DOMAIN
-ExecStart=$SIDEKICK_BIN serve -p 7075
+Environment=GRANICA_CLOUD_PLATFORM=$GRANICA_CLOUD_PLATFORM
+ExecStart=$SIDEKICK_BIN serve -p 7075 --cloud-platform $GRANICA_CLOUD_PLATFORM
 Restart=always
 
 [Install]
