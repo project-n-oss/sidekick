@@ -136,6 +136,18 @@ To download any release of our linux amd64 binary run:
 wget https://github.com/project-n-oss/sidekick/releases/${release}/download/sidekick-linux-amd64.tar.gz
 ```
 
+## Resource Usage
+
+This section showcases the Sidekick resource usage relative to a steady request rate.
+
+| Request Rate (reqs/second) | CPU usage | Memory usage |
+| -------------------------- | --------- | ------------ |
+| ?                          | ?         | ?MiB         |
+| ?                          | ?         | ?MiB         |
+| ?                          | ?         | ?MiB         |
+
+This benchmark was performed on a 4 vCPU, 16 GiB memory VM.
+
 ## Contributing
 
 ### Versioning
