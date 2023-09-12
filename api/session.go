@@ -73,7 +73,7 @@ func (a *Api) sessionMiddleware(handler http.Handler) http.HandlerFunc {
 				zap.String("host", host),
 				zap.String("path", path),
 			)
-			logger.Info(method + " " + path)
+			logger.Debug(method + " " + path)
 			if session.Logger().Level() == zap.DebugLevel {
 				dump, err := httputil.DumpRequest(r, true)
 				if err != nil {
