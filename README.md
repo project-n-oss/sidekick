@@ -1,6 +1,6 @@
 ![release](https://img.shields.io/github/v/release/project-n-oss/sidekick)
 
-![projectn-sidekick.png](projectn-sidekick.png)
+![projectn-sidekick.png](granica-sidekick.png)
 
 # Sidekick
 
@@ -33,9 +33,11 @@ Traffic splitting provides a mechanism to precisely control how traffic is distr
 Traffic splitting configuration is managed through the `client-behavior-params` ConfigMap in the Bolt (Crunch) Kubernetes cluster. This ConfigMap can be edited on your behalf by the Granica team or by you via `custom.vars` or directly editing the ConfigMap (the latter option is not recommended as it can cause state drift.) For further guidance on the traffic splitting configuration, reach out to the Granica team.
 
 ### Fallback on 404
+
 If sidekick can't find your object in Bolt, sidekick tries to find the object in S3. This happens transparently to the client, and it doesn't need any client retries.
 
 ### Failover
+
 Sidekick has a failover mechanism that comes into play when there are network failures or when Bolt returns 500s
 In these situations sidekick returns a 500 to the client, that may cause the client to retry. The retry request will make sidekick request Bolt again but a different endpoint. Eventually, either client will exhaust all retries to sidekick or sidekick will exhaust all replica endpoints. When one of these happens, the request has failed
 The above failover mechanism is recommended, but can be changed. Sidekick can instead failover to S3 transparently to the Client immediately on noticing a network failure or 500 error. This can be set with either by a command line argument or environment variable
