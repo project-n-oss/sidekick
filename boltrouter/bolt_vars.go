@@ -92,7 +92,8 @@ func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform CloudPla
 	ret.WriteOrderEndpoints.Set([]string{"main_write_endpoints", "failover_write_endpoints"})
 	ret.HttpReadMethodTypes.Set([]string{http.MethodGet, http.MethodHead}) // S3 operations get converted to one of the standard HTTP request methods https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html
 
-	if cloudPlatform == AwsCloudPlatform {
+	switch cloudPlatform {
+	case AwsCloudPlatform:
 		isEc2, err := isEc2Instance(ctx, logger)
 		if err != nil {
 			return nil, err
@@ -109,7 +110,7 @@ func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform CloudPla
 			return nil, err
 		}
 		ret.ZoneId.Set(awsZoneId)
-	} else if cloudPlatform == GcpCloudPlatform {
+	case GcpCloudPlatform:
 		isComputeEngine, err := isComputeEngineInstance(ctx, logger)
 		if err != nil {
 			return nil, err
@@ -126,6 +127,8 @@ func newBoltVars(ctx context.Context, logger *zap.Logger, cloudPlatform CloudPla
 			return nil, err
 		}
 		ret.ZoneId.Set(gcpZoneId)
+	default:
+		return nil, fmt.Errorf("unknown cloud platform: %s", CloudPlatformTypeToStrMap[cloudPlatform])
 	}
 
 	var boltCustomDomain string
