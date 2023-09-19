@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.35](https://github.com/project-n-oss/sidekick/compare/v0.1.34...v0.1.35) (2023-09-12)
+
+
+### Features
+
+* Change logging level from Info to Debug for reduced console noise ([#85](https://github.com/project-n-oss/sidekick/issues/85)) ([14bed8a](https://github.com/project-n-oss/sidekick/commit/14bed8afa07b769125a276f3206e357a981b9a38))
+* Update Sidekick logo with Granica ([#84](https://github.com/project-n-oss/sidekick/issues/84)) ([6bd3fcb](https://github.com/project-n-oss/sidekick/commit/6bd3fcb8651aba8a756ad48a7784651ed271ae32))
+
 ## [0.1.34](https://github.com/project-n-oss/sidekick/compare/v0.1.33...v0.1.34) (2023-08-23)
 
 
