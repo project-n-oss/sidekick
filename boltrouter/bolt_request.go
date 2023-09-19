@@ -345,11 +345,12 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 				logger.Error("bolt request failed", zap.Error(err))
 			}
 
-			if br.config.CloudPlatform == AwsCloudPlatform {
+			switch br.config.CloudPlatform {
+			case AwsCloudPlatform:
 				return br.doAwsRequest(logger, boltReq, true, analytics)
-			} else if br.config.CloudPlatform == GcpCloudPlatform {
+			case GcpCloudPlatform:
 				return br.doGcpRequest(logger, boltReq, true, analytics)
-			} else {
+			default:
 				return nil, false, fmt.Errorf("unknown cloud platform")
 			}
 		}
