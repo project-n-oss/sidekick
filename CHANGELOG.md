@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/project-n-oss/sidekick/compare/v0.1.35...v0.2.0) (2023-09-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **KRY-644:** GCP support ([#83](https://github.com/project-n-oss/sidekick/issues/83))
+
+### Features
+
+* **KRY-644:** GCP support ([#83](https://github.com/project-n-oss/sidekick/issues/83)) ([60553fe](https://github.com/project-n-oss/sidekick/commit/60553fe311a57d04e0bbe33edf88926711822088))
+
 ## [0.1.35](https://github.com/project-n-oss/sidekick/compare/v0.1.34...v0.1.35) (2023-09-12)
 
 
