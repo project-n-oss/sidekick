@@ -15,9 +15,12 @@ import (
 	"go.uber.org/zap"
 )
 
+type ErrUnknownCloudPlatform error
+
 type BoltRequest struct {
 	Bolt    *http.Request
 	Aws     *http.Request
+	Gcp     *http.Request
 	crcHash uint32
 }
 
@@ -39,10 +42,23 @@ var (
 	ErrPanicDuringAwsRequest  = errors.New("panic occurred during AWS request")
 )
 
-// NewBoltRequest transforms the passed in intercepted aws http.Request and returns
+// NewBoltRequest transforms the passed in intercepted aws or gcp http.Request and returns
 // a new http.Request Ready to be sent to Bolt.
 // This new http.Request is routed to the correct Bolt endpoint and signed correctly.
 func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
+	var boltRequest *BoltRequest
+	var err error
+
+	switch br.config.CloudPlatform {
+	case AwsCloudPlatform:
+		boltRequest, err = br.newBoltRequestForAws(ctx, logger, req)
+	case GcpCloudPlatform:
+		boltRequest, err = br.newBoltRequestForGcp(ctx, logger, req)
+	}
+	return boltRequest, err
+}
+
+func (br *BoltRouter) newBoltRequestForAws(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
 	sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
@@ -120,11 +136,52 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
 	}
 
-	return &BoltRequest{
+	boltRequest := &BoltRequest{
 		Bolt:    req.Clone(ctx),
 		Aws:     awsRequest.Clone(ctx),
+		Gcp:     nil,
 		crcHash: crcHash,
-	}, nil
+	}
+	return boltRequest, nil
+}
+
+func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
+	BoltURL, err := br.SelectBoltEndpoint(req.Method)
+	if err != nil {
+		return nil, err
+	}
+
+	req.RequestURI = ""
+	BoltURL = BoltURL.JoinPath(req.URL.Path)
+	BoltURL.Path = "/" + BoltURL.Path
+	BoltURL.RawQuery = req.URL.RawQuery
+	req.URL = BoltURL
+	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
+	req.Host = br.boltVars.BoltHostname.Get()
+
+	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
+	req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
+	if !br.config.Passthrough {
+		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
+	}
+
+	gcpRequest := req.Clone(ctx)
+	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
+	gcsUrl = gcsUrl.JoinPath(req.URL.Path)
+	gcsUrl.Path = "/" + gcsUrl.Path
+	gcsUrl.RawQuery = req.URL.RawQuery
+	gcpRequest.URL = gcsUrl
+	gcpRequest.Host = "storage.googleapis.com"
+
+	CopyReqBody(req, gcpRequest)
+
+	boltRequest := &BoltRequest{
+		Bolt:    req.Clone(ctx),
+		Aws:     nil,
+		Gcp:     gcpRequest.Clone(ctx),
+		crcHash: 0,
+	}
+	return boltRequest, nil
 }
 
 // SHA value for empty payload. As head object request is with empty payload
@@ -197,12 +254,11 @@ func newFailoverAwsRequest(ctx context.Context, req *http.Request, awsCred aws.C
 // DoRequest will return a BoltRequestAnalytics struct with analytics about the request.
 func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http.Response, bool, *BoltRequestAnalytics, error) {
 	initialRequestTarget, reason, err := br.SelectInitialRequestTarget(boltReq)
-
 	boltRequestAnalytics := &BoltRequestAnalytics{
 		ObjectKey:                     boltReq.Bolt.URL.Path,
 		RequestBodySize:               uint32(boltReq.Bolt.ContentLength),
 		Method:                        boltReq.Bolt.Method,
-		InitialRequestTarget:          initialRequestTarget,
+		InitialRequestTarget:          InitialRequestTargetMap[initialRequestTarget],
 		InitialRequestTargetReason:    reason,
 		BoltRequestUrl:                boltReq.Bolt.URL.Hostname(),
 		BoltRequestDuration:           time.Duration(0),
@@ -215,21 +271,36 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 		return nil, false, boltRequestAnalytics, err
 	}
 
-	logger.Debug("initial request target", zap.String("target", initialRequestTarget), zap.String("reason", reason))
+	logger.Debug("initial request target", zap.String("target", InitialRequestTargetMap[initialRequestTarget]), zap.String("reason", reason))
 
-	if initialRequestTarget == "bolt" {
+	if initialRequestTarget == InitialRequestTargetBolt {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
 		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
 		// handled inside the function as needed, and we can just return
 		// If the err is of type ErrPanicDuringBoltRequest then we need to failover to AWS manually since .doBoltRequest
 		// halted execution before it could failover
 		if err != nil && errors.Is(err, ErrPanicDuringBoltRequest) && br.config.Failover {
-			logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
-			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
+			switch br.config.CloudPlatform {
+			case AwsCloudPlatform:
+				logger.Error("panic occurred during Bolt request, failing over to AWS", zap.Error(err))
+				resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, true, boltRequestAnalytics)
+			case GcpCloudPlatform:
+				logger.Error("panic occurred during Bolt request, failing over to GCP", zap.Error(err))
+				resp, isFailoverRequest, err = br.doGcpRequest(logger, boltReq, true, boltRequestAnalytics)
+			}
 		}
 		return resp, isFailoverRequest, boltRequestAnalytics, err
 	} else {
-		resp, isFailoverRequest, err := br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
+		var resp *http.Response
+		var isFailoverRequest bool
+		var err error
+
+		switch br.config.CloudPlatform {
+		case AwsCloudPlatform:
+			resp, isFailoverRequest, err = br.doAwsRequest(logger, boltReq, false, boltRequestAnalytics)
+		case GcpCloudPlatform:
+			resp, isFailoverRequest, err = br.doGcpRequest(logger, boltReq, false, boltRequestAnalytics)
+		}
 		return resp, isFailoverRequest, boltRequestAnalytics, err
 	}
 }
@@ -289,7 +360,14 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 				logger.Error("bolt request failed", zap.Error(err))
 			}
 
-			return br.doAwsRequest(logger, boltReq, true, analytics)
+			switch br.config.CloudPlatform {
+			case AwsCloudPlatform:
+				return br.doAwsRequest(logger, boltReq, true, analytics)
+			case GcpCloudPlatform:
+				return br.doGcpRequest(logger, boltReq, true, analytics)
+			default:
+				return nil, false, fmt.Errorf("unknown cloud platform")
+			}
 		}
 	}
 
@@ -337,6 +415,47 @@ func (br *BoltRouter) doAwsRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 			logger.Info("aws request failed, falling back to bolt on 404")
 
 			return br.doBoltRequest(logger, boltReq, true, analytics)
+		}
+	}
+
+	if resp != nil {
+		analytics.AwsRequestResponseStatusCode = statusCode
+	}
+	return resp, isFailover, err
+}
+
+func (br *BoltRouter) doGcpRequest(logger *zap.Logger, boltReq *BoltRequest, isFailover bool, analytics *BoltRequestAnalytics) (resp *http.Response, isFailoverRequest bool, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("panic occurred during GCP request", zap.Any("panic", r))
+			resp = nil
+			err = ErrPanicDuringAwsRequest
+		}
+	}()
+
+	beginTime := time.Now()
+	resp, err = br.gcpHttpClient.Do(boltReq.Gcp)
+	duration := time.Since(beginTime)
+	analytics.AwsRequestDuration = duration
+
+	statusCode := -1
+	if resp != nil {
+		statusCode = resp.StatusCode
+	}
+
+	logger.Debug("gcp resp",
+		zap.Any("code", statusCode),
+		zap.Bool("failover", br.config.Failover),
+		zap.Bool("isFailover", isFailover),
+		zap.Error(err))
+
+	if !isFailover {
+		// Fallback on 404 errors
+		// For other AWS errors, we will return that error back to client to retry as necessary.
+		if !br.config.NoFallback404 && resp != nil && statusCode == 404 {
+			logger.Info("gcp request failed, falling back to bolt on 404")
+
+			return br.doGcpRequest(logger, boltReq, true, analytics)
 		}
 	}
 

@@ -2,15 +2,35 @@ package boltrouter
 
 type CrunchTrafficSplitType string
 
+type CloudPlatformType uint8
+
 const (
 	CrunchTrafficSplitByObjectKeyHash CrunchTrafficSplitType = "objectkeyhash"
 	CrunchTrafficSplitByRandomRequest CrunchTrafficSplitType = "random"
+	UndefinedCloudPlatform            CloudPlatformType      = 0
+	AwsCloudPlatform                  CloudPlatformType      = 1
+	GcpCloudPlatform                  CloudPlatformType      = 2
+)
+
+var (
+	CloudPlatformStrToTypeMap map[string]CloudPlatformType = map[string]CloudPlatformType{
+		"aws": AwsCloudPlatform,
+		"gcp": GcpCloudPlatform,
+	}
+	CloudPlatformTypeToStrMap map[CloudPlatformType]string = map[CloudPlatformType]string{
+		UndefinedCloudPlatform: "undefined",
+		AwsCloudPlatform:       "aws",
+		GcpCloudPlatform:       "gcp",
+	}
 )
 
 type Config struct {
 	// If set, boltrouter will run in local mode.
 	// For example, it will not query quicksilver to get endpoints.
 	Local bool `yaml:"Local"`
+
+	// Set the cloud platform that Crunch is running in.
+	CloudPlatform CloudPlatformType `yaml:"CloudPlatform"`
 
 	// Set the BoltEndpointOverride while running from local mode.
 	BoltEndpointOverride string `yaml:"BoltEndpointOverride"`
@@ -30,13 +50,18 @@ type Config struct {
 	// 2. Hash Based Crunch Traffic Split
 	// Random approach could cause data inconsistency if the requests are mix of GET and PUT.
 	CrunchTrafficSplit CrunchTrafficSplitType `yaml:"CrunchTrafficSplit"`
+
+	// Whether a GCP deployment is single endpoint or we have replicas to take advantage of.
+	GcpReplicasEnabled bool `yaml:"GcpReplicasEnabled"`
 }
 
 var DefaultConfig = Config{
 	Local:                false,
+	CloudPlatform:        UndefinedCloudPlatform,
 	Passthrough:          false,
 	Failover:             false,
 	NoFallback404:        false,
 	BoltEndpointOverride: "",
 	CrunchTrafficSplit:   CrunchTrafficSplitByObjectKeyHash,
+	GcpReplicasEnabled:   false,
 }

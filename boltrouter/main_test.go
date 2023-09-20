@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/jarcoal/httpmock"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/jarcoal/httpmock"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -19,9 +22,38 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("AWS_REGION", "us-east-1")
 	os.Setenv("AWS_ZONE_ID", "use1-az1")
 	os.Setenv("GRANICA_CUSTOM_DOMAIN", "test.bolt.projectn.co")
+	os.Setenv("GRANICA_REGION", "us-east-1")
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/mock-service-account.json")
+
+	// Mock Google Service Account data
+	mockGcpSaData := map[string]interface{}{
+		"type":                        "service_account",
+		"project_id":                  "mock-project-id",
+		"private_key_id":              "mock-private-key-id",
+		"private_key":                 "-----BEGIN PRIVATE KEY-----\nMIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBALZOXYx1pQWaMBpjCYTCARVF9WrA\nk7hj7tXGbhSpBEo25ykZTBQGj0VK+5AAKmcnAewrZaGK5KlWS6eGZLHlBvgpVIfZFPa8cFSwDe3X\nZLbVWSySLJrcTtBH3XNkZXFnIHiBIFWG9JVd4/35GiAsvOKSL9UNdcpPhMi7IwvV5RDZAgMBAAEC\ngYAaSNgyDTA6y41N8KOJsZMIZyrINnXV6wqfZdmvPuMwdBQGF/ChHoT/n5z/mRaEAtrDG0qu7OCl\nDZ0gzT6ta3ECjlw+xPj8wTlVAvayo8SSToSGMiOcoi7nZ0eAn4+eIYkXpZGKDoUpa8dh3I2z4xfR\n+ldc3xotF04fSIq8CF7ckQJBANxOsvW3BkOnQxSsurh24PRdbTuAd+usjf4FKcjFFcyoESjcIqyY\ng/HCH8jzZQ6JWkcRgL1fzTW7aooXrG5gCfUCQQDT1421nSCOS3XJxTyy9V2AyAj1d/Y+DO8+d+vI\npeuSCdU+EActgGavYcokIkaY6Z8MCYQsWWPumElylNpnJKjVAkAlHJzJB6vmeaazNOW/bUc34wUj\noOCSst64i+YeDBVABI/fcjXlHUwczbbNAzNi34B1uF0XiavoAUpROOuzLDqBAkEAnCKASL5Bk38c\nlpUv0rqzqspEiB9dt4gzATjD6MQZpy5mI/MOR0Qe6t7JbO5yWBvAZM/Swhk0ZVOKts/tVR4Y7QJB\nAILwR9prGyUKn7eCN/khkfhGQggvPpbNqPe4CnTjfCBdatNyfhd4oCnvpp8Q2SWAfJt3zULGxRsa\nvYYUFMGnfAI=\n-----END PRIVATE KEY-----",
+		"client_email":                "mock-service-account-email@mock-project-id.iam.gserviceaccount.com",
+		"client_id":                   "mock-client-id",
+		"auth_uri":                    "https://accounts.google.com/o/oauth2/auth",
+		"token_uri":                   "https://oauth2.googleapis.com/token",
+		"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+		"client_x509_cert_url":        "https://www.googleapis.com/robot/v1/metadata/x509/mock-service-account-email%40mock-project-id.iam.gserviceaccount.com",
+		"universe_domain":             "googleapis.com",
+	}
+
+	// Convert the map to JSON
+	jsonMockGcpSaData, err := json.MarshalIndent(mockGcpSaData, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return
+	}
+	// Write the JSON data to a file
+	err = ioutil.WriteFile("/tmp/mock-service-account.json", jsonMockGcpSaData, os.ModePerm)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+		return
+	}
 
 	exitVal := m.Run()
 	os.Exit(exitVal)
@@ -32,6 +64,7 @@ var (
 	failoverWriteEndpoints = []interface{}{"1.0.0.1", "1.0.0.2", "1.0.0.3"}
 	mainReadEndpoints      = []interface{}{"2.0.0.1", "2.0.0.2", "2.0.0.3"}
 	failoverReadEndpoints  = []interface{}{"3.0.0.1", "3.0.0.2", "3.0.0.3"}
+	singleEndpoint         = []interface{}{"bolt.us-east-1.test.bolt.projectn.co"}
 
 	defaultClientBehaviorParams = map[string]interface{}{
 		"cleaner_on":             "true",
@@ -81,7 +114,7 @@ func NewQuicksilverMock(t *testing.T, clusterHealthy bool, clientBehaviorParams 
 
 func SetupQuickSilverMock(t *testing.T, ctx context.Context, clusterHealthy bool, clientBehaviorParams map[string]interface{}, intelligentQS bool, logger *zap.Logger) {
 	quicksilverURL := NewQuicksilverMock(t, clusterHealthy, clientBehaviorParams, intelligentQS)
-	boltVars, err := GetBoltVars(ctx, logger)
+	boltVars, err := GetBoltVars(ctx, logger, AwsCloudPlatform)
 	require.NoError(t, err)
 	boltVars.QuicksilverURL.Set(quicksilverURL)
 }

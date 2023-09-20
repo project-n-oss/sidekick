@@ -3,7 +3,6 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"strings"
@@ -27,6 +26,7 @@ func version() string {
 }
 
 func init() {
+	rootLogger = NewLogger(zapcore.InfoLevel)
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().StringP("log-level", "", "info", "log level. one of: debug, info, warn, error, fatal, panic")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
@@ -108,6 +108,6 @@ func waitForTermSignal() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logrus.Fatal(err)
+		rootLogger.Fatal(err.Error())
 	}
 }

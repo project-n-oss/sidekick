@@ -8,9 +8,8 @@ To get started, you will need to configure your SideKick sidecar container. A sa
 
 Additionally, the following environment variables must be set:
 
-* `GRANICA_CUSTOM_DOMAIN`: This is the custom domain you chose during setup.
-* `AWS_REGION`: This is the region of your Bolt deployment.
-
+- `GRANICA_CUSTOM_DOMAIN`: This is the custom domain you chose during setup.
+- `GRANICA_REGION`: This is the region of your Bolt deployment.
 
 ## Application configuration
 

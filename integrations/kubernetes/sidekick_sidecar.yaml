@@ -15,11 +15,11 @@ spec:
       containers:
         - name: sidekick
           image: ghcr.io/project-n-oss/sidekick:latest
-          command: ["sidekick", "serve"]
+          command: ["sidekick", "serve", "--cloud-platform", "<aws|gcp>"]
           env:
             - name: GRANICA_CUSTOM_DOMAIN
               value: km.bolt.projectn.co
-            - name: AWS_REGION
+            - name: GRANICA_REGION
               value: us-east-1
           ports:
             - containerPort: 7075

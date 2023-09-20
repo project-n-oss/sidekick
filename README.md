@@ -4,7 +4,7 @@
 
 # Sidekick
 
-Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) proxy process that allows your applications to talk with a Bolt cluster through any AWS SDK.
+Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) proxy process that allows your applications to talk with a Bolt cluster through any AWS or GCS SDK.
 
 ## Getting started
 
@@ -20,10 +20,12 @@ In order to run Sidekick, you first need to set some ENV variables
 
 ```bash
 export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
-# Optional if not running on a ec2 instance or running in a different region
-export AWS_REGION=<YOUR_BOLT_CLUSTER_REGION>
-# Optional if not running on a ec2 instance to force read from a read-replica in this az
+# Optional of running on an ec2 or google compute engine instance
+export GRANICA_REGION=YOUR_GRANICA_CRUNCH_CLUSTER_REGION>
+# (AWS) Optional if not running on a ec2 instance to force read from a read-replica in this az
 export AWS_ZONE_ID=<AWS_ZONE_ID>
+# (GCP) Optional if not running on a google compute engine instance to force use a replica in this zone
+export GCP_ZONE=<GCP_ZONE>
 ```
 
 ### Traffic Splitting
@@ -85,24 +87,32 @@ docker build -t sidekick .
 
 or pull one from the [containers page](https://github.com/project-n-oss/sidekick/pkgs/container/sidekick)
 
-#### Running on an EC2 Instance using instance profile credentials
+#### Running on an AWS EC2 Instance using instance profile credentials / Google Compute Engine instance using attached IAM service account
 
 ```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve --cloud-platform <aws|gcp>
 ```
 
 #### Running on any machine using environment variable credentials
 
+##### AWS
+
 ```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve -v
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve --cloud-platform aws
 ```
 
 If using temporary credentials, add `--env AWS_SESSION_TOKEN=<YOUR_SESSION_TOKEN>` to the command above. However, this is not recommended since credentials will expire. Instead, consider using the credentials profiles file with role assumption directives.
 
-#### Running on any machine using the credential profiles file
+##### GCP
 
 ```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env AWS_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v <PATH_TO_SERVICE_ACCOUNT_KEY_FILE>:<PATH_TO_MOUNTED_SERVICE_ACCOUNT_KEY_FILE> --env GOOGLE_APPLICATION_CREDENTIALS=<PATH_TO_MOUNTED_SERVICE_ACCOUNT_KEY_FILE> <sidekick-image> serve --cloud-platform gcp
+```
+
+#### Running on any machine using the AWS credential profiles file
+
+```bash
+docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve --cloud-platform aws
 ```
 
 By default, the `default` profile from the credentials file will be used. If you want to use another profile from the credentials file add `--env AWS_DEFAULT_PROFILE=<YOUR_PROFILE>` to the command above.
@@ -125,6 +135,18 @@ To download any release of our linux amd64 binary run:
 ```bash
 wget https://github.com/project-n-oss/sidekick/releases/${release}/download/sidekick-linux-amd64.tar.gz
 ```
+
+## Resource Usage
+
+This section showcases the Sidekick resource usage relative to a steady request rate from client applications.
+
+| Request Rate (reqs/second) | CPU usage | Memory usage |
+| -------------------------- | --------- | ------------ |
+| ?                          | ?         | ?            |
+| ?                          | ?         | ?MiB         |
+| 1000                       | 0.5       | 3031.04 MiB  |
+
+This benchmark was performed on a 4 vCPU, 16 GiB memory Google Cloud Engine VM w/ Sidekick running as a native process.
 
 ## Contributing
 
