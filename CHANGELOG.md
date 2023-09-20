@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/project-n-oss/sidekick/compare/v0.2.0...v0.2.1) (2023-09-20)
+
+
+### Bug Fixes
+
+* make staticcheck actually work in ci and fix warnings ([#87](https://github.com/project-n-oss/sidekick/issues/87)) ([4d17c53](https://github.com/project-n-oss/sidekick/commit/4d17c53a1073d1767c89255cb029d4db90ec3b25))
+
 ## [0.2.0](https://github.com/project-n-oss/sidekick/compare/v0.1.35...v0.2.0) (2023-09-20)
 
 
