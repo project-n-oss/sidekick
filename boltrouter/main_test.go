@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -49,7 +48,7 @@ func TestMain(m *testing.M) {
 		return
 	}
 	// Write the JSON data to a file
-	err = ioutil.WriteFile("/tmp/mock-service-account.json", jsonMockGcpSaData, os.ModePerm)
+	err = os.WriteFile("/tmp/mock-service-account.json", jsonMockGcpSaData, os.ModePerm)
 	if err != nil {
 		fmt.Println("Error writing to file:", err)
 		return
