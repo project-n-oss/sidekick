@@ -8,8 +8,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -28,6 +26,7 @@ func version() string {
 }
 
 func init() {
+	rootLogger = NewLogger(zapcore.InfoLevel)
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().StringP("log-level", "", "info", "log level. one of: debug, info, warn, error, fatal, panic")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
@@ -109,6 +108,6 @@ func waitForTermSignal() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logrus.Fatal(err)
+		rootLogger.Fatal(err.Error())
 	}
 }
