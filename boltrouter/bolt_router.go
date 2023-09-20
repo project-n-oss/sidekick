@@ -46,7 +46,8 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 		standardHttpClient.Transport = customTransport
 	}
 
-	if cfg.CloudPlatform == AwsCloudPlatform {
+	switch cfg.CloudPlatform {
+	case AwsCloudPlatform:
 		boltHttpClient = http.Client{
 			Timeout: time.Duration(90) * time.Second,
 		}
@@ -58,7 +59,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 			}
 			boltHttpClient.Transport = customTransport
 		}
-	} else if cfg.CloudPlatform == GcpCloudPlatform {
+	case GcpCloudPlatform:
 		creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/devstorage.read_write")
 		if err != nil {
 			return nil, err
@@ -87,8 +88,7 @@ func NewBoltRouter(ctx context.Context, logger *zap.Logger, cfg Config) (*BoltRo
 				Source: ts,
 			},
 		}
-
-	} else {
+	default:
 		return nil, fmt.Errorf("invalid cloud platform: %s", CloudPlatformTypeToStrMap[cfg.CloudPlatform])
 	}
 
