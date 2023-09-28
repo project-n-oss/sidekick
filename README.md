@@ -21,7 +21,7 @@ In order to run Sidekick, you first need to set some ENV variables
 ```bash
 export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
 # Optional of running on an ec2 or google compute engine instance
-export GRANICA_REGION=YOUR_GRANICA_CRUNCH_CLUSTER_REGION>
+export GRANICA_REGION=<YOUR_GRANICA_CRUNCH_CLUSTER_REGION>
 # (AWS) Optional if not running on a ec2 instance to force read from a read-replica in this az
 export AWS_ZONE_ID=<AWS_ZONE_ID>
 # (GCP) Optional if not running on a google compute engine instance to force use a replica in this zone
