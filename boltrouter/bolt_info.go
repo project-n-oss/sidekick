@@ -122,6 +122,7 @@ func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
 		if br.config.CloudPlatform == AwsCloudPlatform || (br.config.CloudPlatform == GcpCloudPlatform && br.config.GcpReplicasEnabled) {
 			return fmt.Errorf("could not refresh bolt info: %w", err)
 		}
+		return nil
 	}
 	br.boltVars.BoltInfo.Set(info)
 	br.updateEndpointLiveness()
