@@ -19,7 +19,7 @@ keytool -noprompt -import -alias sidekickCert -keystore $JAVA_HOME/lib/security/
 sed -i '/<\/configuration>/i \
   <property>\
     <name>fs.gs.storage.root.url</name>\
-    <value>https://localhost:7076</value>\
+    <value>http://localhost:7075</value>\
     <description>\
       Google Cloud Storage root URL.\
     </description>\
