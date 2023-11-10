@@ -12,6 +12,10 @@ fi
 chmod +x $SIDEKICK_BIN
 $SIDEKICK_BIN --help > /dev/null
 
+git clone https://github.com/project-n-oss/sidekick.git /home/dataproc/sidekick
+openssl x509 -outform der -in /home/dataproc/sidekick/cmd/sidekick-local.granica.ai.pem -out /home/dataproc/sidekick-local.granica.ai.der
+keytool -noprompt -import -alias sidekickCert -keystore $JAVA_HOME/lib/security/cacerts -file /home/dataproc/sidekick-local.granica.ai.der -storepass changeit
+
 sed -i '/<\/configuration>/i \
   <property>\
     <name>fs.gs.storage.root.url</name>\
@@ -40,7 +44,7 @@ Description=Sidekick service file
 [Service]
 Environment=GRANICA_CUSTOM_DOMAIN=$GRANICA_CUSTOM_DOMAIN
 Environment=GRANICA_CLOUD_PLATFORM=$GRANICA_CLOUD_PLATFORM
-ExecStart=$SIDEKICK_BIN serve --cloud-platform gcp
+ExecStart=$SIDEKICK_BIN serve --cloud-platform gcp --log-level debug
 Restart=always
 
 [Install]
