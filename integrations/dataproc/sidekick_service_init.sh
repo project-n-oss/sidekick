@@ -12,15 +12,14 @@ fi
 chmod +x $SIDEKICK_BIN
 $SIDEKICK_BIN --help > /dev/null
 
-cat >> /etc/hadoop/conf/core-site.xml <<EOL
-<property>
-  <name>fs.gs.storage.root.url</name>
-  <value>https://localhost:7076</value>
-  <description>
-    Google Cloud Storage root URL.
-  </description>
-</property>
-EOL
+sed -i '/<\/configuration>/i \
+  <property>\
+    <name>fs.gs.storage.root.url</name>\
+    <value>https://localhost:7076</value>\
+    <description>\
+      Google Cloud Storage root URL.\
+    </description>\
+  </property>' /etc/hadoop/conf/core-site.xml
 
 # Add any spark or env config here:
 # --------------------------------------------------
