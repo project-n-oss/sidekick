@@ -12,7 +12,7 @@ fi
 chmod +x $SIDEKICK_BIN
 $SIDEKICK_BIN --help > /dev/null
 
-git clone https://github.com/project-n-oss/sidekick.git /home/dataproc/sidekick
+git clone -b feat/dataproc-integration-docs https://github.com/project-n-oss/sidekick.git /home/dataproc/sidekick
 openssl x509 -outform der -in /home/dataproc/sidekick/cmd/sidekick-local.granica.ai.pem -out /home/dataproc/sidekick-local.granica.ai.der
 keytool -noprompt -import -alias sidekickCert -keystore $JAVA_HOME/lib/security/cacerts -file /home/dataproc/sidekick-local.granica.ai.der -storepass changeit
 
