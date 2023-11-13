@@ -153,13 +153,20 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
-	escapedPath, escapePathErr := escapeGCSPath(req.URL.Path)
+	logger.Debug("req.URL.Path", zap.String("path", req.URL.Path))
+	logger.Debug("req.URL.RawPath", zap.String("path", req.URL.RawPath))
+	logger.Debug("req.URL.EscapedPath", zap.String("path", req.URL.EscapedPath()))
+
+	escapedPath, escapePathErr := escapeGCSPath(req.URL.Path, logger)
+	logger.Debug("escapedPath", zap.String("path", escapedPath))
 	if escapePathErr != nil {
 		logger.Debug("Error escaping path, using original path")
 		BoltURL.Path = req.URL.Path
 	} else {
 		BoltURL.Path = escapedPath
 	}
+
+	logger.Debug("BoltURL.Path", zap.String("path", BoltURL.Path))
 
 	if !strings.HasPrefix(BoltURL.Path, "/") {
 		BoltURL.Path = "/" + BoltURL.Path
@@ -179,10 +186,13 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
 	if escapePathErr != nil {
+		logger.Debug("gcp: Error escaping path, using original path")
 		gcsUrl.Path = req.URL.Path
 	} else {
 		gcsUrl.Path = escapedPath
 	}
+
+	logger.Debug("gcsUrl.Path", zap.String("path", gcsUrl.Path))
 
 	if !strings.HasPrefix(gcsUrl.Path, "/") {
 		gcsUrl.Path = "/" + gcsUrl.Path
@@ -504,7 +514,7 @@ func StatusCodeIs2xx(statusCode int) bool {
 // would be transformed to "/b/example-bucket/o/foo%3F%3Fbar".
 //
 // https://cloud.google.com/storage/docs/request-endpoints#encoding
-func escapeGCSPath(path string) (string, error) {
+func escapeGCSPath(path string, logger *zap.Logger) (string, error) {
 	parts := strings.SplitN(path, "/o/", 2)
 	if len(parts) != 2 {
 		return path, fmt.Errorf("path does not contain '/o/'")
@@ -512,7 +522,19 @@ func escapeGCSPath(path string) (string, error) {
 
 	basePart := parts[0] + "/o/"
 	pathPart := parts[1]
-	escapedPathPart := url.PathEscape(pathPart)
 
-	return basePart + escapedPathPart, nil
+	unescapedPathPart, err := url.QueryUnescape(pathPart)
+	if err != nil {
+		logger.Debug("Error unescaping path, using original path")
+		// If there's an error in unescaping, it means the path wasn't escaped
+		unescapedPathPart = pathPart
+	}
+
+	reEscapedPathPart := url.PathEscape(unescapedPathPart)
+	if reEscapedPathPart == pathPart {
+		logger.Debug("Path was already escaped")
+		return basePart + pathPart, nil
+	}
+
+	return basePart + reEscapedPathPart, nil
 }
