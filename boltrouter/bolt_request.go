@@ -152,8 +152,15 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
-	BoltURL = BoltURL.JoinPath(req.URL.Path)
+	logger.Debug("req.URL.Path", zap.String("req.URL.Path", req.URL.Path))
+	unescapedPath, err := url.PathUnescape(req.URL.Path)
+	if err != nil {
+		return nil, err
+	}
+	logger.Debug("unescapedPath", zap.String("unescapedPath", unescapedPath))
+	BoltURL = BoltURL.JoinPath(unescapedPath)
 	BoltURL.Path = "/" + BoltURL.Path
+	logger.Debug("BoltURL.Path", zap.String("BoltURL.Path", BoltURL.Path))
 	BoltURL.RawQuery = req.URL.RawQuery
 	req.URL = BoltURL
 	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
@@ -167,8 +174,9 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
-	gcsUrl = gcsUrl.JoinPath(req.URL.Path)
+	gcsUrl = gcsUrl.JoinPath(unescapedPath)
 	gcsUrl.Path = "/" + gcsUrl.Path
+	logger.Debug("gcsUrl.Path", zap.String("gcsUrl.Path", gcsUrl.Path))
 	gcsUrl.RawQuery = req.URL.RawQuery
 	gcpRequest.URL = gcsUrl
 	gcpRequest.Host = "storage.googleapis.com"

@@ -119,10 +119,14 @@ func (br *BoltRouter) RefreshBoltInfoPeriodically(ctx context.Context) {
 func (br *BoltRouter) RefreshBoltInfo(ctx context.Context) error {
 	info, err := br.getBoltInfo(ctx)
 	if err != nil {
-		return fmt.Errorf("could not refresh bolt info: %w", err)
+		if br.config.GcpReplicasEnabled {
+			return fmt.Errorf("could not refresh bolt info: %w", err)
+		}
 	}
-	br.boltVars.BoltInfo.Set(info)
-	br.updateEndpointLiveness()
+	if br.config.GcpReplicasEnabled {
+		br.boltVars.BoltInfo.Set(info)
+		br.updateEndpointLiveness()
+	}
 	return nil
 }
 
