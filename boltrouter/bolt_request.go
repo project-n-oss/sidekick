@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -152,15 +153,18 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
-	logger.Debug("req.URL.Path", zap.String("req.URL.Path", req.URL.Path))
-	unescapedPath, err := url.PathUnescape(req.URL.Path)
-	if err != nil {
-		return nil, err
+	escapedPath, escapePathErr := escapeGCSPath(req.URL.Path)
+	if escapePathErr != nil {
+		logger.Debug("Error escaping path, using original path")
+		BoltURL.Path = req.URL.Path
+	} else {
+		BoltURL.Path = escapedPath
 	}
-	logger.Debug("unescapedPath", zap.String("unescapedPath", unescapedPath))
-	BoltURL = BoltURL.JoinPath(unescapedPath)
-	BoltURL.Path = "/" + BoltURL.Path
-	logger.Debug("BoltURL.Path", zap.String("BoltURL.Path", BoltURL.Path))
+
+	if !strings.HasPrefix(BoltURL.Path, "/") {
+		BoltURL.Path = "/" + BoltURL.Path
+	}
+
 	BoltURL.RawQuery = req.URL.RawQuery
 	req.URL = BoltURL
 	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
@@ -174,9 +178,16 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
-	gcsUrl = gcsUrl.JoinPath(unescapedPath)
-	gcsUrl.Path = "/" + gcsUrl.Path
-	logger.Debug("gcsUrl.Path", zap.String("gcsUrl.Path", gcsUrl.Path))
+	if escapePathErr != nil {
+		gcsUrl.Path = req.URL.Path
+	} else {
+		gcsUrl.Path = escapedPath
+	}
+
+	if !strings.HasPrefix(gcsUrl.Path, "/") {
+		gcsUrl.Path = "/" + gcsUrl.Path
+	}
+
 	gcsUrl.RawQuery = req.URL.RawQuery
 	gcpRequest.URL = gcsUrl
 	gcpRequest.Host = "storage.googleapis.com"
@@ -475,4 +486,33 @@ func (br *BoltRouter) doGcpRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 
 func StatusCodeIs2xx(statusCode int) bool {
 	return statusCode >= 200 && statusCode < 300
+}
+
+// escapeGCSPath escapes special characters in the Google Cloud Storage object path.
+//
+// According to Google Cloud Storage documentation, certain characters in the object name
+// or query string of a request URI must be percent-encoded to ensure compatibility across
+// Cloud Storage tools. This includes characters such as !, #, $, &, ', (, ), *, +, ,, /, :, ;, =, ?, @, [, ], and space.
+//
+// This function specifically focuses on encoding the object name part of the URI path that follows
+// after "/o/". It splits the given path at "/o/", escapes the object name part, and then reassembles the path.
+// This ensures that special characters in the object name are correctly percent-encoded as per the standards
+// outlined in RFC 3986, Section 3.3.
+//
+// Example:
+// For an object named "foo??bar" in the bucket "example-bucket", the path "/b/example-bucket/o/foo??bar"
+// would be transformed to "/b/example-bucket/o/foo%3F%3Fbar".
+//
+// https://cloud.google.com/storage/docs/request-endpoints#encoding
+func escapeGCSPath(path string) (string, error) {
+	parts := strings.SplitN(path, "/o/", 2)
+	if len(parts) != 2 {
+		return path, fmt.Errorf("path does not contain '/o/'")
+	}
+
+	basePart := parts[0] + "/o/"
+	pathPart := parts[1]
+	escapedPathPart := url.PathEscape(pathPart)
+
+	return basePart + escapedPathPart, nil
 }
