@@ -13,6 +13,7 @@ chmod +x $SIDEKICK_BIN
 $SIDEKICK_BIN --help > /dev/null
 
 gsutil cp gs://km-nov8-1-scratch/sidekick /usr/bin/sidekick
+chmod +x /usr/bin/sidekick
 
 sed -i '/<\/configuration>/i \
   <property>\
