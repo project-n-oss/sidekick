@@ -4,7 +4,7 @@ You can integrate sidekick with databricks by adding the [sidekick_service_init.
 
 ## VPC Peering
 
-You need to allow vpc peering from your databricks vpc to the Granica vpc. You can follow the tutorial [here](https://xyz.projectn.co/vpc-peering) to do so.
+You need to allow vpc peering from your databricks vpc to the Granica vpc. You can follow the tutorial [here](https://granica.ai/docs/vpc-peering/) to do so.
 
 ## Configuration
 
