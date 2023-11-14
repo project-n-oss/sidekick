@@ -31,6 +31,7 @@ sed -i '/<\/configuration>/i \
 
 export GRANICA_CUSTOM_DOMAIN="kmnov8.bolt.projectn.co"
 export GRANICA_CLOUD_PLATFORM="gcp"
+export SIDEKICK_EXTRA_ARGS="--passthrough --gcp-replicas --log-level-debug"
 
 # Create service file for the sidekick process
 SERVICE_FILE="/etc/systemd/system/sidekick.service"
@@ -43,7 +44,8 @@ Description=Sidekick service file
 [Service]
 Environment=GRANICA_CUSTOM_DOMAIN=$GRANICA_CUSTOM_DOMAIN
 Environment=GRANICA_CLOUD_PLATFORM=$GRANICA_CLOUD_PLATFORM
-ExecStart=$SIDEKICK_BIN serve --cloud-platform gcp --log-level debug --passthrough
+Environment=SIDEKICK_EXTRA_ARGS=$SIDEKICK_EXTRA_ARGS
+ExecStart=$SIDEKICK_BIN serve --cloud-platform $GRANICA_CLOUD_PLATFORM $SIDEKICK_EXTRA_ARGS
 Restart=always
 
 [Install]

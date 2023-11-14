@@ -17,4 +17,5 @@ Define the environment variables by adding these lines to the [sidekick service 
 ```bash
 export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
 export GRANICA_CLOUD_PLATFORM="<aws|gcp>"
+export SIDEKICK_EXTRA_ARGS="--passthrough <other args>"
 ```
