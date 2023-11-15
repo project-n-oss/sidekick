@@ -307,7 +307,7 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 
 	logger.Debug("initial request target", zap.String("target", InitialRequestTargetMap[initialRequestTarget]), zap.String("reason", reason))
 
-	initialRequestTarget = InitialRequestTargetFallback
+	// initialRequestTarget = InitialRequestTargetFallback
 	if initialRequestTarget == InitialRequestTargetBolt {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
 		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
