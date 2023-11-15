@@ -153,6 +153,8 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
+	savePath := req.URL.Path
+	saveRawPath := req.URL.RawPath
 	logger.Debug("req.URL.Path", zap.String("path", req.URL.Path))
 	logger.Debug("req.URL.RawPath", zap.String("path", req.URL.RawPath))
 	logger.Debug("req.URL.EscapedPath", zap.String("path", req.URL.EscapedPath()))
@@ -169,28 +171,28 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 
 	logger.Debug("BoltURL.Path", zap.String("path", BoltURL.Path))
 
-	// if !strings.HasPrefix(BoltURL.Path, "/") {
-	// 	BoltURL.Path = "/" + BoltURL.Path
-	// }
+	if !strings.HasPrefix(BoltURL.Path, "/") {
+		BoltURL.Path = "/" + BoltURL.Path
+	}
 
-	// BoltURL.RawQuery = req.URL.RawQuery
-	// req.URL = BoltURL
-	// req.Header.Set("Host", br.boltVars.BoltHostname.Get())
-	// req.Host = br.boltVars.BoltHostname.Get()
+	BoltURL.RawQuery = req.URL.RawQuery
+	req.URL = BoltURL
+	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
+	req.Host = br.boltVars.BoltHostname.Get()
 
-	// req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
-	// req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
-	// if !br.config.Passthrough {
-	// 	req.Header.Set("X-Bolt-Passthrough-Read", "disable")
-	// }
+	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
+	req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
+	if !br.config.Passthrough {
+		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
+	}
 
 	logger.Debug("req URI", zap.String("uri", req.RequestURI))
 	logger.Debug("req URL.URI", zap.String("url", req.URL.RequestURI()))
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
-	gcsUrl.Path = req.URL.Path
-	gcsUrl.RawPath = req.URL.RawPath
+	gcsUrl.Path = savePath
+	gcsUrl.RawPath = saveRawPath
 	// if escapePathErr != nil {
 	// 	logger.Debug("gcp: Error escaping path, using original path")
 	// 	gcsUrl.Path = req.URL.Path
