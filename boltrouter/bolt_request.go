@@ -484,15 +484,15 @@ func (br *BoltRouter) doGcpRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 		zap.Bool("isFailover", isFailover),
 		zap.Error(err))
 
-	// if !isFailover {
-	// 	// Fallback on 404 errors
-	// 	// For other AWS errors, we will return that error back to client to retry as necessary.
-	// 	if !br.config.NoFallback404 && resp != nil && statusCode == 404 {
-	// 		logger.Info("gcp request failed, falling back to bolt on 404")
+	if !isFailover {
+		// Fallback on 404 errors
+		// For other AWS errors, we will return that error back to client to retry as necessary.
+		if !br.config.NoFallback404 && resp != nil && statusCode == 404 {
+			logger.Info("gcp request failed, falling back to bolt on 404")
 
-	// 		return br.doGcpRequest(logger, boltReq, true, analytics)
-	// 	}
-	// }
+			return br.doGcpRequest(logger, boltReq, true, analytics)
+		}
+	}
 
 	if resp != nil {
 		analytics.AwsRequestResponseStatusCode = statusCode
