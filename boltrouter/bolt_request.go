@@ -153,20 +153,13 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
-	logger.Debug("req.URL.Path", zap.String("path", req.URL.Path))
-	logger.Debug("req.URL.RawPath", zap.String("path", req.URL.RawPath))
-	logger.Debug("req.URL.EscapedPath", zap.String("path", req.URL.EscapedPath()))
-
 	escapedPath, escapePathErr := escapeGCSPath(req.URL.Path, logger)
-	logger.Debug("escapedPath", zap.String("path", escapedPath))
 	if escapePathErr != nil {
 		logger.Debug("Error escaping path, using original path")
 		BoltURL.Path = req.URL.Path
 	} else {
 		BoltURL.Path = escapedPath
 	}
-
-	logger.Debug("BoltURL.Path", zap.String("path", BoltURL.Path))
 
 	if !strings.HasPrefix(BoltURL.Path, "/") {
 		BoltURL.Path = "/" + BoltURL.Path
@@ -185,14 +178,8 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
-	if escapePathErr != nil {
-		logger.Debug("gcp: Error escaping path, using original path")
-		gcsUrl.Path = req.URL.Path
-	} else {
-		gcsUrl.Path = escapedPath
-	}
-
-	logger.Debug("gcsUrl.Path", zap.String("path", gcsUrl.Path))
+	gcsUrl.Path = req.URL.Path
+	gcsUrl.RawPath = req.URL.RawPath
 
 	if !strings.HasPrefix(gcsUrl.Path, "/") {
 		gcsUrl.Path = "/" + gcsUrl.Path
@@ -200,6 +187,7 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 
 	gcsUrl.RawQuery = req.URL.RawQuery
 	gcpRequest.URL = gcsUrl
+	gcpRequest.Header.Set("Host", "storage.googleapis.com")
 	gcpRequest.Host = "storage.googleapis.com"
 
 	CopyReqBody(req, gcpRequest)
