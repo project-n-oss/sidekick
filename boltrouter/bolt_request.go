@@ -153,37 +153,59 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
+	logger.Debug("req.URL.Path", zap.String("path", req.URL.Path))
+	logger.Debug("req.URL.RawPath", zap.String("path", req.URL.RawPath))
+	logger.Debug("req.URL.EscapedPath", zap.String("path", req.URL.EscapedPath()))
+
 	escapedPath, escapePathErr := escapeGCSPath(req.URL.Path, logger)
+	logger.Debug("escapedPath", zap.String("path", escapedPath))
 	if escapePathErr != nil {
 		logger.Debug("Error escaping path, using original path")
 		BoltURL.Path = req.URL.Path
 	} else {
 		BoltURL.Path = escapedPath
 	}
+	// BoltURL.Path = req.URL.EscapedPath()
 
-	if !strings.HasPrefix(BoltURL.Path, "/") {
-		BoltURL.Path = "/" + BoltURL.Path
-	}
+	logger.Debug("BoltURL.Path", zap.String("path", BoltURL.Path))
 
-	BoltURL.RawQuery = req.URL.RawQuery
-	req.URL = BoltURL
-	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
-	req.Host = br.boltVars.BoltHostname.Get()
+	// if !strings.HasPrefix(BoltURL.Path, "/") {
+	// 	BoltURL.Path = "/" + BoltURL.Path
+	// }
 
-	req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
-	req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
-	if !br.config.Passthrough {
-		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
-	}
+	// BoltURL.RawQuery = req.URL.RawQuery
+	// req.URL = BoltURL
+	// req.Header.Set("Host", br.boltVars.BoltHostname.Get())
+	// req.Host = br.boltVars.BoltHostname.Get()
+
+	// req.Header.Set("User-Agent", fmt.Sprintf("%s%s", br.boltVars.UserAgentPrefix.Get(), req.Header.Get("User-Agent")))
+	// req.Header.Set("X-Bolt-Availability-Zone", br.boltVars.ZoneId.Get())
+	// if !br.config.Passthrough {
+	// 	req.Header.Set("X-Bolt-Passthrough-Read", "disable")
+	// }
+
+	logger.Debug("req URI", zap.String("uri", req.RequestURI))
+	logger.Debug("req URL.URI", zap.String("url", req.URL.RequestURI()))
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
 	gcsUrl.Path = req.URL.Path
 	gcsUrl.RawPath = req.URL.RawPath
+	// if escapePathErr != nil {
+	// 	logger.Debug("gcp: Error escaping path, using original path")
+	// 	gcsUrl.Path = req.URL.Path
+	// } else {
+	// 	gcsUrl.Path = escapedPath
+	// }
 
-	if !strings.HasPrefix(gcsUrl.Path, "/") {
-		gcsUrl.Path = "/" + gcsUrl.Path
-	}
+	logger.Debug("gcsUrl.Path", zap.String("path", gcsUrl.Path))
+
+	logger.Debug("gcsRequest URI", zap.String("uri", gcpRequest.RequestURI))
+	logger.Debug("gcsRequest URL.URI", zap.String("url", gcpRequest.URL.RequestURI()))
+
+	// if !strings.HasPrefix(gcsUrl.Path, "/") {
+	// 	gcsUrl.Path = "/" + gcsUrl.Path
+	// }
 
 	gcsUrl.RawQuery = req.URL.RawQuery
 	gcpRequest.URL = gcsUrl
@@ -290,6 +312,7 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 
 	logger.Debug("initial request target", zap.String("target", InitialRequestTargetMap[initialRequestTarget]), zap.String("reason", reason))
 
+	initialRequestTarget = InitialRequestTargetFallback
 	if initialRequestTarget == InitialRequestTargetBolt {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
 		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
@@ -466,15 +489,15 @@ func (br *BoltRouter) doGcpRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 		zap.Bool("isFailover", isFailover),
 		zap.Error(err))
 
-	if !isFailover {
-		// Fallback on 404 errors
-		// For other AWS errors, we will return that error back to client to retry as necessary.
-		if !br.config.NoFallback404 && resp != nil && statusCode == 404 {
-			logger.Info("gcp request failed, falling back to bolt on 404")
+	// if !isFailover {
+	// 	// Fallback on 404 errors
+	// 	// For other AWS errors, we will return that error back to client to retry as necessary.
+	// 	if !br.config.NoFallback404 && resp != nil && statusCode == 404 {
+	// 		logger.Info("gcp request failed, falling back to bolt on 404")
 
-			return br.doGcpRequest(logger, boltReq, true, analytics)
-		}
-	}
+	// 		return br.doGcpRequest(logger, boltReq, true, analytics)
+	// 	}
+	// }
 
 	if resp != nil {
 		analytics.AwsRequestResponseStatusCode = statusCode
