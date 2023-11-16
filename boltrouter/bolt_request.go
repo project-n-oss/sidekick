@@ -384,6 +384,9 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 			(err != nil || !StatusCodeIs2xx(statusCode)) {
 			// Attempt to failover on error or based on response status code
 			failover = true
+		} else if br.config.CloudPlatform == GcpCloudPlatform && statusCode == 405 {
+			// Crunch returns 405 for not allowed requests that are not supported
+			failover = true
 		}
 
 		if failover {
