@@ -155,18 +155,6 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	req.RequestURI = ""
 	incomingRequestPath := req.URL.Path
 	incomingRequestRawPath := req.URL.RawPath
-	// logger.Debug("req.URL.Path", zap.String("path", req.URL.Path))
-	// logger.Debug("req.URL.RawPath", zap.String("path", req.URL.RawPath))
-	// logger.Debug("req.URL.EscapedPath", zap.String("path", req.URL.EscapedPath()))
-
-	// escapedPath, escapePathErr := escapeGCSPath(req.URL.Path, logger)
-	// logger.Debug("escapedPath", zap.String("path", escapedPath))
-	// if escapePathErr != nil {
-	// 	logger.Debug("Error escaping path, using original path")
-	// 	BoltURL.Path = req.URL.Path
-	// } else {
-	// 	BoltURL.Path = escapedPath
-	// }
 
 	BoltURL.Path = incomingRequestPath
 	BoltURL.RawPath = incomingRequestRawPath
@@ -195,11 +183,6 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
 	gcsUrl.Path = incomingRequestPath
 	gcsUrl.RawPath = incomingRequestRawPath
-
-	// logger.Debug("gcsUrl.Path", zap.String("path", gcsUrl.Path))
-
-	// logger.Debug("gcsRequest URI", zap.String("uri", gcpRequest.RequestURI))
-	// logger.Debug("gcsRequest URL.URI", zap.String("url", gcpRequest.URL.RequestURI()))
 
 	if !strings.HasPrefix(gcsUrl.Path, "/") {
 		gcsUrl.Path = "/" + gcsUrl.Path
@@ -310,7 +293,6 @@ func (br *BoltRouter) DoRequest(logger *zap.Logger, boltReq *BoltRequest) (*http
 
 	logger.Debug("initial request target", zap.String("target", InitialRequestTargetMap[initialRequestTarget]), zap.String("reason", reason))
 
-	// initialRequestTarget = InitialRequestTargetFallback
 	if initialRequestTarget == InitialRequestTargetBolt {
 		resp, isFailoverRequest, err := br.doBoltRequest(logger, boltReq, false, boltRequestAnalytics)
 		// if nothing during br.doBoltRequest panics, err will not be of type ErrPanicDuringBoltRequest so failover was
@@ -509,44 +491,3 @@ func (br *BoltRouter) doGcpRequest(logger *zap.Logger, boltReq *BoltRequest, isF
 func StatusCodeIs2xx(statusCode int) bool {
 	return statusCode >= 200 && statusCode < 300
 }
-
-// escapeGCSPath escapes special characters in the Google Cloud Storage object path.
-//
-// According to Google Cloud Storage documentation, certain characters in the object name
-// or query string of a request URI must be percent-encoded to ensure compatibility across
-// Cloud Storage tools. This includes characters such as !, #, $, &, ', (, ), *, +, ,, /, :, ;, =, ?, @, [, ], and space.
-//
-// This function specifically focuses on encoding the object name part of the URI path that follows
-// after "/o/". It splits the given path at "/o/", escapes the object name part, and then reassembles the path.
-// This ensures that special characters in the object name are correctly percent-encoded as per the standards
-// outlined in RFC 3986, Section 3.3.
-//
-// Example:
-// For an object named "foo??bar" in the bucket "example-bucket", the path "/b/example-bucket/o/foo??bar"
-// would be transformed to "/b/example-bucket/o/foo%3F%3Fbar".
-//
-// https://cloud.google.com/storage/docs/request-endpoints#encoding
-// func escapeGCSPath(path string, logger *zap.Logger) (string, error) {
-// 	parts := strings.SplitN(path, "/o/", 2)
-// 	if len(parts) != 2 {
-// 		return path, fmt.Errorf("path does not contain '/o/'")
-// 	}
-
-// 	basePart := parts[0] + "/o/"
-// 	pathPart := parts[1]
-
-// 	unescapedPathPart, err := url.QueryUnescape(pathPart)
-// 	if err != nil {
-// 		logger.Debug("Error unescaping path, using original path")
-// 		// If there's an error in unescaping, it means the path wasn't escaped
-// 		unescapedPathPart = pathPart
-// 	}
-
-// 	reEscapedPathPart := url.PathEscape(unescapedPathPart)
-// 	if reEscapedPathPart == pathPart {
-// 		logger.Debug("Path was already escaped")
-// 		return basePart + pathPart, nil
-// 	}
-
-// 	return basePart + reEscapedPathPart, nil
-// }
