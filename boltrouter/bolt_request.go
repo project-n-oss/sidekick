@@ -159,8 +159,6 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	BoltURL.Path = incomingRequestPath
 	BoltURL.RawPath = incomingRequestRawPath
 
-	logger.Debug("BoltURL.Path", zap.String("path", BoltURL.Path))
-
 	if !strings.HasPrefix(BoltURL.Path, "/") {
 		BoltURL.Path = "/" + BoltURL.Path
 	}
@@ -175,9 +173,6 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	if !br.config.Passthrough {
 		req.Header.Set("X-Bolt-Passthrough-Read", "disable")
 	}
-
-	logger.Debug("req URI", zap.String("uri", req.RequestURI))
-	logger.Debug("req URL.URI", zap.String("url", req.URL.RequestURI()))
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
