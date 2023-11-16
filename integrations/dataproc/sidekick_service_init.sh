@@ -12,9 +12,6 @@ fi
 chmod +x $SIDEKICK_BIN
 $SIDEKICK_BIN --help > /dev/null
 
-gsutil cp gs://km-nov8-1-scratch/sidekick /usr/bin/sidekick
-chmod +x /usr/bin/sidekick
-
 sed -i '/<\/configuration>/i \
   <property>\
     <name>fs.gs.storage.root.url</name>\
@@ -29,9 +26,9 @@ sed -i '/<\/configuration>/i \
 
 # --------------------------------------------------
 
-export GRANICA_CUSTOM_DOMAIN="kmnov8.bolt.projectn.co"
-export GRANICA_CLOUD_PLATFORM="gcp"
-export SIDEKICK_EXTRA_ARGS="--gcp-replicas --log-level-debug"
+export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
+export GRANICA_CLOUD_PLATFORM="<aws|gcp>"
+export SIDEKICK_EXTRA_ARGS="<CHECK MAIN README FOR OTHER ARGS"
 
 # Create service file for the sidekick process
 SERVICE_FILE="/etc/systemd/system/sidekick.service"
