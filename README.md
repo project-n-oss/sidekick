@@ -57,6 +57,15 @@ export SIDEKICK_BOLTROUTER_FAILOVER=true  # Not recommended
 go run main serve
 ```
 
+### GCP Read Replicas
+
+Granica Crunch deployments in GCP can run in a single public endpoint mode (legacy) and regular read-replica mode. In order
+to enable GCP read-replica support, pass the `gcp-replicas` flag to Sidekick.
+
+```bash
+./sidekick serve --gcp-replicas
+```
+
 ### Local
 
 You can run sidekick directly from the command line:

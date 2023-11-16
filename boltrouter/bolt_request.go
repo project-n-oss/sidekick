@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -152,8 +153,16 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 	}
 
 	req.RequestURI = ""
-	BoltURL = BoltURL.JoinPath(req.URL.Path)
-	BoltURL.Path = "/" + BoltURL.Path
+	incomingRequestPath := req.URL.Path
+	incomingRequestRawPath := req.URL.RawPath
+
+	BoltURL.Path = incomingRequestPath
+	BoltURL.RawPath = incomingRequestRawPath
+
+	if !strings.HasPrefix(BoltURL.Path, "/") {
+		BoltURL.Path = "/" + BoltURL.Path
+	}
+
 	BoltURL.RawQuery = req.URL.RawQuery
 	req.URL = BoltURL
 	req.Header.Set("Host", br.boltVars.BoltHostname.Get())
@@ -167,10 +176,16 @@ func (br *BoltRouter) newBoltRequestForGcp(ctx context.Context, logger *zap.Logg
 
 	gcpRequest := req.Clone(ctx)
 	gcsUrl, _ := url.Parse("https://storage.googleapis.com")
-	gcsUrl = gcsUrl.JoinPath(req.URL.Path)
-	gcsUrl.Path = "/" + gcsUrl.Path
+	gcsUrl.Path = incomingRequestPath
+	gcsUrl.RawPath = incomingRequestRawPath
+
+	if !strings.HasPrefix(gcsUrl.Path, "/") {
+		gcsUrl.Path = "/" + gcsUrl.Path
+	}
+
 	gcsUrl.RawQuery = req.URL.RawQuery
 	gcpRequest.URL = gcsUrl
+	gcpRequest.Header.Set("Host", "storage.googleapis.com")
 	gcpRequest.Host = "storage.googleapis.com"
 
 	CopyReqBody(req, gcpRequest)
@@ -348,6 +363,9 @@ func (br *BoltRouter) doBoltRequest(logger *zap.Logger, boltReq *BoltRequest, is
 		} else if br.config.Failover &&
 			(err != nil || !StatusCodeIs2xx(statusCode)) {
 			// Attempt to failover on error or based on response status code
+			failover = true
+		} else if br.config.CloudPlatform == GcpCloudPlatform && statusCode == 405 {
+			// Crunch returns 405 for not allowed requests that are not supported
 			failover = true
 		}
 
