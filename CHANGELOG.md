@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/project-n-oss/sidekick/compare/v0.2.1...v0.2.2) (2023-11-16)
+
+
+### Features
+
+* gcp object path fixes & dataproc integration docs ([#91](https://github.com/project-n-oss/sidekick/issues/91)) ([219ba99](https://github.com/project-n-oss/sidekick/commit/219ba99bbf4f4b8353821c844dfa1e7fee8513ad))
+
 ## [0.2.1](https://github.com/project-n-oss/sidekick/compare/v0.2.0...v0.2.1) (2023-09-20)
 
 
