@@ -46,6 +46,7 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().String("crunch-traffic-split", "objectkeyhash", "Specify the crunch traffic split strategy: random or objectkeyhash")
 	cmd.Flags().StringP("cloud-platform", "", "", "Cloud platform to use. one of: aws, gcp")
 	cmd.Flags().BoolP("gcp-replicas", "", false, "Whether to query Quicksilver for replica IPs in GCP mode or use the public Bolt endpoint.")
+	cmd.Flags().Bool("no-fallback-404", false, "Disable fallback on 404 response code from AWS request to Bolt or vice-versa.")
 }
 
 var serveCmd = &cobra.Command{
@@ -153,6 +154,9 @@ func getBoltRouterConfig(cmd *cobra.Command) (boltrouter.Config, error) {
 	}
 	if cmd.Flags().Lookup("gcp-replicas").Changed {
 		boltRouterConfig.GcpReplicasEnabled, _ = cmd.Flags().GetBool("gcp-replicas")
+	}
+	if cmd.Flags().Lookup("no-fallback-404").Changed {
+		boltRouterConfig.NoFallback404, _ = cmd.Flags().GetBool("no-fallback-404")
 	}
 	return boltRouterConfig, nil
 }
