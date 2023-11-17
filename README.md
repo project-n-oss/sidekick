@@ -36,7 +36,13 @@ Traffic splitting configuration is managed through the `client-behavior-params` 
 
 ### Fallback on 404
 
-If sidekick can't find your object in Bolt, sidekick tries to find the object in S3. This happens transparently to the client, and it doesn't need any client retries.
+If Sidekick can't find your object in Crunch, Sidekick tries to find the object in S3/GCS. This happens transparently to the client, and it doesn't need any client retries.
+
+If you'd like to disable this behavior, run Sidekick with the `--no-fallback-404` flag.
+
+```bash
+./sidekick serve --no-fallback-404
+```
 
 ### Failover
 
