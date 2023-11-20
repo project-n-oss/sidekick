@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/project-n-oss/sidekick/compare/v0.2.2...v0.2.3) (2023-11-20)
+
+
+### Features
+
+* add 404 failover behavior control via cli arg ([#93](https://github.com/project-n-oss/sidekick/issues/93)) ([40d9ac0](https://github.com/project-n-oss/sidekick/commit/40d9ac02887da7c8f373172449b6384bc0df0e6e))
+
 ## [0.2.2](https://github.com/project-n-oss/sidekick/compare/v0.2.1...v0.2.2) (2023-11-16)
 
 
