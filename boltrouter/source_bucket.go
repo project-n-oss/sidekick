@@ -52,7 +52,8 @@ func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFal
 	isVirtualHostedStyle := false
 	split := strings.Split(req.Host, ".")
 	logger.Debug("split host", zap.Strings("split", split))
-	if len(split) > 1 {
+	// assuming running on http://sidekick.us-west-2.km-nov21-aws.bolt.projectn.co
+	if len(split) > 6 {
 		if _, err := strconv.Atoi(split[0]); err != nil {
 			// is not a number, so it is a bucket name
 			isVirtualHostedStyle = true
