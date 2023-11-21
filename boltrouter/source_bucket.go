@@ -56,6 +56,7 @@ func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFal
 			isVirtualHostedStyle = true
 		}
 	}
+	isVirtualHostedStyle = false
 
 	if isVirtualHostedStyle {
 		bucket := split[0]
