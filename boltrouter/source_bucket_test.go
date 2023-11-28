@@ -36,7 +36,7 @@ func TestExtractSourceBucket(t *testing.T) {
 			})
 
 			req := testS3Client.GetRequest(t, ctx)
-			sourceBucket, err := extractSourceBucket(logger, req, "foo")
+			sourceBucket, err := extractSourceBucket(logger, req, "foo", false)
 			assert.NoError(t, err)
 			assert.Equal(t, bucketName, sourceBucket.Bucket)
 			assert.Equal(t, tc.requestStyle, sourceBucket.Style)
@@ -54,7 +54,24 @@ func TestExtractSourceBucket(t *testing.T) {
 		})
 
 		req := testS3Client.GetRequest(t, ctx)
-		sourceBucket, err := extractSourceBucket(logger, req, "foo")
+		sourceBucket, err := extractSourceBucket(logger, req, "foo", false)
+		assert.NoError(t, err)
+		assert.Equal(t, bucketName, sourceBucket.Bucket)
+		assert.Equal(t, pathStyle, sourceBucket.Style)
+		assert.Equal(t, "foo", sourceBucket.Region)
+	})
+
+	t.Run("IgnoreAuthHeaderRegion", func(t *testing.T) {
+		bucketName := randomdata.SillyName()
+
+		testS3Client := NewTestS3Client(t, ctx, pathStyle, "us-west-1")
+		// This populates testS3Client.req
+		testS3Client.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket: aws.String(bucketName),
+		})
+
+		req := testS3Client.GetRequest(t, ctx)
+		sourceBucket, err := extractSourceBucket(logger, req, "foo", true)
 		assert.NoError(t, err)
 		assert.Equal(t, bucketName, sourceBucket.Bucket)
 		assert.Equal(t, pathStyle, sourceBucket.Style)
