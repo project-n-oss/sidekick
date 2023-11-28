@@ -58,12 +58,13 @@ type Config struct {
 }
 
 var DefaultConfig = Config{
-	Local:                false,
-	CloudPlatform:        UndefinedCloudPlatform,
-	Passthrough:          false,
-	Failover:             false,
-	NoFallback404:        false,
-	BoltEndpointOverride: "",
-	CrunchTrafficSplit:   CrunchTrafficSplitByObjectKeyHash,
-	GcpReplicasEnabled:   false,
+	Local:                     false,
+	CloudPlatform:             UndefinedCloudPlatform,
+	Passthrough:               false,
+	Failover:                  false,
+	NoFallback404:             false,
+	BoltEndpointOverride:      "",
+	CrunchTrafficSplit:        CrunchTrafficSplitByObjectKeyHash,
+	GcpReplicasEnabled:        false,
+	AwsIgnoreAuthHeaderRegion: false,
 }
