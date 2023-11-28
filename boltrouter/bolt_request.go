@@ -60,7 +60,7 @@ func (br *BoltRouter) NewBoltRequest(ctx context.Context, logger *zap.Logger, re
 }
 
 func (br *BoltRouter) newBoltRequestForAws(ctx context.Context, logger *zap.Logger, req *http.Request) (*BoltRequest, error) {
-	sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get())
+	sourceBucket, err := extractSourceBucket(logger, req, br.boltVars.Region.Get(), br.config.AwsIgnoreAuthHeaderRegion)
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
 	}
