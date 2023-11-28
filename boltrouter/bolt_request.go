@@ -64,6 +64,7 @@ func (br *BoltRouter) newBoltRequestForAws(ctx context.Context, logger *zap.Logg
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
 	}
+	logger.Debug("extracted source bucket", zap.String("bucket", sourceBucket.Bucket), zap.String("region", sourceBucket.Region))
 
 	awsCred, err := getAwsCredentialsFromRegion(ctx, sourceBucket.Region)
 	if err != nil {
