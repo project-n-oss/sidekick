@@ -20,7 +20,7 @@ When running with the endpoint URL override, the underlying AWS SDKs that Apache
 
 ### Apache NiFi Processors
 
-Set the `Endpoint Override URL` properly to the Sidekick address. This is usually `http://localhost:7075`.
+Set the `Endpoint Override URL` property to the Sidekick address. This is usually `http://localhost:7075`.
 
 ## Limitations
 
