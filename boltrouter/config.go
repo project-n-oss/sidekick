@@ -53,15 +53,18 @@ type Config struct {
 
 	// Whether a GCP deployment is single endpoint or we have replicas to take advantage of.
 	GcpReplicasEnabled bool `yaml:"GcpReplicasEnabled"`
+
+	AwsIgnoreAuthHeaderRegion bool `yaml:"AwsIgnoreAuthHeaderRegion"`
 }
 
 var DefaultConfig = Config{
-	Local:                false,
-	CloudPlatform:        UndefinedCloudPlatform,
-	Passthrough:          false,
-	Failover:             false,
-	NoFallback404:        false,
-	BoltEndpointOverride: "",
-	CrunchTrafficSplit:   CrunchTrafficSplitByObjectKeyHash,
-	GcpReplicasEnabled:   false,
+	Local:                     false,
+	CloudPlatform:             UndefinedCloudPlatform,
+	Passthrough:               false,
+	Failover:                  false,
+	NoFallback404:             false,
+	BoltEndpointOverride:      "",
+	CrunchTrafficSplit:        CrunchTrafficSplitByObjectKeyHash,
+	GcpReplicasEnabled:        false,
+	AwsIgnoreAuthHeaderRegion: false,
 }

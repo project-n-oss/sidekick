@@ -57,6 +57,10 @@ func (a *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 
 	boltReq, err := sess.br.NewBoltRequest(ctx, sess.Logger(), req.Clone(ctx))
 	if err != nil {
+		if strings.Contains(err.Error(), "no auth header in request") {
+			a.BadRequest(sess.Logger(), w, err)
+			return
+		}
 		a.InternalError(sess.Logger(), w, err)
 		return
 	}

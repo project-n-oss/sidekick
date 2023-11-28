@@ -27,7 +27,7 @@ type SourceBucket struct {
 // extractSourceBucket extracts the aws request bucket using Path-style or Virtual-hosted-style requests.
 // https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
 // This method will "n-auth-dummy" if nothing is found
-func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFallback string) (SourceBucket, error) {
+func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFallback string, ignoreAuthHeaderRegion bool) (SourceBucket, error) {
 	region, err := getRegionForBucket(req.Header.Get("Authorization"))
 	if err != nil {
 		return SourceBucket{}, fmt.Errorf("could not get region for bucket: %w", err)
@@ -35,6 +35,10 @@ func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFal
 
 	if region == "" {
 		logger.Warn("could not get region from auth header, using default region fallback", zap.String("defaultRegionFallback", defaultRegionFallback))
+		region = defaultRegionFallback
+	}
+
+	if ignoreAuthHeaderRegion {
 		region = defaultRegionFallback
 	}
 
