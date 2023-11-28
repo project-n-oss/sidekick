@@ -32,6 +32,7 @@ func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFal
 	if err != nil {
 		return SourceBucket{}, fmt.Errorf("could not get region for bucket: %w", err)
 	}
+	logger.Debug("extracted region", zap.String("region", region))
 
 	if region == "" {
 		logger.Warn("could not get region from auth header, using default region fallback", zap.String("defaultRegionFallback", defaultRegionFallback))
@@ -50,12 +51,15 @@ func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFal
 
 	isVirtualHostedStyle := false
 	split := strings.Split(req.Host, ".")
-	if len(split) > 1 {
+	logger.Debug("split host", zap.Strings("split", split))
+	// assuming running on http://sidekick.us-west-2.km-nov21-aws.bolt.projectn.co
+	if len(split) > 6 {
 		if _, err := strconv.Atoi(split[0]); err != nil {
 			// is not a number, so it is a bucket name
 			isVirtualHostedStyle = true
 		}
 	}
+	logger.Debug("isVirtualHostedStyle", zap.Bool("isVirtualHostedStyle", isVirtualHostedStyle))
 
 	if isVirtualHostedStyle {
 		bucket := split[0]
@@ -67,6 +71,8 @@ func extractSourceBucket(logger *zap.Logger, req *http.Request, defaultRegionFal
 		ret.Bucket = bucket
 		ret.Style = pathStyle
 	}
+
+	logger.Debug("extracted source bucket", zap.String("bucket", ret.Bucket), zap.String("style", string(ret.Style)), zap.String("region", ret.Region))
 
 	return ret, nil
 }

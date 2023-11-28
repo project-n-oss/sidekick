@@ -64,6 +64,7 @@ func (br *BoltRouter) newBoltRequestForAws(ctx context.Context, logger *zap.Logg
 	if err != nil {
 		return nil, fmt.Errorf("could not extract source bucket: %w", err)
 	}
+	logger.Debug("extracted source bucket", zap.String("bucket", sourceBucket.Bucket), zap.String("region", sourceBucket.Region))
 
 	awsCred, err := getAwsCredentialsFromRegion(ctx, sourceBucket.Region)
 	if err != nil {
@@ -74,6 +75,8 @@ func (br *BoltRouter) newBoltRequestForAws(ctx context.Context, logger *zap.Logg
 	if err != nil {
 		return nil, fmt.Errorf("failed to make failover request: %w", err)
 	}
+
+	logger.Debug("aws request", zap.String("url", awsRequest.URL.String()), zap.String("path", awsRequest.URL.Path))
 
 	authPrefix := randString(4)
 	headReq, err := signedAwsHeadRequest(ctx, req, awsCred, sourceBucket.Bucket, sourceBucket.Region, authPrefix)
@@ -87,6 +90,8 @@ func (br *BoltRouter) newBoltRequestForAws(ctx context.Context, logger *zap.Logg
 	} else {
 		bucketAndObjPath = req.URL.Path
 	}
+
+	logger.Debug("bucketAndObjPath", zap.String("bucketAndObjPath", bucketAndObjPath))
 
 	crcHash := crc32.ChecksumIEEE([]byte(bucketAndObjPath))
 	BoltURL, err := br.SelectBoltEndpoint(req.Method)
