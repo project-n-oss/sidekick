@@ -47,6 +47,7 @@ func initServerFlags(cmd *cobra.Command) {
 	cmd.Flags().StringP("cloud-platform", "", "", "Cloud platform to use. one of: aws, gcp")
 	cmd.Flags().BoolP("gcp-replicas", "", false, "Whether to query Quicksilver for replica IPs in GCP mode or use the public Bolt endpoint.")
 	cmd.Flags().Bool("no-fallback-404", false, "Disable fallback on 404 response code from AWS request to Bolt or vice-versa.")
+	cmd.Flags().Bool("aws-ignore-auth-header-region", false, "Do not infer region from auth header and use the region specified via GRANICA_REGION env var instead. Only used in AWS mode.")
 }
 
 var serveCmd = &cobra.Command{
@@ -157,6 +158,9 @@ func getBoltRouterConfig(cmd *cobra.Command) (boltrouter.Config, error) {
 	}
 	if cmd.Flags().Lookup("no-fallback-404").Changed {
 		boltRouterConfig.NoFallback404, _ = cmd.Flags().GetBool("no-fallback-404")
+	}
+	if cmd.Flags().Lookup("aws-ignore-auth-header-region").Changed {
+		boltRouterConfig.AwsIgnoreAuthHeaderRegion, _ = cmd.Flags().GetBool("aws-ignore-auth-header-region")
 	}
 	return boltRouterConfig, nil
 }
