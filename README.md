@@ -65,11 +65,20 @@ go run main serve
 
 ### GCP Read Replicas
 
-Granica Crunch deployments in GCP can run in a single public endpoint mode (legacy) and regular read-replica mode. In order
-to enable GCP read-replica support, pass the `gcp-replicas` flag to Sidekick.
+Granica Crunch deployments in GCP can run in a single public endpoint mode (legacy) and regular read-replica mode. In order to enable GCP read-replica support, pass the `gcp-replicas` flag to Sidekick.
 
 ```bash
 ./sidekick serve --gcp-replicas
+```
+
+### (AWS) Ignoring region in the Authorization header
+
+Some AWS SDKs default to signing requests for `us-east-1`, which may not always be appropriate. In order to instruct Sidekick to ignore the region specified in the Authorization header and to use the region of the underlying EC2/Google Compute Engine instance, or the `GRANICA_REGION` environment variable, pass the `--aws-ignore-auth-header-region` to Sidekick.
+
+This is only used when running in AWS mode.
+
+```bash
+./sidekick serve --aws-ignore-auth-header-region
 ```
 
 ### Local
