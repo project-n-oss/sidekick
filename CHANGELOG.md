@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/project-n-oss/sidekick/compare/v0.2.3...v0.2.4) (2023-11-28)
+
+
+### Features
+
+* Apache NiFi integration support ([#98](https://github.com/project-n-oss/sidekick/issues/98)) ([9649eb2](https://github.com/project-n-oss/sidekick/commit/9649eb25bbd61d9f7f2811ab62708a2c66ae6d8b))
+
 ## [0.2.3](https://github.com/project-n-oss/sidekick/compare/v0.2.2...v0.2.3) (2023-11-20)
 
 
