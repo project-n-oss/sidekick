@@ -1,11 +1,9 @@
-integration_tests/
 bin/
 **/*.env
 .github/
-integrations/
 .gitignored
+
+**/*.env
 **/*.png
 README.md
-
-.vscode/
 compose-dev.yaml

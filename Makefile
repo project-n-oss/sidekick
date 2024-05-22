@@ -5,7 +5,8 @@ bin/staticcheck: go.mod go.sum
 
 bin: bin/staticcheck 
 
-sidekick:
+.PHONY: sidekick
+sidekick: clean-bin
 	go build .
 
 clean-bin:

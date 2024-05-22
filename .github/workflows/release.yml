@@ -9,9 +9,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  # place holders for sidekick build to run
-  AWS_ACCESS_KEY_ID: foobar_key
-  AWS_SECRET_ACCESS_KEY: foobar_secret
 
 jobs:
   docker-build:

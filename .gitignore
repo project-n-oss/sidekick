@@ -1,7 +1,7 @@
 sidekick
 .env
+config.yml
 bin/
-
+tmp/
+test.sh
 .vscode
-compose-dev.yaml
-temp/
