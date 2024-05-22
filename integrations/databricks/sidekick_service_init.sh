@@ -23,6 +23,8 @@ EOL
 
 # --------------------------------------------------
 
+export SIDEKICK_APP_CLOUDPLATFORM="<aws|gcp>"
+
 # Create service file for the sidekick process
 SERVICE_FILE="/etc/systemd/system/sidekick.service"
 touch $SERVICE_FILE
@@ -32,9 +34,8 @@ cat > $SERVICE_FILE << EOF
 Description=Sidekick service file
 
 [Service]
-Environment=GRANICA_CUSTOM_DOMAIN=$GRANICA_CUSTOM_DOMAIN
-Environment=GRANICA_CLOUD_PLATFORM=$GRANICA_CLOUD_PLATFORM
-ExecStart=$SIDEKICK_BIN serve -p 7075 --cloud-platform $GRANICA_CLOUD_PLATFORM
+Environment=SIDEKICK_APP_CLOUDPLATFORM=$SIDEKICK_APP_CLOUDPLATFORM
+ExecStart=$SIDEKICK_BIN serve -p 7075
 Restart=always
 
 [Install]
