@@ -2,6 +2,6 @@
 
 npm run bundle
 npm run get-original
-npm run get-sidekick-router
-npm run get-sidekick-router-crunched
+npm run get-sidekick
+npm run get-sidekick-crunched
 ./upload_results.sh

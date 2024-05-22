@@ -5,7 +5,7 @@ import (
 	"github.com/project-n-oss/sidekick/app"
 )
 
-const cfgEnvPrefix = "SIDEKICKROUTER"
+const cfgEnvPrefix = "SIDEKICK"
 
 type Config struct {
 	Api api.Config `yaml:"Api"`

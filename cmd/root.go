@@ -41,7 +41,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "sidekick-router",
+	Use:           "sidekick",
 	Version:       version(),
 	SilenceErrors: true,
 	SilenceUsage:  true,
