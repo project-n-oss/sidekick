@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.0](https://github.com/project-n-oss/sidekick/compare/v0.2.4...v1.0.0) (2024-05-22)
+
+
+### Features
+
+* moved to sidekick-router ([#100](https://github.com/project-n-oss/sidekick/issues/100)) ([d694b6b](https://github.com/project-n-oss/sidekick/commit/d694b6be7797a0d9457e3b5596c430dc63f25061))
+
+
+### Bug Fixes
+
+* fix typo ([50e7a52](https://github.com/project-n-oss/sidekick/commit/50e7a52f217a7952462b02f1f585d1a07a0ddfe4))
+
+
+### Miscellaneous Chores
+
+* release 1.0.0 ([a7fe3c8](https://github.com/project-n-oss/sidekick/commit/a7fe3c811c8bc72baf8cfb20dc68129c3272b2df))
+
 ## [0.2.4](https://github.com/project-n-oss/sidekick/compare/v0.2.3...v0.2.4) (2023-11-28)
 
 
