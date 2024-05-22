@@ -23,7 +23,7 @@ App:
   CloudPlatform: AWS
 ```
 
-These config values can also be set from ENV variabale like so:
+These config values can also be set from ENV variable like so:
 
 ```bash
 export SIDEKICK_APP_CLOUDPLATFORM=AWS
