@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"os"
@@ -9,14 +10,15 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
+	"github.com/project-n-oss/sidekick/pkg/config"
+	"github.com/project-n-oss/sidekick/pkg/logger"
+	"github.com/project-n-oss/sidekick/pkg/shutdown"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gopkg.in/yaml.v2"
 )
 
 //go:embed ascii.txt
-var asciiArt string
+var bannerArt string
 
 //go:embed version.md
 var versionFile string
@@ -26,9 +28,10 @@ func version() string {
 }
 
 func init() {
-	rootLogger = NewLogger(zapcore.InfoLevel)
+	rootLogger, _ = logger.NewLogger(false)
+
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().StringP("log-level", "", "info", "log level. one of: debug, info, warn, error, fatal, panic")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "make output more verbose")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
 }
 
@@ -43,12 +46,10 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		logLevel, _ := cmd.Flags().GetString("log-level")
-		zapLogLevel, _ := zapcore.ParseLevel(logLevel)
-		rootLogger = NewLogger(zapLogLevel)
-
-		OnShutdown(func() {
-			_ = rootLogger.Sync()
+		verbose, _ := cmd.Flags().GetBool("verbose")
+		rootLogger, _ = logger.NewLogger(verbose)
+		shutdown.OnShutdown(func() {
+			rootLogger.Sync()
 		})
 
 		if _, err := os.Stat(".env"); err == nil {
@@ -58,23 +59,13 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		if config, _ := cmd.Flags().GetString("config"); config != "" {
-			f, err := os.Open(config)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			if err := yaml.NewDecoder(f).Decode(&rootConfig); err != nil {
-				return fmt.Errorf("failed to decode config: %w", err)
-			}
-		} else if f, err := os.Open("config.yaml"); err == nil {
-			defer f.Close()
-			if err := yaml.NewDecoder(f).Decode(&rootConfig); err != nil {
-				return fmt.Errorf("failed to decode config: %w", err)
-			}
+		configFilePath, _ := cmd.Flags().GetString("config")
+		cfgOpts := []func(*config.UnmarshalConfigOptions){}
+		if configFilePath != "" {
+			cfgOpts = append(cfgOpts, config.WithFilePath(configFilePath))
 		}
 
-		if err := unmarshalConfigFromEnv(&rootConfig); err != nil {
+		if err := config.UnmarshalConfig(context.Background(), cfgEnvPrefix, &rootConfig, cfgOpts...); err != nil {
 			return err
 		}
 
@@ -83,14 +74,14 @@ var rootCmd = &cobra.Command{
 			waitForTermSignal()
 		}()
 
-		fmt.Println(asciiArt)
+		fmt.Println(bannerArt)
 		fmt.Printf("Version: %s\n", version())
 
 		return nil
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		// Do a graceful shutdown
-		Shutdown()
+		shutdown.Shutdown()
 		return nil
 	},
 }
@@ -103,7 +94,7 @@ func waitForTermSignal() {
 	rootLogger.Info("received signal, shutting down", zap.String("signal", sig.String()))
 
 	// Do a graceful shutdown
-	Shutdown()
+	shutdown.Shutdown()
 }
 
 func Execute() {

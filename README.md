@@ -4,86 +4,32 @@
 
 # Sidekick
 
-Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) proxy process that allows your applications to talk with a Bolt cluster through any AWS or GCS SDK.
+Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) proxy process that help redirect or reduce chances of overwrites in native crunch.
 
 ## Getting started
 
-- go1.20
-- A bolt cluster
-- A cloud instance that has a vpc connection with the bolt cluster
+### Perequisites
+
+- go1.21
 
 ## Running Sidekick
 
-### Env Variables
-
-In order to run Sidekick, you first need to set some ENV variables
-
-```bash
-export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
-# Optional of running on an ec2 or google compute engine instance
-export GRANICA_REGION=<YOUR_GRANICA_CRUNCH_CLUSTER_REGION>
-# (AWS) Optional if not running on a ec2 instance to force read from a read-replica in this az
-export AWS_ZONE_ID=<AWS_ZONE_ID>
-# (GCP) Optional if not running on a google compute engine instance to force use a replica in this zone
-export GCP_ZONE=<GCP_ZONE>
-```
-
-### Traffic Splitting
-
-Traffic splitting provides a mechanism to precisely control how traffic is distributed between Bolt (Crunch) and S3, enabling gradual rollouts and offering numerous benefits. This capability allows you to onboard your applications in a safe and controlled manner, minimizing risks and ensuring smooth transitions.
-
-Traffic splitting configuration is managed through the `client-behavior-params` ConfigMap in the Bolt (Crunch) Kubernetes cluster. This ConfigMap can be edited on your behalf by the Granica team or by you via `custom.vars` or directly editing the ConfigMap (the latter option is not recommended as it can cause state drift.) For further guidance on the traffic splitting configuration, reach out to the Granica team.
-
-### Fallback on 404
-
-If Sidekick can't find your object in Crunch, Sidekick tries to find the object in S3/GCS. This happens transparently to the client, and it doesn't need any client retries.
-
-If you'd like to disable this behavior, run Sidekick with the `--no-fallback-404` flag.
-
-```bash
-./sidekick serve --no-fallback-404
-```
-
-### Failover
-
-Sidekick has a failover mechanism that comes into play when there are network failures or when Bolt returns 500s
-In these situations sidekick returns a 500 to the client, that may cause the client to retry. The retry request will make sidekick request Bolt again but a different endpoint. Eventually, either client will exhaust all retries to sidekick or sidekick will exhaust all replica endpoints. When one of these happens, the request has failed
-The above failover mechanism is recommended, but can be changed. Sidekick can instead failover to S3 transparently to the Client immediately on noticing a network failure or 500 error. This can be set with either by a command line argument or environment variable
-
-```bash
-# Using flag
-go run main serve --failover=false
-# Using binary
-./sidekick serve --failover=false
-```
-
-```bash
-# Using env variable
-export SIDEKICK_BOLTROUTER_FAILOVER=true  # Not recommended
-go run main serve
-```
-
-### GCP Read Replicas
-
-Granica Crunch deployments in GCP can run in a single public endpoint mode (legacy) and regular read-replica mode. In order to enable GCP read-replica support, pass the `gcp-replicas` flag to Sidekick.
-
-```bash
-./sidekick serve --gcp-replicas
-```
-
-### (AWS) Ignoring region in the Authorization header
-
-Some AWS SDKs default to signing requests for `us-east-1`, which may not always be appropriate. In order to instruct Sidekick to ignore the region specified in the Authorization header and to use the region of the underlying EC2/Google Compute Engine instance, or the `GRANICA_REGION` environment variable, pass the `--aws-ignore-auth-header-region` to Sidekick.
-
-This is only used when running in AWS mode.
-
-```bash
-./sidekick serve --aws-ignore-auth-header-region
-```
-
 ### Local
 
-You can run sidekick directly from the command line:
+You will need to create a config.yml file in the root of the project. You can use the following template:
+
+```yaml
+App:
+  CloudPlatform: AWS
+```
+
+These config values can also be set from ENV variabale like so:
+
+```bash
+export SIDEKICK_APP_CLOUDPLATFORM=AWS
+```
+
+You can then run sidekick directly from the command line:
 
 ```bash
 go run main.go serve
@@ -97,84 +43,36 @@ run the following command to learn more about the options:
 go run main.go serve --help
 ```
 
-### Logging
-
-Sidekick supports a `--log-level` argument to control the logging level. By default, the logging level is set to `info`. However, you can set a more verbose log level, such as debug, to enable detailed debugging information. For all available logging options run `./sidekick --help`.
+## Using Sidekick
 
 ### Docker
 
-Build the docker image:
+You can pull the docker image from the [containers page](https://github.com/project-n-oss/sidekick/pkgs/container/sidekick)
+
+You can then run the docker image with the following command:
 
 ```bash
-docker build -t sidekick .
+docker run -p 7075:7075 --env SIDEKICK_APP_CLOUDPLATFORM=AWS <sidekick-image> serve 
 ```
-
-or pull one from the [containers page](https://github.com/project-n-oss/sidekick/pkgs/container/sidekick)
-
-#### Running on an AWS EC2 Instance using instance profile credentials / Google Compute Engine instance using attached IAM service account
-
-```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> <sidekick-image> sidekick serve --cloud-platform <aws|gcp>
-```
-
-#### Running on any machine using environment variable credentials
-
-##### AWS
-
-```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> --env AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY> --env AWS_SECRET_ACCESS_KEY="<YOUR_AWS_SECRET_KEY>" <sidekick-image> serve --cloud-platform aws
-```
-
-If using temporary credentials, add `--env AWS_SESSION_TOKEN=<YOUR_SESSION_TOKEN>` to the command above. However, this is not recommended since credentials will expire. Instead, consider using the credentials profiles file with role assumption directives.
-
-##### GCP
-
-```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> -env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v <PATH_TO_SERVICE_ACCOUNT_KEY_FILE>:<PATH_TO_MOUNTED_SERVICE_ACCOUNT_KEY_FILE> --env GOOGLE_APPLICATION_CREDENTIALS=<PATH_TO_MOUNTED_SERVICE_ACCOUNT_KEY_FILE> <sidekick-image> serve --cloud-platform gcp
-```
-
-#### Running on any machine using the AWS credential profiles file
-
-```bash
-docker run -p 7075:7075 --env GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN> --env GRANICA_REGION=<YOUR_BOLT_CLUSTER_REGION> -v ~/.aws/:/root/.aws/ <sidekick-image> serve --cloud-platform aws
-```
-
-By default, the `default` profile from the credentials file will be used. If you want to use another profile from the credentials file add `--env AWS_DEFAULT_PROFILE=<YOUR_PROFILE>` to the command above.
-
-## Using Sidekick
-
-### AWS sdks
-
-You can find examples on how to setup your aws sdk clients to work with sidekick [here](./integrations/AWS_SDK.md)
-
-### GCP sdks
-
-You can find examples on how to setup your aws sdk clients to work with sidekick [here](./integrations/GCP_SDK.md)
-
-### 3rd Party Integrations
-
-You can find more information to integrated sidekick with 3 party tools/frameworks/services [here](./integrations)
 
 ### Pre Built binaries
 
-Sidekick binaries are hosted and released from GitHub. Please check our [releases page](./releases).
+Sidekick binaries are hosted and released from GitHub. Please check our [releases page](https://github.com/project-n-oss/sidekick/releases).
 To download any release of our linux amd64 binary run:
 
 ```bash
-wget https://github.com/project-n-oss/sidekick/releases/${release}/download/sidekick-linux-amd64.tar.gz
+wget https://github.com/project-n-oss/sidekick/releases/download/${release}/sidekick-linux-amd64.tar.gz
 ```
 
-## Resource Usage
+You can then run the binary directly:
 
-This section showcases the Sidekick resource usage relative to a steady request rate from client applications.
+```bash
+SIDEKICK_APP_CLOUDPLATFORM=AWS ./sidekick serve
+```
 
-| Request Rate (reqs/second) | CPU usage | Memory usage |
-| -------------------------- | --------- | ------------ |
-| ?                          | ?         | ?            |
-| ?                          | ?         | ?MiB         |
-| 1000                       | 0.5       | 3031.04 MiB  |
+### Integrations
 
-This benchmark was performed on a 4 vCPU, 16 GiB memory Google Cloud Engine VM w/ Sidekick running as a native process.
+Document on how to integrate sidekick with various services can be found in the [integrations](./integrations) folder.
 
 ## Contributing
 

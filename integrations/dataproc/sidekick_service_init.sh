@@ -26,9 +26,7 @@ sed -i '/<\/configuration>/i \
 
 # --------------------------------------------------
 
-export GRANICA_CUSTOM_DOMAIN=<YOUR_CUSTOM_DOMAIN>
-export GRANICA_CLOUD_PLATFORM="<aws|gcp>"
-export SIDEKICK_EXTRA_ARGS="<CHECK MAIN README FOR OTHER ARGS"
+export SIDEKICK_APP_CLOUDPLATFORM="<aws|gcp>"
 
 # Create service file for the sidekick process
 SERVICE_FILE="/etc/systemd/system/sidekick.service"
@@ -39,10 +37,8 @@ cat > $SERVICE_FILE << EOF
 Description=Sidekick service file
 
 [Service]
-Environment=GRANICA_CUSTOM_DOMAIN=$GRANICA_CUSTOM_DOMAIN
-Environment=GRANICA_CLOUD_PLATFORM=$GRANICA_CLOUD_PLATFORM
-Environment=SIDEKICK_EXTRA_ARGS=$SIDEKICK_EXTRA_ARGS
-ExecStart=$SIDEKICK_BIN serve --cloud-platform $GRANICA_CLOUD_PLATFORM $SIDEKICK_EXTRA_ARGS
+Environment=SIDEKICK_APP_CLOUDPLATFORM=$SIDEKICK_APP_CLOUDPLATFORM
+ExecStart=$SIDEKICK_BIN serve -p 7075
 Restart=always
 
 [Install]
