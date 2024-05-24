@@ -5,12 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/project-n-oss/sidekick/app/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	sidekickAws "github.com/project-n-oss/sidekick/app/aws"
 )
-
-func statusCodeIs2xx(statusCode int) bool {
-	return statusCode >= 200 && statusCode < 300
-}
 
 // DoRequest makes a request to the cloud platform
 // Does a request to the source bucket and if it returns 404, tries the crunched bucket
@@ -27,15 +25,16 @@ func (sess *Session) DoRequest(req *http.Request) (*http.Response, bool, error) 
 const crunchFileFoundErrStatus = "500 Src file not found, but crunched file found"
 
 // DoAwsRequest makes a request to AWS
-// Does a request to the source bucket and if it returns 404, tries the crunched bucket
-// Returns the response and a boolean indicating if the response is from the crunched bucket
+// If a crunched version of the source file exists, returns a 500 response
+// Returns the response and a boolean indicating if a crunched file was found
+// You can disable this behavior by setting NoCrunchErr to true in the config
 func (sess *Session) DoAwsRequest(req *http.Request) (*http.Response, bool, error) {
-	sourceBucket, err := aws.ExtractSourceBucket(req)
+	sourceBucket, err := sidekickAws.ExtractSourceBucket(req)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to extract source bucket from request: %w", err)
 	}
 
-	cloudRequest, err := aws.NewRequest(sess.Context(), sess.Logger(), req, sourceBucket)
+	cloudRequest, err := sidekickAws.NewRequest(sess.Context(), sess.Logger(), req, sourceBucket)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to make aws request: %w", err)
 	}
@@ -45,34 +44,20 @@ func (sess *Session) DoAwsRequest(req *http.Request) (*http.Response, bool, erro
 		return nil, false, fmt.Errorf("failed to do aws request: %w", err)
 	}
 
-	statusCode := -1
-	if resp != nil {
-		statusCode = resp.StatusCode
-	}
-
-	if statusCode == 404 && !isCrunchedFile(req.URL.Path) && !sess.app.cfg.NoCrunchErr {
-		crunchedFilePath := makeCrunchFilePath(req.URL.Path)
-		crunchedRequest, err := aws.NewRequest(sess.Context(), sess.Logger(), req, sourceBucket, aws.WithPath(crunchedFilePath))
-		if err != nil {
-			return nil, false, fmt.Errorf("failed to make aws request: %w", err)
-		}
-
-		resp, err := http.DefaultClient.Do(crunchedRequest)
-		if err != nil {
-			return nil, false, fmt.Errorf("failed to do crunched aws request: %w", err)
-		}
-		crunchedStatusCode := -1
-		if resp != nil {
-			crunchedStatusCode = resp.StatusCode
-		}
-
-		// return 500 to client if there is a crunch version of the file
-		if statusCodeIs2xx(crunchedStatusCode) {
+	// if the source file is not already a crunched file, check if the crunched file exists
+	if !sess.app.cfg.NoCrunchErr && !isCrunchedFile(cloudRequest.URL.Path) {
+		objectKey := makeCrunchFilePath(cloudRequest.URL.Path)
+		// ignore errors, we only want to check if the object exists
+		headResp, _ := sess.app.s3Client.HeadObject(sess.Context(), &s3.HeadObjectInput{
+			Bucket: aws.String(sourceBucket.Bucket),
+			Key:    aws.String(objectKey),
+		})
+		// found crunched file, return 500 to client
+		if headResp != nil && headResp.ETag != nil {
 			resp.StatusCode = 500
 			resp.Status = crunchFileFoundErrStatus
 		}
-
-		return resp, true, err
+		return resp, true, nil
 	}
 
 	return resp, false, err
