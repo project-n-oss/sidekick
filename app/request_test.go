@@ -33,17 +33,18 @@ func TestApp_RequestIsCrunchedFile(t *testing.T) {
 func TestApp_RequestMakeCrunchFilePath(t *testing.T) {
 	testCases := []struct {
 		path     string
+		bucket   string
 		expected string
 	}{
-		{path: "/foo/bar", expected: "/foo/bar.gr"},
-		{path: "/foo/bar/", expected: "/foo/bar/.gr"},
-		{path: "/foo/bar/myfile.parquet", expected: "/foo/bar/myfile.gr.parquet"},
-		{path: "/foo/bar/myfile.c00.zstd.parquet", expected: "/foo/bar/myfile.gr.c00.zstd.parquet"},
+		{path: "/foo/bar", bucket: "foo", expected: "bar.gr"},
+		{path: "/foo/bar/", bucket: "foo", expected: "bar/.gr"},
+		{path: "/foo/bar/myfile.parquet", bucket: "foo", expected: "bar/myfile.gr.parquet"},
+		{path: "/foo/bar/myfile.c00.zstd.parquet", bucket: "foo", expected: "bar/myfile.gr.c00.zstd.parquet"},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			assert.Equal(t, tc.expected, makeCrunchFilePath(tc.path))
+			assert.Equal(t, tc.expected, makeCrunchFilePath(tc.bucket, tc.path))
 		})
 	}
 }

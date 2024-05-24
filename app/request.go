@@ -22,7 +22,8 @@ func (sess *Session) DoRequest(req *http.Request) (*http.Response, bool, error) 
 	}
 }
 
-const crunchFileFoundErrStatus = "500 Src file not found, but crunched file found"
+const crunchFileFoundErrStatus = "409 Src file not found, but crunched file found"
+const crunchFileFoundStatusCode = 409
 
 // DoAwsRequest makes a request to AWS
 // If a crunched version of the source file exists, returns a 500 response
@@ -46,21 +47,22 @@ func (sess *Session) DoAwsRequest(req *http.Request) (*http.Response, bool, erro
 
 	// if the source file is not already a crunched file, check if the crunched file exists
 	if !sess.app.cfg.NoCrunchErr && !isCrunchedFile(cloudRequest.URL.Path) {
-		objectKey := makeCrunchFilePath(cloudRequest.URL.Path)
+		objectKey := makeCrunchFilePath(sourceBucket.Bucket, cloudRequest.URL.Path)
 
-		// ignore errors, we only want to check if the object exists
 		s3Client, err := sidekickAws.GetS3ClientFromRegion(sess.Context(), sourceBucket.Region)
 		if err != nil {
 			return nil, false, fmt.Errorf("failed to get s3 client for region '%s': %w", sourceBucket.Region, err)
 		}
 
+		// ignore errors, we only want to check if the object exists
 		headResp, _ := s3Client.HeadObject(sess.Context(), &s3.HeadObjectInput{
 			Bucket: aws.String(sourceBucket.Bucket),
 			Key:    aws.String(objectKey),
 		})
+
 		// found crunched file, return 500 to client
 		if headResp != nil && headResp.ETag != nil {
-			resp.StatusCode = 500
+			resp.StatusCode = crunchFileFoundStatusCode
 			resp.Status = crunchFileFoundErrStatus
 		}
 		return resp, true, nil
@@ -69,12 +71,15 @@ func (sess *Session) DoAwsRequest(req *http.Request) (*http.Response, bool, erro
 	return resp, false, err
 }
 
-func makeCrunchFilePath(filePath string) string {
+func makeCrunchFilePath(bucketName, filePath string) string {
 	splitS := strings.SplitAfterN(filePath, ".", 2)
 	ret := strings.TrimSuffix(splitS[0], ".") + ".gr"
 	if len(splitS) > 1 {
 		ret += "." + splitS[1]
 	}
+	ret = strings.TrimPrefix(ret, "/")
+	ret = strings.TrimPrefix(ret, bucketName)
+	ret = strings.TrimPrefix(ret, "/")
 	return ret
 }
 
