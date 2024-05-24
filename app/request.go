@@ -47,8 +47,14 @@ func (sess *Session) DoAwsRequest(req *http.Request) (*http.Response, bool, erro
 	// if the source file is not already a crunched file, check if the crunched file exists
 	if !sess.app.cfg.NoCrunchErr && !isCrunchedFile(cloudRequest.URL.Path) {
 		objectKey := makeCrunchFilePath(cloudRequest.URL.Path)
+
 		// ignore errors, we only want to check if the object exists
-		headResp, _ := sess.app.s3Client.HeadObject(sess.Context(), &s3.HeadObjectInput{
+		s3Client, err := sidekickAws.GetS3ClientFromRegion(sess.Context(), sourceBucket.Region)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to get s3 client for region '%s': %w", sourceBucket.Region, err)
+		}
+
+		headResp, _ := s3Client.HeadObject(sess.Context(), &s3.HeadObjectInput{
 			Bucket: aws.String(sourceBucket.Bucket),
 			Key:    aws.String(objectKey),
 		})

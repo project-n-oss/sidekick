@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/project-n-oss/sidekick/app/aws"
+	sidekickAws "github.com/project-n-oss/sidekick/app/aws"
+
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -19,7 +18,6 @@ type App struct {
 
 	standardHttpClient *http.Client
 	gcpHttpClient      *http.Client
-	s3Client           *s3.Client
 }
 
 func New(ctx context.Context, logger *zap.Logger, cfg Config) (*App, error) {
@@ -39,12 +37,8 @@ func New(ctx context.Context, logger *zap.Logger, cfg Config) (*App, error) {
 
 	switch cfg.CloudPlatform {
 	case AwsCloudPlatform.String():
-		aws.RefreshCredentialsPeriodically(ctx, logger)
-		awsConfig, err := config.LoadDefaultConfig(ctx)
-		if err != nil {
-			return nil, err
-		}
-		ret.s3Client = s3.NewFromConfig(awsConfig)
+		sidekickAws.RefreshCredentialsPeriodically(ctx, logger)
+		sidekickAws.RefreshS3ClientPeriodically(ctx, logger)
 
 	case GcpCloudPlatform.String():
 		creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/devstorage.read_write")
