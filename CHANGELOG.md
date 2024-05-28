@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/project-n-oss/sidekick/compare/v1.0.0...v1.1.0) (2024-05-28)
+
+
+### Features
+
+* crunch lock ([#104](https://github.com/project-n-oss/sidekick/issues/104)) ([1f00e44](https://github.com/project-n-oss/sidekick/commit/1f00e4417782397663be2ac7933395d58023971a))
+
 ## [1.0.0](https://github.com/project-n-oss/sidekick/compare/v0.2.4...v1.0.0) (2024-05-22)
 
 
