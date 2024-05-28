@@ -6,6 +6,7 @@
   "scripts": {
     "bundle": "webpack",
     "get-original": "k6 run dist/get-original-test.js",
+    "get-nginx": "k6 run dist/get-nginx-test.js",
     "get-sidekick": "k6 run dist/get-sidekick-test.js",
     "get-sidekick-crunched": "k6 run dist/get-sidekick-crunched-test.js"
   },
