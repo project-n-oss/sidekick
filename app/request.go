@@ -21,7 +21,7 @@ func (sess *Session) DoRequest(req *http.Request) (*http.Response, bool, error) 
 	}
 }
 
-const crunchFileFoundErrStatus = "409 Src file not found, but crunched file found"
+const crunchFileFoundErrStatus = "409 Src file not found, but crunched file also found"
 const crunchFileFoundStatusCode = 409
 
 // DoAwsRequest makes a request to AWS
