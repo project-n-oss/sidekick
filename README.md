@@ -4,7 +4,11 @@
 
 # Sidekick
 
-Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) proxy process that help redirect or reduce chances of overwrites in native crunch.
+Sidekick is a [sidecar](https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar) proxy process that helps you integrate with the granica crunch platform.
+
+## What it does
+
+Sidekick runs as a sidecar next to you application code and acts as a proxy to S3. If sidecar finds a crunched version of the file you are trying to query it will always return a 409. This garantees an error on the client side during the crunching of a file.
 
 ## Getting started
 
