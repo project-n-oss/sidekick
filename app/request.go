@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -69,25 +68,4 @@ func (sess *Session) DoAwsRequest(req *http.Request) (*http.Response, bool, erro
 	}
 
 	return resp, false, err
-}
-
-func makeCrunchFilePath(bucketName, filePath string) string {
-	splitS := strings.SplitAfterN(filePath, ".", 2)
-	ret := strings.TrimSuffix(splitS[0], ".") + ".gr"
-	if len(splitS) > 1 {
-		ret += "." + splitS[1]
-	}
-	ret = strings.TrimPrefix(ret, "/")
-	ret = strings.TrimPrefix(ret, bucketName)
-	ret = strings.TrimPrefix(ret, "/")
-	return ret
-}
-
-func isCrunchedFile(filePath string) bool {
-	splitS := strings.SplitAfterN(filePath, ".", 2)
-	if len(splitS) == 1 {
-		return false
-	}
-	ext := splitS[len(splitS)-1]
-	return strings.HasPrefix(ext, "gr")
 }
