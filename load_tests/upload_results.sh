@@ -35,6 +35,14 @@ do
   aws s3 cp "${file}" "${BUCKET_PATH}/${filename}"
 done
 
+find -type f -name "*-summary.csv" | while read -r file
+do
+  filename=$(basename "$file")
+  echo "Uploading ${filename} to ${BUCKET_PATH}"
+  aws s3 cp "${file}" "${BUCKET_PATH}/${filename}"
+done
+
+
 # Increment the index and store in the bucket for next time
 echo $INDEX > $INDEX_FILE
 aws s3 cp $INDEX_FILE ${DATE_PATH}/${INDEX_FILE}

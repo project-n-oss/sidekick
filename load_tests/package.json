@@ -5,10 +5,12 @@
   "main": "get.js",
   "scripts": {
     "bundle": "webpack",
-    "get-original": "k6 run dist/get-original-test.js",
-    "get-nginx": "k6 run dist/get-nginx-test.js",
-    "get-sidekick": "k6 run dist/get-sidekick-test.js",
-    "get-sidekick-crunched": "k6 run dist/get-sidekick-crunched-test.js"
+    "get-original-load": "k6 run dist/get-original-load-test.js",
+    "get-original-stress": "k6 run dist/get-original-stress-test.js",
+    "get-nginx-load": "k6 run dist/get-nginx-load-test.js",
+    "get-sidekick-load": "k6 run dist/get-sidekick-load-test.js",
+    "get-sidekick-stress": "k6 run dist/get-sidekick-stress-test.js",
+    "get-sidekick-crunched-load": "k6 run dist/get-sidekick-crunched-load-test.js"
   },
   "keywords": [],
   "author": "",

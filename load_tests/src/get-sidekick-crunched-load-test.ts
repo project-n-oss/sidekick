@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check } from 'k6';
 // @ts-ignore
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.1.0/index.js';
-import { getOptions } from './get-options';
+import { getLoadTestOptions } from './options';
 import { SignedRequest } from './signed-request';
 
 // This test will use sidekick to try and read a deleted and crunched file
@@ -12,12 +12,12 @@ const signedRequest = SignedRequest({
     endpoint: 'http://localhost:7075',
 });
 
-export const options = getOptions;
+export const options = getLoadTestOptions;
 
 export default async function () {
     const res = http.get(signedRequest.url, { headers: signedRequest.headers });
     check(res, {
-        'is status 500': (r) => r.status === 500,
+        'is status 409': (r) => r.status === 409,
         'contains data': (r) => r.body !== undefined,
     });
 }
@@ -25,6 +25,6 @@ export default async function () {
 export function handleSummary(data: any) {
     return {
         stdout: textSummary(data, { indent: ' ', enableColors: true }),
-        'get-sidekick-router-crunched-summary.json': JSON.stringify(data, null, 2),
+        'get-sidekick-crunched-load-test-summary.json': JSON.stringify(data, null, 2),
     };
 }
