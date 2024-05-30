@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/project-n-oss/sidekick/compare/v1.1.0...v1.2.0) (2024-05-30)
+
+
+### Features
+
+* new native crunch file naming convention ([#106](https://github.com/project-n-oss/sidekick/issues/106)) ([c5fb5ca](https://github.com/project-n-oss/sidekick/commit/c5fb5cab85247a3415aa515f8dca50d86de00608))
+
 ## [1.1.0](https://github.com/project-n-oss/sidekick/compare/v1.0.0...v1.1.0) (2024-05-28)
 
 
