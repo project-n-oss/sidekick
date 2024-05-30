@@ -39,6 +39,10 @@ func TestApp_RequestMakeCrunchFilePath(t *testing.T) {
 		{path: "/foo/bar/", bucket: "foo", expected: "bar/0.gr."},
 		{path: "/foo/bar/myfile.parquet", bucket: "foo", expected: "bar/myfile.0.gr.parquet"},
 		{path: "/foo/bar/myfile.c00.zstd.parquet", bucket: "foo", expected: "bar/myfile.c00.zstd.0.gr.parquet"},
+		{path: "/foo/bar/myfile.c00.zstd.parquet", bucket: "foo", expected: "bar/myfile.c00.zstd.0.gr.parquet"},
+		{path: "bar", bucket: "foo", expected: "0.gr.bar"},
+		{path: "bar.parquet", bucket: "foo", expected: "bar.0.gr.parquet"},
+		{path: "bar/", bucket: "foo", expected: "bar/0.gr."},
 	}
 
 	for _, tc := range testCases {
