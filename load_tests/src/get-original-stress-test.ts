@@ -4,7 +4,7 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.1.0/index.js';
 import { getStressTestOptions } from './options';
 import { SignedRequest } from './signed-request';
-import { getCSVStressMetrics } from './stress-metrics';
+import { getStressTestCsv } from './stress-test-csv';
 
 // this test calls s3 directly
 const signedRequest = SignedRequest({
@@ -24,7 +24,7 @@ export default async function () {
 }
 
 export function handleSummary(data: any) {
-    const csv = getCSVStressMetrics(data['metrics']);
+    const csv = getStressTestCsv(data);
     return {
         stdout: textSummary(data, { indent: ' ', enableColors: true }),
         'get-original-load-test-summary.json': JSON.stringify(data, null, 2),
