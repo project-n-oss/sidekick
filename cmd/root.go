@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 
@@ -33,6 +34,7 @@ func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "make output more verbose")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "read configuration from this file")
+	rootCmd.PersistentFlags().Bool("cpuprofile", false, "save cpu profile")
 }
 
 var (
@@ -51,6 +53,22 @@ var rootCmd = &cobra.Command{
 		shutdown.OnShutdown(func() {
 			rootLogger.Sync()
 		})
+
+		cpuprofile, _ := cmd.Flags().GetBool("cpuprofile")
+		if cpuprofile {
+			f, err := os.Create("cpu.prof")
+			if err != nil {
+				return fmt.Errorf("could not create CPU profile: %w", err)
+			}
+
+			if err := pprof.StartCPUProfile(f); err != nil {
+				return fmt.Errorf("could not start CPU profile: %w", err)
+			}
+			shutdown.OnShutdown(func() {
+				pprof.StopCPUProfile()
+				f.Close()
+			})
+		}
 
 		if _, err := os.Stat(".env"); err == nil {
 			err := godotenv.Load()
