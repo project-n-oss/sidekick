@@ -27,7 +27,7 @@ export function handleSummary(data: any) {
     const csv = getCSVStressMetrics(data['metrics']);
     return {
         stdout: textSummary(data, { indent: ' ', enableColors: true }),
-        'get-original-load-test-summary.json': JSON.stringify(data, null, 2),
-        'get-original-load-test-summary.csv': csv,
+        'get-original-stress-test-summary.json': JSON.stringify(data, null, 2),
+        'get-original-stress-test-summary.csv': csv,
     };
 }
