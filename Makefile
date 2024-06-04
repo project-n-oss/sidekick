@@ -9,5 +9,8 @@ bin: bin/staticcheck
 sidekick: clean-bin
 	go build .
 
+default-pgo: cpu.prof
+	cp cpu.prof default.pgo
+
 clean-bin:
 	rm -rf bin
