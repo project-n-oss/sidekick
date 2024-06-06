@@ -44,6 +44,7 @@ func (api *Api) routeBase(w http.ResponseWriter, req *http.Request) {
 	sess.WithLogger(sess.Logger().With(
 		zap.Int("awsStatusCode", resp.StatusCode),
 		zap.Bool("crunched", crunched),
+		zap.Int("respContentLength", int(resp.ContentLength)),
 	))
 
 	// Convert the response headers to lower case, as Python etc libraries expect lower case.
