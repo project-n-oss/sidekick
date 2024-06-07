@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/project-n-oss/sidekick/compare/v1.3.0...v1.4.0) (2024-06-07)
+
+
+### Features
+
+* added resp content len in log ([#110](https://github.com/project-n-oss/sidekick/issues/110)) ([1dcbe67](https://github.com/project-n-oss/sidekick/commit/1dcbe6718ee69a3a41bbb93b55b72012cf1c34cd))
+
 ## [1.3.0](https://github.com/project-n-oss/sidekick/compare/v1.2.0...v1.3.0) (2024-06-04)
 
 
